@@ -836,12 +836,13 @@ const PROVIDERS = {
     color: 'var(--kimi)',
     dotColor: '#06b6d4',
     models: [
+      { id: 'kimi-k2-5',        label: 'Kimi K2.5'      },
       { id: 'kimi-latest',      label: 'Kimi Latest'    },
       { id: 'moonshot-v1-128k', label: 'Moonshot 128K'  },
       { id: 'moonshot-v1-32k',  label: 'Moonshot 32K'   },
       { id: 'moonshot-v1-8k',   label: 'Moonshot 8K'    },
     ],
-    defaultModel: 'kimi-latest',
+    defaultModel: 'kimi-k2-5',
   },
 };
 
@@ -888,6 +889,7 @@ const PRICING = {
   'grok-2-1212':                       { i: 2.00,  o: 10.00 },
   'grok-beta':                         { i: 5.00,  o: 15.00 },
   // Kimi (Moonshot) — prices approx. USD
+  'kimi-k2-5':        { i: 2.00, o: 8.00 },
   'kimi-latest':      { i: 2.00, o: 6.00 },
   'moonshot-v1-128k': { i: 8.00, o: 8.00 },
   'moonshot-v1-32k':  { i: 2.40, o: 2.40 },
