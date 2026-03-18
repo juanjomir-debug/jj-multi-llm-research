@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JJ Multi-LLM Research</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2230;
+      --border:    #30363d;
+      --text:      #e6edf3;
+      --text-muted:#8b949e;
+      --accent:    #58a6ff;
+      --accent-dim:#1f3b5a;
+      --success:   #3fb950;
+      --warn:      #d29922;
+      --danger:    #f85149;
+      --claude:    #cc785c;
+      --openai:    #10a37f;
+      --gemini:    #4285f4;
+      --grok:      #a78bfa;
+      --radius:    8px;
+      --sidebar-w: 380px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    html { font-size: 14px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: var(--accent); }
+    button { cursor: pointer; font-family: inherit; }
+    textarea, input, select {
+      font-family: inherit;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      outline: none;
+    }
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88,166,255,.15);
+    }
+    select option { background: var(--surface); }
+
+    /* ── Layout ─────────────────────────────────────────────────────────────── */
+    .app-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .app-header h1 { font-size: 1.05rem; font-weight: 600; flex: 1; }
+    .app-header h1 span { color: var(--accent); }
+    .header-badge {
+      font-size: 0.7rem;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 2px 8px;
+    }
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: var(--radius);
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      transition: all .15s;
+    }
+    .btn-icon:hover { background: var(--surface2); color: var(--text); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────────── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .sidebar-inner { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      padding: 4px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+
+    /* ── Model card ─────────────────────────────────────────────────────────── */
+    .model-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+    .model-card.active   { border-color: var(--accent); }
+    .model-card.disabled { opacity: .5; }
+
+    .model-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--surface2);
+      cursor: pointer;
+    }
+    .model-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .model-name { font-weight: 600; font-size: .85rem; flex: 1; }
+    .model-toggle {
+      width: 34px; height: 18px;
+      border-radius: 9px;
+      background: var(--border);
+      border: none;
+      position: relative;
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+    .model-toggle::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px; left: 3px;
+      transition: transform .2s;
+    }
+    .model-toggle.on { background: var(--accent); }
+    .model-toggle.on::after { transform: translateX(16px); }
+
+    .model-card-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; }
+
+    .model-select {
+      width: 100%;
+      padding: 5px 8px;
+      font-size: .82rem;
+      border-radius: var(--radius);
+    }
+    .cost-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .75rem;
+      color: var(--text-muted);
+    }
+    .cost-chip .cost-val { font-weight: 600; font-family: monospace; }
+    .cost-chip .cost-val.cheap  { color: var(--success); }
+    .cost-chip .cost-val.medium { color: var(--warn); }
+    .cost-chip .cost-val.pricey { color: var(--danger); }
+
+    .instr-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: .78rem;
+      padding: 2px 0;
+      text-align: left;
+    }
+    .instr-toggle:hover { color: var(--text); }
+    .instr-toggle .arrow { transition: transform .15s; font-size: .7rem; }
+    .instr-toggle.open .arrow { transform: rotate(90deg); }
+
+    .instr-area {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .instr-area.open { display: flex; }
+    .instr-area textarea {
+      width: 100%;
+      min-height: 70px;
+      padding: 6px 8px;
+      font-size: .8rem;
+      resize: vertical;
+      border-radius: var(--radius);
+    }
+    .instr-hint { font-size: .72rem; color: var(--text-muted); }
+
+    /* ── Integrator section ─────────────────────────────────────────────────── */
+    .integrator-card {
+      border: 1px solid var(--grok);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .integrator-header {
+      background: rgba(167,139,250,.1);
+      padding: 8px 10px;
+      font-weight: 600;
+      font-size: .85rem;
+      color: var(--grok);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .integrator-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; }
+    .integrator-row { display: flex; gap: 6px; }
+    .integrator-row select { flex: 1; padding: 5px 6px; font-size: .82rem; border-radius: var(--radius); }
+
+    /* ── Advanced settings ──────────────────────────────────────────────────── */
+    .adv-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: transparent;
+      border: none;
+      width: 100%;
+      color: var(--text-muted);
+      font-size: .78rem;
+      padding: 4px 2px;
+    }
+    .adv-toggle:hover { color: var(--text); }
+    .adv-body { display: none; flex-direction: column; gap: 8px; padding-top: 6px; }
+    .adv-body.open { display: flex; }
+    .field-row { display: flex; flex-direction: column; gap: 4px; }
+    .field-row label { font-size: .75rem; color: var(--text-muted); }
+    .field-row input[type=number] { width: 100%; padding: 5px 8px; font-size: .82rem; border-radius: var(--radius); }
+
+    /* ── Key status ─────────────────────────────────────────────────────────── */
+    .key-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .key-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .75rem;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 4px 8px;
+    }
+    .key-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .key-dot.ok  { background: var(--success); }
+    .key-dot.err { background: var(--danger); }
+
+    /* ── Main panel ──────────────────────────────────────────────────────────── */
+    .main {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      min-height: 0;
+    }
+    .query-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .query-label { font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+    .query-section textarea {
+      width: 100%;
+      min-height: 100px;
+      max-height: 280px;
+      padding: 10px 12px;
+      font-size: .95rem;
+      line-height: 1.5;
+      resize: vertical;
+      border-radius: var(--radius);
+    }
+    .query-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .run-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      padding: 9px 20px;
+      font-size: .9rem;
+      font-weight: 700;
+      transition: background .15s, opacity .15s;
+    }
+    .run-btn:hover:not(:disabled) { background: #79b8ff; }
+    .run-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .run-btn.running { background: var(--warn); color: #000; }
+
+    .total-cost-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+    .total-cost-badge .tval { font-weight: 700; font-family: monospace; }
+    .total-cost-badge .tval.cheap  { color: var(--success); }
+    .total-cost-badge .tval.medium { color: var(--warn); }
+    .total-cost-badge .tval.pricey { color: var(--danger); }
+
+    .enabled-count { font-size: .78rem; color: var(--text-muted); margin-left: auto; }
+
+    /* ── Results ─────────────────────────────────────────────────────────────── */
+    .results-section { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+    }
+
+    .result-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .result-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .result-provider-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .result-model-name { font-size: .82rem; font-weight: 600; flex: 1; }
+    .result-meta { font-size: .72rem; color: var(--text-muted); display: flex; gap: 10px; }
+    .result-meta span { display: flex; align-items: center; gap: 3px; }
+
+    .result-body {
+      padding: 12px;
+      font-size: .85rem;
+      line-height: 1.6;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 400px;
+    }
+    .result-body .loading-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: .83rem;
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result-error {
+      color: var(--danger);
+      font-size: .82rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .result-footer {
+      padding: 6px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: .75rem;
+      transition: all .15s;
+    }
+    .copy-btn:hover { background: var(--surface2); color: var(--text); }
+    .copy-btn.copied { color: var(--success); border-color: var(--success); }
+
+    /* ── Integrator result ───────────────────────────────────────────────────── */
+    .integrator-result-card {
+      border: 1px solid var(--grok);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .integrator-result-header {
+      background: rgba(167,139,250,.12);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(167,139,250,.3);
+    }
+    .integrator-result-header h3 { font-size: .9rem; font-weight: 700; flex: 1; color: var(--grok); }
+    .integrator-result-body {
+      padding: 16px;
+      font-size: .88rem;
+      line-height: 1.7;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .integrator-result-footer {
+      padding: 8px 14px;
+      border-top: 1px solid rgba(167,139,250,.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .integrator-result-footer .tval { font-family: monospace; font-weight: 600; font-size: .8rem; }
+
+    /* ── Markdown styles inside result bodies ────────────────────────────────── */
+    .md-content h1 { font-size: 1.15rem; margin: 14px 0 8px; }
+    .md-content h2 { font-size: 1rem;    margin: 12px 0 6px; }
+    .md-content h3 { font-size: .9rem;   margin: 10px 0 5px; color: var(--accent); }
+    .md-content p  { margin-bottom: 8px; }
+    .md-content ul, .md-content ol { margin: 6px 0 8px 18px; }
+    .md-content li { margin-bottom: 3px; }
+    .md-content code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: .85em;
+      font-family: 'Consolas', 'Fira Mono', monospace;
+    }
+    .md-content pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    .md-content pre code { background: none; border: none; padding: 0; font-size: .82em; }
+    .md-content blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 10px;
+      color: var(--text-muted);
+      margin: 6px 0;
+    }
+    .md-content strong { font-weight: 700; }
+    .md-content em { color: var(--text-muted); }
+    .md-content hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+    .md-content table { border-collapse: collapse; width: 100%; font-size: .82rem; margin: 8px 0; }
+    .md-content th, .md-content td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; }
+    .md-content th { background: var(--surface2); }
+
+    /* ── Toast ──────────────────────────────────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      bottom: 18px; right: 18px;
+      display: flex; flex-direction: column; gap: 6px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-size: .82rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      animation: fadeIn .15s ease;
+    }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error   { border-color: var(--danger);  color: var(--danger);  }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } }
+
+    /* ── Empty state ─────────────────────────────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .empty-state .emo { font-size: 2.5rem; }
+    .empty-state p { font-size: .85rem; max-width: 340px; line-height: 1.5; }
+
+    /* ── Mobile ──────────────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow: visible; }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height .3s ease;
+      }
+      .sidebar.mobile-open { max-height: 2000px; }
+      .main { overflow: visible; }
+      body { overflow-y: auto; }
+      .results-grid { grid-template-columns: 1fr; }
+      .sidebar-inner { padding: 12px; }
+    }
+    @media (min-width: 901px) {
+      .layout { height: calc(100vh - 41px); }
+      .sidebar { height: 100%; }
+      .main { height: 100%; }
+      .mobile-toggle-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <h1>JJ <span>Multi-LLM</span> Research</h1>
+  <span class="header-badge" id="enabledBadge">0 modelos</span>
+  <button class="btn-icon mobile-toggle-btn" id="mobileToggleBtn" onclick="toggleMobileSidebar()">⚙ Config</button>
+</header>
+
+<!-- ── Layout ──────────────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+
+      <!-- API Keys status -->
+      <div>
+        <div class="section-title">Estado de API Keys</div>
+        <div class="key-grid" id="keyGrid">
+          <div class="key-item"><div class="key-dot" id="dot-anthropic"></div>Claude</div>
+          <div class="key-item"><div class="key-dot" id="dot-openai"></div>OpenAI</div>
+          <div class="key-item"><div class="key-dot" id="dot-google"></div>Gemini</div>
+          <div class="key-item"><div class="key-dot" id="dot-xai"></div>Grok</div>
+        </div>
+      </div>
+
+      <!-- Research models -->
+      <div>
+        <div class="section-title">Modelos de investigación</div>
+        <div id="modelCards" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
+      <!-- Integrator -->
+      <div>
+        <div class="section-title">Integrador / Sintetizador</div>
+        <div class="integrator-card">
+          <div class="integrator-header">🔮 Modelo integrador</div>
+          <div class="integrator-body">
+            <div class="integrator-row">
+              <select id="intProvider" onchange="onIntProviderChange()">
+                <option value="anthropic">Claude</option>
+                <option value="openai">OpenAI</option>
+                <option value="google">Gemini</option>
+                <option value="xai">Grok</option>
+              </select>
+              <select id="intModel" onchange="updateEstimate()"></select>
+            </div>
+            <div class="cost-chip">
+              <span>Costo est. integrador:</span>
+              <span class="cost-val" id="intCostVal">$0.0000</span>
+            </div>
+            <button class="instr-toggle" id="intInstrToggle" onclick="toggleInstrArea('int')">
+              <span class="arrow">▶</span> Instrucciones personalizadas
+            </button>
+            <div class="instr-area" id="intInstrArea">
+              <textarea id="intInstructions" rows="4"
+                placeholder="Instrucciones adicionales para el integrador (se añaden al prompt base)..."
+                oninput="updateEstimate()"></textarea>
+              <span class="instr-hint">Opcional. Se anteponen al prompt base del sintetizador.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced -->
+      <div>
+        <button class="adv-toggle" onclick="toggleAdv()">
+          <span>⚙ Configuración avanzada</span>
+          <span id="advArrow">▼</span>
+        </button>
+        <div class="adv-body" id="advBody">
+          <div class="field-row">
+            <label>Max tokens por modelo</label>
+            <input type="number" id="maxTokens" value="2048" min="256" max="16384" step="256" oninput="updateEstimate()" />
+          </div>
+          <div class="field-row">
+            <label>Max tokens integrador</label>
+            <input type="number" id="maxTokensInt" value="4096" min="512" max="16384" step="256" oninput="updateEstimate()" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="mainPanel">
+
+    <!-- Query -->
+    <div class="query-section">
+      <div class="query-label">Pregunta de investigación</div>
+      <textarea id="questionInput" placeholder="¿Qué quieres investigar? Escribe tu pregunta aquí..."
+        oninput="updateEstimate(); updateRunBtn()"></textarea>
+      <div class="query-footer">
+        <button class="run-btn" id="runBtn" onclick="runResearch()" disabled>
+          <span id="runBtnIcon">▶</span>
+          <span id="runBtnLabel">Investigar</span>
+        </button>
+        <div class="total-cost-badge">
+          <span>Costo estimado:</span>
+          <span class="tval" id="totalCostVal">$0.0000</span>
+        </div>
+        <span class="enabled-count" id="enabledCountLabel">0 modelos activos</span>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section" id="resultsSection">
+      <div class="empty-state" id="emptyState">
+        <div class="emo">🔬</div>
+        <p>Configura los modelos en el panel izquierdo, escribe tu pregunta y pulsa <strong>Investigar</strong>.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── Model catalogue ──────────────────────────────────────────────────────────
+const PROVIDERS = {
+  anthropic: {
+    label: 'Claude',
+    icon: '🔷',
+    color: 'var(--claude)',
+    dotColor: '#cc785c',
+    models: [
+      { id: 'claude-opus-4-6',          label: 'Opus 4.6'   },
+      { id: 'claude-sonnet-4-6',        label: 'Sonnet 4.6' },
+      { id: 'claude-haiku-4-5-20251001',label: 'Haiku 4.5'  },
+      { id: 'claude-opus-4-5',          label: 'Opus 4.5'   },
+      { id: 'claude-sonnet-4-5',        label: 'Sonnet 4.5' },
+    ],
+    defaultModel: 'claude-opus-4-6',
+  },
+  openai: {
+    label: 'OpenAI',
+    icon: '⚡',
+    color: 'var(--openai)',
+    dotColor: '#10a37f',
+    models: [
+      { id: 'gpt-5-mini',  label: 'GPT-5 Mini'  },
+      { id: 'gpt-4o',      label: 'GPT-4o'      },
+      { id: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+      { id: 'o1',          label: 'o1'           },
+      { id: 'o3-mini',     label: 'o3-mini'      },
+    ],
+    defaultModel: 'gpt-5-mini',
+  },
+  google: {
+    label: 'Gemini',
+    icon: '✨',
+    color: 'var(--gemini)',
+    dotColor: '#4285f4',
+    models: [
+      { id: 'models/gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite (preview)' },
+      { id: 'gemini-2.0-flash',                     label: 'Gemini 2.0 Flash'                },
+      { id: 'gemini-2.0-flash-lite',                label: 'Gemini 2.0 Flash Lite'           },
+      { id: 'gemini-1.5-pro',                       label: 'Gemini 1.5 Pro'                  },
+      { id: 'gemini-2.5-pro-preview-03-25',         label: 'Gemini 2.5 Pro (preview)'        },
+    ],
+    defaultModel: 'models/gemini-3.1-flash-lite-preview',
+  },
+  xai: {
+    label: 'Grok',
+    icon: '𝕏',
+    color: 'var(--grok)',
+    dotColor: '#a78bfa',
+    models: [
+      { id: 'grok-4.20-beta-0309-non-reasoning', label: 'Grok 4 Beta (non-reasoning)' },
+      { id: 'grok-3',                            label: 'Grok 3'                      },
+      { id: 'grok-3-mini',                       label: 'Grok 3 Mini'                 },
+      { id: 'grok-beta',                         label: 'Grok Beta'                   },
+    ],
+    defaultModel: 'grok-4.20-beta-0309-non-reasoning',
+  },
+};
+
+// Pricing (USD / 1M tokens)
+const PRICING = {
+  'claude-opus-4-6':           { i: 15.00, o: 75.00 },
+  'claude-sonnet-4-6':         { i:  3.00, o: 15.00 },
+  'claude-haiku-4-5-20251001': { i:  0.80, o:  4.00 },
+  'claude-opus-4-5':           { i: 15.00, o: 75.00 },
+  'claude-sonnet-4-5':         { i:  3.00, o: 15.00 },
+  'gpt-4o':                    { i:  2.50, o: 10.00 },
+  'gpt-4o-mini':               { i:  0.15, o:  0.60 },
+  'gpt-5-mini':                { i:  0.15, o:  0.60 },
+  'o1':                        { i: 15.00, o: 60.00 },
+  'o3-mini':                   { i:  1.10, o:  4.40 },
+  'gemini-2.0-flash':                     { i: 0.10,  o: 0.40  },
+  'gemini-2.0-flash-lite':                { i: 0.075, o: 0.30  },
+  'gemini-1.5-pro':                       { i: 1.25,  o: 5.00  },
+  'gemini-2.5-pro-preview-03-25':         { i: 1.25,  o: 5.00  },
+  'models/gemini-3.1-flash-lite-preview': { i: 0.075, o: 0.30  },
+  'grok-3':                               { i: 3.00,  o: 15.00 },
+  'grok-3-mini':                          { i: 0.30,  o:  0.50 },
+  'grok-beta':                            { i: 5.00,  o: 15.00 },
+  'grok-4.20-beta-0309-non-reasoning':    { i: 3.00,  o: 15.00 },
+};
+
+function calcCost(modelId, inTok, outTok) {
+  const p = PRICING[modelId];
+  if (!p) return 0;
+  return (inTok / 1_000_000) * p.i + (outTok / 1_000_000) * p.o;
+}
+
+function fmtCost(v) {
+  if (v === 0) return '$0.0000';
+  if (v < 0.001) return '$<0.001';
+  return '$' + v.toFixed(4);
+}
+function costClass(v) {
+  if (v < 0.02)  return 'cheap';
+  if (v < 0.10)  return 'medium';
+  return 'pricey';
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+const state = {
+  models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({
+    provider,
+    modelId: cfg.defaultModel,
+    enabled: true,
+    customInstructions: '',
+  })),
+  isRunning: false,
+};
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+async function init() {
+  renderModelCards();
+  populateIntegratorDropdowns();
+  await loadKeyStatus();
+  updateEstimate();
+}
+
+async function loadKeyStatus() {
+  try {
+    const r = await fetch('/api/config');
+    const cfg = await r.json();
+    const map = { anthropic: 'dot-anthropic', openai: 'dot-openai', google: 'dot-google', xai: 'dot-xai' };
+    for (const [k, id] of Object.entries(map)) {
+      const dot = document.getElementById(id);
+      if (cfg[k]) { dot.classList.add('ok'); } else { dot.classList.add('err'); }
+    }
+  } catch {}
+}
+
+// ── Sidebar model cards ───────────────────────────────────────────────────────
+function renderModelCards() {
+  const container = document.getElementById('modelCards');
+  container.innerHTML = '';
+  state.models.forEach((m, idx) => {
+    const prov = PROVIDERS[m.provider];
+    const card = document.createElement('div');
+    card.className = 'model-card' + (m.enabled ? ' active' : ' disabled');
+    card.id = `card-${m.provider}`;
+
+    const modelOptions = prov.models.map(opt =>
+      `<option value="${opt.id}" ${opt.id === m.modelId ? 'selected' : ''}>${opt.label}</option>`
+    ).join('');
+
+    card.innerHTML = `
+      <div class="model-card-header" onclick="toggleModel(${idx})">
+        <span class="model-icon">${prov.icon}</span>
+        <span class="model-name" style="color:${prov.dotColor}">${prov.label}</span>
+        <button class="model-toggle ${m.enabled ? 'on' : ''}" id="toggle-${m.provider}"
+          onclick="event.stopPropagation(); toggleModel(${idx})"></button>
+      </div>
+      <div class="model-card-body" id="body-${m.provider}" style="${m.enabled ? '' : 'display:none'}">
+        <select class="model-select" id="sel-${m.provider}"
+          onchange="onModelChange(${idx}, this.value)">${modelOptions}</select>
+        <div class="cost-chip">
+          <span>Costo est.:</span>
+          <span class="cost-val" id="mcost-${m.provider}">$0.0000</span>
+        </div>
+        <button class="instr-toggle" id="instrToggle-${m.provider}"
+          onclick="toggleInstrArea('${m.provider}')">
+          <span class="arrow">▶</span> Instrucciones personalizadas
+        </button>
+        <div class="instr-area" id="instrArea-${m.provider}">
+          <textarea id="instr-${m.provider}" rows="3"
+            placeholder="Instrucciones de sistema para ${prov.label}..."
+            oninput="onInstrChange(${idx}, this.value)">${m.customInstructions}</textarea>
+          <span class="instr-hint">Opcional. Define el rol, contexto o restricciones para este modelo.</span>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+  updateEnabledBadge();
+}
+
+function toggleModel(idx) {
+  state.models[idx].enabled = !state.models[idx].enabled;
+  const m = state.models[idx];
+  const card  = document.getElementById(`card-${m.provider}`);
+  const tog   = document.getElementById(`toggle-${m.provider}`);
+  const body  = document.getElementById(`body-${m.provider}`);
+  card.className = 'model-card' + (m.enabled ? ' active' : ' disabled');
+  tog.className  = 'model-toggle' + (m.enabled ? ' on' : '');
+  body.style.display = m.enabled ? '' : 'none';
+  updateEnabledBadge();
+  updateEstimate();
+  updateRunBtn();
+}
+
+function onModelChange(idx, newId) {
+  state.models[idx].modelId = newId;
+  updateEstimate();
+}
+
+function onInstrChange(idx, val) {
+  state.models[idx].customInstructions = val;
+  updateEstimate();
+}
+
+function toggleInstrArea(key) {
+  const btn  = document.getElementById(`instrToggle-${key}`) || document.getElementById('intInstrToggle');
+  const area = document.getElementById(`instrArea-${key}`)   || document.getElementById('intInstrArea');
+  if (!btn || !area) return;
+  const open = area.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+function updateEnabledBadge() {
+  const n = state.models.filter(m => m.enabled).length;
+  document.getElementById('enabledBadge').textContent = `${n} modelo${n !== 1 ? 's' : ''}`;
+  document.getElementById('enabledCountLabel').textContent = `${n} modelo${n !== 1 ? 's' : ''} activo${n !== 1 ? 's' : ''}`;
+}
+
+// ── Integrator dropdowns ──────────────────────────────────────────────────────
+function populateIntegratorDropdowns() {
+  onIntProviderChange();
+}
+
+function onIntProviderChange() {
+  const provKey = document.getElementById('intProvider').value;
+  const prov = PROVIDERS[provKey];
+  const sel  = document.getElementById('intModel');
+  sel.innerHTML = prov.models.map(m =>
+    `<option value="${m.id}">${m.label}</option>`
+  ).join('');
+  updateEstimate();
+}
+
+function getIntegratorConfig() {
+  return {
+    provider: document.getElementById('intProvider').value,
+    modelId:  document.getElementById('intModel').value,
+    customInstructions: document.getElementById('intInstructions').value,
+  };
+}
+
+// ── Advanced settings ─────────────────────────────────────────────────────────
+function toggleAdv() {
+  const body = document.getElementById('advBody');
+  const arr  = document.getElementById('advArrow');
+  const open = body.classList.toggle('open');
+  arr.textContent = open ? '▲' : '▼';
+}
+
+// ── Cost estimate ─────────────────────────────────────────────────────────────
+function updateEstimate() {
+  const question = document.getElementById('questionInput').value;
+  const qTok = Math.ceil(question.length / 4);
+  const estOut = parseInt(document.getElementById('maxTokens').value) || 2048;
+  const estIntOut = parseInt(document.getElementById('maxTokensInt').value) || 4096;
+
+  let totalCost = 0;
+
+  state.models.forEach(m => {
+    if (!m.enabled) return;
+    const inTok = qTok + Math.ceil((m.customInstructions || '').length / 4) + 30;
+    const cost = calcCost(m.modelId, inTok, estOut);
+    totalCost += cost;
+    const el = document.getElementById(`mcost-${m.provider}`);
+    if (el) {
+      el.textContent = fmtCost(cost);
+      el.className = `cost-val ${costClass(cost)}`;
+    }
+  });
+
+  // Integrator estimate
+  const intCfg = getIntegratorConfig();
+  const enabledCount = state.models.filter(m => m.enabled).length;
+  const intInTok = enabledCount * (estOut + 200) + qTok + Math.ceil((intCfg.customInstructions || '').length / 4) + 100;
+  const intCost = calcCost(intCfg.modelId, intInTok, estIntOut);
+  totalCost += intCost;
+
+  const intEl = document.getElementById('intCostVal');
+  intEl.textContent = fmtCost(intCost);
+  intEl.className = `cost-val ${costClass(intCost)}`;
+
+  const totalEl = document.getElementById('totalCostVal');
+  totalEl.textContent = fmtCost(totalCost);
+  totalEl.className = `tval ${costClass(totalCost)}`;
+}
+
+function updateRunBtn() {
+  const hasQuestion = document.getElementById('questionInput').value.trim().length > 0;
+  const hasModels   = state.models.some(m => m.enabled);
+  const btn = document.getElementById('runBtn');
+  btn.disabled = !hasQuestion || !hasModels || state.isRunning;
+}
+
+// ── Run research ──────────────────────────────────────────────────────────────
+async function runResearch() {
+  if (state.isRunning) return;
+
+  const question = document.getElementById('questionInput').value.trim();
+  if (!question) return;
+
+  const enabledModels = state.models.filter(m => m.enabled);
+  if (enabledModels.length === 0) {
+    toast('Activa al menos un modelo.', 'error');
+    return;
+  }
+
+  state.isRunning = true;
+  updateRunBtn();
+  const runBtn = document.getElementById('runBtn');
+  runBtn.classList.add('running');
+  document.getElementById('runBtnIcon').textContent = '⏸';
+  document.getElementById('runBtnLabel').textContent = 'Investigando...';
+
+  const resultsSection = document.getElementById('resultsSection');
+  document.getElementById('emptyState')?.remove();
+  resultsSection.innerHTML = '';
+
+  // Build pending result cards
+  const grid = document.createElement('div');
+  grid.className = 'results-grid';
+  grid.id = 'resultsGrid';
+  enabledModels.forEach(m => {
+    grid.appendChild(buildResultCard(m, 'pending'));
+  });
+  resultsSection.appendChild(grid);
+
+  // Build integrator placeholder
+  const intCard = buildIntegratorCard('pending');
+  resultsSection.appendChild(intCard);
+
+  // SSE stream
+  try {
+    const body = {
+      question,
+      models: state.models,
+      integrator: getIntegratorConfig(),
+      maxTokens: parseInt(document.getElementById('maxTokens').value) || 2048,
+      maxTokensIntegrator: parseInt(document.getElementById('maxTokensInt').value) || 4096,
+    };
+
+    const response = await fetch('/api/research', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop();
+      for (const part of parts) {
+        const lines = part.split('\n');
+        let event = 'message', data = '';
+        for (const line of lines) {
+          if (line.startsWith('event: ')) event = line.slice(7).trim();
+          if (line.startsWith('data: '))  data  = line.slice(6).trim();
+        }
+        if (data && event !== 'ping') handleSSEEvent(event, JSON.parse(data));
+      }
+    }
+  } catch (err) {
+    toast('Error de conexión: ' + err.message, 'error');
+  }
+
+  state.isRunning = false;
+  runBtn.classList.remove('running');
+  document.getElementById('runBtnIcon').textContent = '▶';
+  document.getElementById('runBtnLabel').textContent = 'Investigar';
+  updateRunBtn();
+}
+
+function handleSSEEvent(event, data) {
+  switch (event) {
+    case 'model:start':
+      updateResultCard(data.modelId, 'loading', null);
+      break;
+    case 'model:done':
+      updateResultCard(data.modelId, 'done', data);
+      break;
+    case 'model:error':
+      updateResultCard(data.modelId, 'error', data);
+      break;
+    case 'integrator:start':
+      updateIntegratorCard('loading', null);
+      break;
+    case 'integrator:done':
+      updateIntegratorCard('done', data);
+      break;
+    case 'integrator:error':
+      updateIntegratorCard('error', data);
+      break;
+  }
+}
+
+// ── Result card builders ──────────────────────────────────────────────────────
+function getProviderForModel(modelId) {
+  for (const [prov, cfg] of Object.entries(PROVIDERS)) {
+    if (cfg.models.some(m => m.id === modelId)) return prov;
+  }
+  return 'anthropic';
+}
+
+function buildResultCard(m, status) {
+  const prov = PROVIDERS[m.provider];
+  const div = document.createElement('div');
+  div.className = 'result-card';
+  div.id = `rcard-${m.modelId.replace(/[^a-z0-9]/gi, '-')}`;
+
+  const modelLabel = prov.models.find(x => x.id === m.modelId)?.label || m.modelId;
+
+  div.innerHTML = `
+    <div class="result-card-header">
+      <div class="result-provider-dot" style="background:${prov.dotColor}"></div>
+      <span class="result-model-name">${prov.icon} ${prov.label} — ${modelLabel}</span>
+      <div class="result-meta" id="rmeta-${m.modelId.replace(/[^a-z0-9]/gi, '-')}"></div>
+    </div>
+    <div class="result-body" id="rbody-${m.modelId.replace(/[^a-z0-9]/gi, '-')}">
+      <div class="loading-row"><div class="spinner"></div> Esperando...</div>
+    </div>
+    <div class="result-footer" id="rfoot-${m.modelId.replace(/[^a-z0-9]/gi, '-')}"></div>`;
+  return div;
+}
+
+function updateResultCard(modelId, status, data) {
+  const safeId = modelId.replace(/[^a-z0-9]/gi, '-');
+  const body = document.getElementById(`rbody-${safeId}`);
+  const meta = document.getElementById(`rmeta-${safeId}`);
+  const foot = document.getElementById(`rfoot-${safeId}`);
+  if (!body) return;
+
+  if (status === 'loading') {
+    body.innerHTML = `<div class="loading-row"><div class="spinner"></div> Generando respuesta...</div>`;
+  } else if (status === 'done') {
+    body.innerHTML = `<div class="md-content">${renderMarkdown(data.text)}</div>`;
+    const dur = (data.durationMs / 1000).toFixed(1);
+    meta.innerHTML = `
+      <span title="Tokens entrada/salida">${data.inputTokens}↑ ${data.outputTokens}↓</span>
+      <span title="Duración">${dur}s</span>
+      <span title="Costo" style="color:var(--${costClass(data.cost) === 'cheap' ? 'success' : costClass(data.cost) === 'medium' ? 'warn' : 'danger'})">${fmtCost(data.cost)}</span>`;
+    foot.innerHTML = `<button class="copy-btn" onclick="copyText(this, \`${escapeForAttr(data.text)}\`)">Copiar</button>`;
+  } else if (status === 'error') {
+    body.innerHTML = `<div class="result-error">⚠ ${data.error}</div>`;
+  }
+}
+
+function buildIntegratorCard(status) {
+  const intProv = document.getElementById('intProvider').value;
+  const intMod  = document.getElementById('intModel').value;
+  const prov    = PROVIDERS[intProv];
+  const modLabel = prov?.models.find(x => x.id === intMod)?.label || intMod;
+
+  const div = document.createElement('div');
+  div.className = 'integrator-result-card';
+  div.id = 'intResultCard';
+  div.innerHTML = `
+    <div class="integrator-result-header">
+      <h3>🔮 Síntesis Integrada</h3>
+      <span style="font-size:.75rem;color:var(--text-muted)">${prov?.icon || ''} ${prov?.label || ''} — ${modLabel}</span>
+      <div id="intMeta" style="font-size:.75rem;color:var(--text-muted);margin-left:auto"></div>
+    </div>
+    <div class="integrator-result-body" id="intBody">
+      <div class="loading-row"><div class="spinner"></div> Esperando respuestas de los modelos...</div>
+    </div>
+    <div class="integrator-result-footer" id="intFoot"></div>`;
+  return div;
+}
+
+function updateIntegratorCard(status, data) {
+  const body = document.getElementById('intBody');
+  const meta = document.getElementById('intMeta');
+  const foot = document.getElementById('intFoot');
+  if (!body) return;
+
+  if (status === 'loading') {
+    body.innerHTML = `<div class="loading-row"><div class="spinner"></div> Sintetizando respuestas...</div>`;
+  } else if (status === 'done') {
+    body.innerHTML = `<div class="md-content">${renderMarkdown(data.text)}</div>`;
+    const dur = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : '';
+    meta.innerHTML = `${data.inputTokens}↑ ${data.outputTokens}↓ &nbsp;${fmtCost(data.cost)} &nbsp;${dur}`;
+    foot.innerHTML = `<button class="copy-btn" onclick="copyText(this, \`${escapeForAttr(data.text)}\`)">Copiar síntesis</button>`;
+  } else if (status === 'error') {
+    body.innerHTML = `<div class="result-error">⚠ Error en integrador: ${data.error}</div>`;
+  }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function renderMarkdown(text) {
+  if (!text) return '';
+  marked.setOptions({ breaks: true, gfm: true });
+  return marked.parse(text);
+}
+
+function escapeForAttr(str) {
+  return (str || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$/g, '\\$');
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copiar';
+      btn.classList.remove('copied');
+    }, 1800);
+  }).catch(() => toast('No se pudo copiar.', 'error'));
+}
+
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
