@@ -530,6 +530,31 @@
     .md-content th, .md-content td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; }
     .md-content th { background: var(--surface2); }
 
+    /* ── Strengths button ────────────────────────────────────────────────────── */
+    .strengths-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: linear-gradient(135deg, rgba(88,166,255,.12), rgba(167,139,250,.12));
+      border: 1px solid rgba(88,166,255,.35);
+      color: var(--accent);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+      font-size: .78rem;
+      font-weight: 600;
+      transition: all .2s;
+      margin-bottom: 4px;
+      letter-spacing: .02em;
+    }
+    .strengths-btn:hover {
+      background: linear-gradient(135deg, rgba(88,166,255,.22), rgba(167,139,250,.22));
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(88,166,255,.2);
+    }
+    .strengths-btn:active { opacity: .8; }
+
     /* ── Toast ──────────────────────────────────────────────────────────────── */
     .toast-container {
       position: fixed;
@@ -620,6 +645,10 @@
       <!-- Research models -->
       <div>
         <div class="section-title">Modelos de investigación</div>
+        <button class="strengths-btn" onclick="applyModelStrengths()"
+          title="Asigna instrucciones personalizadas optimizadas para las fortalezas únicas de cada modelo">
+          ⚡ Aprovechar Fortalezas de cada modelo
+        </button>
         <div id="modelCards" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
 
@@ -1368,6 +1397,41 @@ function toast(msg, type = 'success') {
 
 function toggleMobileSidebar() {
   document.getElementById('sidebar').classList.toggle('mobile-open');
+}
+
+// ── Model strengths ───────────────────────────────────────────────────────────
+const MODEL_STRENGTHS = {
+  anthropic: `Eres un analista epistemológico riguroso. Responde mediante Chain of Thought explícito, desglosando supuestos verificables. Identifica qué sabes con certeza y qué requiere evidencia adicional. Finaliza con autoevaluación crítica que nombre posibles errores lógicos, sesgos cognitivos y limitaciones de tu respuesta. Prioriza rigor sobre completitud.`,
+
+  openai: `Actúa como sintetizador maestro de perspectivas múltiples. Estructura tu respuesta en subsecciones claras con resumen ejecutivo inicial. Incluye ejemplos concretos y verificables, referencias comprobables, y diseña el formato para facilitar consolidación posterior. Equilibra profundidad con accesibilidad. Tu respuesta es la "versión base" que otros modelos mejorarán.`,
+
+  xai: `Asume rol de crítico radical. Cuestiona directamente las premisas subyacentes de esta pregunta; ¿qué asumen erróneamente quienes la formulan? Presenta argumentos contraintuitivos o socialmente incómodos que sean defensibles. Incluye evidencia actualizada (2024-2025) que contradiga consensos. Sé directo sin rodeos diplomáticos.`,
+
+  moonshot: `Proporciona perspectiva de profundidad histórica y civilizacional. Desarrolla línea de tiempo relevante con hitos clave, analiza desde tradiciones de pensamiento no occidentales (china, india, islámica), e identifica dónde el framing occidental sesga la pregunta. Sugiere fuentes primarias clásicas. Ofrece visión verdaderamente universal, no eurocéntrica.`,
+
+  google: `Actúa como integrador sistémico multidisciplinario. Mapea cómo esta pregunta conecta múltiples disciplinas (ciencia, tecnología, economía, ética, sistemas complejos). Proporciona visión actualizada a 2024-2025 e identifica escenarios probables con roadmap de evolución (hitos a 6/12/24 meses). Detecta patrones de segundo y tercer orden, efectos sistémicos no obvios.`,
+};
+
+function applyModelStrengths() {
+  let applied = 0;
+  state.models.forEach((m, idx) => {
+    const instr = MODEL_STRENGTHS[m.provider];
+    if (!instr) return;
+    state.models[idx].customInstructions = instr;
+    // Update textarea in DOM
+    const textarea = document.getElementById(`instr-${m.provider}`);
+    if (textarea) textarea.value = instr;
+    // Open instruction area if closed
+    const area = document.getElementById(`instrArea-${m.provider}`);
+    const btn  = document.getElementById(`instrToggle-${m.provider}`);
+    if (area && !area.classList.contains('open')) {
+      area.classList.add('open');
+      if (btn) btn.classList.add('open');
+    }
+    applied++;
+  });
+  updateEstimate();
+  toast(`⚡ Fortalezas aplicadas a ${applied} modelos.`, 'success');
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
