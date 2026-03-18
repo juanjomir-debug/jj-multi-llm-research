@@ -301,6 +301,34 @@ app.get('/api/config', (_req, res) => {
   });
 });
 
+// ─── API: Kimi diagnostic ─────────────────────────────────────────────────────
+app.get('/api/diag/kimi', async (_req, res) => {
+  const key = process.env.MOONSHOT_API_KEY || '';
+  const baseURL = 'https://api.moonshot.ai/v1';
+  const info = {
+    keyExists:   !!key,
+    keyLength:   key.length,
+    keyPrefix:   key.slice(0, 10) + (key.length > 10 ? '...' : ''),
+    baseURL,
+    testModel:   'kimi-latest',
+    testResult:  null,
+    error:       null,
+  };
+  if (!key) { return res.json({ ...info, error: 'MOONSHOT_API_KEY not set in Railway env vars' }); }
+  try {
+    const client = new OpenAI({ apiKey: key, baseURL });
+    const r = await client.chat.completions.create({
+      model: 'kimi-latest',
+      messages: [{ role: 'user', content: 'Di "OK" en una palabra.' }],
+      max_tokens: 10,
+    });
+    info.testResult = r.choices[0].message.content;
+  } catch (e) {
+    info.error = { message: e.message, status: e.status, code: e.code, type: e.constructor?.name };
+  }
+  res.json(info);
+});
+
 // ─── API: cost estimate ───────────────────────────────────────────────────────
 app.post('/api/estimate', (req, res) => {
   const { question = '', models = [], integrator = {} } = req.body;
