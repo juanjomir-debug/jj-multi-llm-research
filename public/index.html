@@ -327,6 +327,58 @@
 
     .enabled-count { font-size: .78rem; color: var(--text-muted); margin-left: auto; }
 
+    /* ── Attach zone ─────────────────────────────────────────────────────────── */
+    .attach-zone {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 28px;
+    }
+    .attach-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: var(--radius);
+      padding: 4px 10px;
+      font-size: .8rem;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .attach-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .attach-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 8px 3px 10px;
+      font-size: .75rem;
+      color: var(--text-muted);
+      max-width: 180px;
+    }
+    .attach-chip .chip-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .attach-chip .chip-icon { flex-shrink: 0; }
+    .attach-chip button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 0;
+      line-height: 1;
+      font-size: .85rem;
+      flex-shrink: 0;
+      opacity: .6;
+    }
+    .attach-chip button:hover { color: var(--danger); opacity: 1; }
+
     /* ── Results ─────────────────────────────────────────────────────────────── */
     .results-section { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
     .results-grid {
@@ -630,6 +682,17 @@
       <div class="query-label">Pregunta de investigación</div>
       <textarea id="questionInput" placeholder="¿Qué quieres investigar? Escribe tu pregunta aquí..."
         oninput="updateEstimate(); updateRunBtn()"></textarea>
+
+      <!-- File attachments -->
+      <div class="attach-zone" id="attachZone">
+        <input type="file" id="fileInput" multiple accept=".pdf,image/*"
+          style="display:none" onchange="handleFileSelect(event)">
+        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button">
+          📎 Adjuntar
+        </button>
+        <div id="attachChips" style="display:contents"></div>
+      </div>
+
       <div class="query-footer">
         <button class="run-btn" id="runBtn" onclick="runResearch()" disabled>
           <span id="runBtnIcon">▶</span>
@@ -765,6 +828,7 @@ const state = {
     enabled: true,
     customInstructions: '',
   })),
+  attachments: [],   // { name, type, content (base64), size }
   isRunning: false,
 };
 
@@ -990,6 +1054,7 @@ async function runResearch() {
       integrator: getIntegratorConfig(),
       maxTokens: parseInt(document.getElementById('maxTokens').value) || 2048,
       maxTokensIntegrator: parseInt(document.getElementById('maxTokensInt').value) || 4096,
+      attachments: state.attachments,
     };
 
     const response = await fetch('/api/research', {
@@ -1027,6 +1092,57 @@ async function runResearch() {
   document.getElementById('runBtnIcon').textContent = '▶';
   document.getElementById('runBtnLabel').textContent = 'Investigar';
   updateRunBtn();
+}
+
+// ── File attachments ──────────────────────────────────────────────────────────
+const MAX_FILES = 5;
+const MAX_SIZE  = 10 * 1024 * 1024; // 10 MB per file
+
+function handleFileSelect(event) {
+  const files = Array.from(event.target.files);
+  event.target.value = ''; // allow re-selecting same file
+
+  for (const file of files) {
+    if (state.attachments.length >= MAX_FILES) {
+      toast(`Máximo ${MAX_FILES} archivos adjuntos.`, 'error'); break;
+    }
+    if (file.size > MAX_SIZE) {
+      toast(`"${file.name}" supera el límite de 10 MB.`, 'error'); continue;
+    }
+    const isDupe = state.attachments.some(a => a.name === file.name && a.size === file.size);
+    if (isDupe) continue;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // e.target.result is "data:<type>;base64,<data>" — strip the prefix
+      const dataUrl = e.target.result;
+      const base64  = dataUrl.split(',')[1];
+      state.attachments.push({ name: file.name, type: file.type, content: base64, size: file.size });
+      renderAttachChips();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removeAttachment(index) {
+  state.attachments.splice(index, 1);
+  renderAttachChips();
+}
+
+function renderAttachChips() {
+  const container = document.getElementById('attachChips');
+  container.innerHTML = '';
+  state.attachments.forEach((att, i) => {
+    const icon = att.type === 'application/pdf' ? '📄' : '🖼️';
+    const chip = document.createElement('div');
+    chip.className = 'attach-chip';
+    chip.title = `${att.name} (${(att.size / 1024).toFixed(0)} KB)`;
+    chip.innerHTML = `
+      <span class="chip-icon">${icon}</span>
+      <span class="chip-name">${att.name}</span>
+      <button onclick="removeAttachment(${i})" title="Quitar adjunto">×</button>`;
+    container.appendChild(chip);
+  });
 }
 
 function handleSSEEvent(event, data) {
