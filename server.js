@@ -53,6 +53,7 @@ const PRICING = {
   'grok-2-1212':                       { input: 2.00,  output: 10.00 },
   'grok-beta':                         { input: 5.00,  output: 15.00 },
   // Moonshot (Kimi)
+  'kimi-k2-5':          { input: 2.00, output: 8.00  },
   'kimi-latest':        { input: 2.00, output: 6.00  },
   'moonshot-v1-128k':   { input: 8.00, output: 8.00  },
   'moonshot-v1-32k':    { input: 2.40, output: 2.40  },
@@ -238,7 +239,9 @@ async function callGrok(modelId, systemPrompt, userMessage, maxTokens, attachmen
 
 async function callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   if (!process.env.MOONSHOT_API_KEY) throw new Error('MOONSHOT_API_KEY not configured');
-  const client = new OpenAI({ apiKey: process.env.MOONSHOT_API_KEY, baseURL: 'https://api.moonshot.cn/v1' });
+  // Diagnostic log (safe: shows only prefix, not full key)
+  console.log('[Kimi] KEY exists:', !!process.env.MOONSHOT_API_KEY, '| prefix:', process.env.MOONSHOT_API_KEY?.slice(0, 6));
+  const client = new OpenAI({ apiKey: process.env.MOONSHOT_API_KEY, baseURL: 'https://api.moonshot.ai/v1' });
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
 
