@@ -46,6 +46,7 @@ const PRICING = {
   'gemini-1.5-pro':                       { input: 1.25,  output: 5.00 },
   'gemini-1.5-flash':                     { input: 0.075, output: 0.30 },
   // xAI Grok
+  'grok-4.2':                          { input: 3.00,  output: 15.00 },
   'grok-4.20-beta-0309':               { input: 3.00,  output: 15.00 },
   'grok-4.20-beta-0309-non-reasoning': { input: 3.00,  output: 15.00 },
   'grok-3':                            { input: 3.00,  output: 15.00 },
