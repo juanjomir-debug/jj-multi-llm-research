@@ -4,9 +4,10 @@ const path = require('path');
 const Anthropic = require('@anthropic-ai/sdk');
 const OpenAI = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const pdfParse = require('pdf-parse');
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '25mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Pricing (USD per 1M tokens: input / output) ────────────────────────────
@@ -42,15 +43,40 @@ function calcCost(modelId, inputTok, outputTok) {
   return (inputTok / 1_000_000) * p.input + (outputTok / 1_000_000) * p.output;
 }
 
+// ─── PDF text extraction ──────────────────────────────────────────────────────
+
+async function extractPdfText(base64) {
+  const buf = Buffer.from(base64, 'base64');
+  const { text } = await pdfParse(buf);
+  return text.trim();
+}
+
 // ─── LLM callers ─────────────────────────────────────────────────────────────
 
-async function callClaude(modelId, systemPrompt, userMessage, maxTokens) {
+async function callClaude(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  // Build multimodal content array if attachments present
+  let userContent;
+  if (attachments.length > 0) {
+    userContent = [];
+    for (const att of attachments) {
+      if (att.type.startsWith('image/')) {
+        userContent.push({ type: 'image', source: { type: 'base64', media_type: att.type, data: att.content } });
+      } else if (att.textContent) {
+        userContent.push({ type: 'text', text: `[Archivo adjunto: ${att.name}]\n\n${att.textContent}` });
+      }
+    }
+    userContent.push({ type: 'text', text: userMessage });
+  } else {
+    userContent = userMessage;
+  }
+
   const params = {
     model: modelId,
     max_tokens: maxTokens,
-    messages: [{ role: 'user', content: userMessage }],
+    messages: [{ role: 'user', content: userContent }],
   };
   if (systemPrompt) params.system = systemPrompt;
   const r = await client.messages.create(params);
@@ -61,12 +87,28 @@ async function callClaude(modelId, systemPrompt, userMessage, maxTokens) {
   };
 }
 
-async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens) {
+async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-  messages.push({ role: 'user', content: userMessage });
+
+  // Build multimodal content array if attachments present
+  if (attachments.length > 0) {
+    const userContent = [];
+    for (const att of attachments) {
+      if (att.type.startsWith('image/')) {
+        userContent.push({ type: 'image_url', image_url: { url: `data:${att.type};base64,${att.content}` } });
+      } else if (att.textContent) {
+        userContent.push({ type: 'text', text: `[Archivo adjunto: ${att.name}]\n\n${att.textContent}` });
+      }
+    }
+    userContent.push({ type: 'text', text: userMessage });
+    messages.push({ role: 'user', content: userContent });
+  } else {
+    messages.push({ role: 'user', content: userMessage });
+  }
+
   const r = await client.chat.completions.create({ model: modelId, messages, max_tokens: maxTokens });
   return {
     text: r.choices[0].message.content,
@@ -75,7 +117,7 @@ async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens) {
   };
 }
 
-async function callGemini(modelId, systemPrompt, userMessage) {
+async function callGemini(modelId, systemPrompt, userMessage, attachments = []) {
   if (!process.env.GOOGLE_API_KEY) throw new Error('GOOGLE_API_KEY not configured');
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
   const cleanId = modelId.startsWith('models/') ? modelId.slice(7) : modelId;
@@ -83,7 +125,25 @@ async function callGemini(modelId, systemPrompt, userMessage) {
     model: cleanId,
     ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
   });
-  const result = await model.generateContent(userMessage);
+
+  // Build multimodal parts if attachments present
+  let requestArg;
+  if (attachments.length > 0) {
+    const parts = [];
+    for (const att of attachments) {
+      if (att.type.startsWith('image/')) {
+        parts.push({ inlineData: { mimeType: att.type, data: att.content } });
+      } else if (att.textContent) {
+        parts.push({ text: `[Archivo adjunto: ${att.name}]\n\n${att.textContent}` });
+      }
+    }
+    parts.push({ text: userMessage });
+    requestArg = { contents: [{ role: 'user', parts }] };
+  } else {
+    requestArg = userMessage;
+  }
+
+  const result = await model.generateContent(requestArg);
   const resp = result.response;
   return {
     text: resp.text(),
@@ -92,12 +152,28 @@ async function callGemini(modelId, systemPrompt, userMessage) {
   };
 }
 
-async function callGrok(modelId, systemPrompt, userMessage, maxTokens) {
+async function callGrok(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   if (!process.env.XAI_API_KEY) throw new Error('XAI_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.XAI_API_KEY, baseURL: 'https://api.x.ai/v1' });
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-  messages.push({ role: 'user', content: userMessage });
+
+  // Build multimodal content array if attachments present
+  if (attachments.length > 0) {
+    const userContent = [];
+    for (const att of attachments) {
+      if (att.type.startsWith('image/')) {
+        userContent.push({ type: 'image_url', image_url: { url: `data:${att.type};base64,${att.content}` } });
+      } else if (att.textContent) {
+        userContent.push({ type: 'text', text: `[Archivo adjunto: ${att.name}]\n\n${att.textContent}` });
+      }
+    }
+    userContent.push({ type: 'text', text: userMessage });
+    messages.push({ role: 'user', content: userContent });
+  } else {
+    messages.push({ role: 'user', content: userMessage });
+  }
+
   const r = await client.chat.completions.create({ model: modelId, messages, max_tokens: maxTokens });
   return {
     text: r.choices[0].message.content,
@@ -107,12 +183,12 @@ async function callGrok(modelId, systemPrompt, userMessage, maxTokens) {
 }
 
 // Dispatch to the right caller
-async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens) {
+async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   switch (provider) {
-    case 'anthropic': return callClaude(modelId, systemPrompt, userMessage, maxTokens);
-    case 'openai':    return callOpenAI(modelId, systemPrompt, userMessage, maxTokens);
-    case 'google':    return callGemini(modelId, systemPrompt, userMessage);
-    case 'xai':       return callGrok(modelId, systemPrompt, userMessage, maxTokens);
+    case 'anthropic': return callClaude(modelId, systemPrompt, userMessage, maxTokens, attachments);
+    case 'openai':    return callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachments);
+    case 'google':    return callGemini(modelId, systemPrompt, userMessage, attachments);
+    case 'xai':       return callGrok(modelId, systemPrompt, userMessage, maxTokens, attachments);
     default: throw new Error(`Unknown provider: ${provider}`);
   }
 }
@@ -162,7 +238,7 @@ app.post('/api/estimate', (req, res) => {
 
 // ─── API: run research (SSE stream) ──────────────────────────────────────────
 app.post('/api/research', async (req, res) => {
-  const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096 } = req.body;
+  const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096, attachments = [] } = req.body;
 
   res.writeHead(200, {
     'Content-Type':  'text/event-stream',
@@ -180,6 +256,26 @@ app.post('/api/research', async (req, res) => {
   // Keep-alive ping every 15 s
   const ping = setInterval(() => send('ping', {}), 15_000);
 
+  // ── Process attachments: extract text from PDFs ──
+  let processedAttachments = [];
+  try {
+    processedAttachments = await Promise.all(
+      attachments.map(async (att) => {
+        if (att.type === 'application/pdf') {
+          try {
+            const textContent = await extractPdfText(att.content);
+            return { ...att, textContent };
+          } catch {
+            return { ...att, textContent: `[Error al extraer texto de ${att.name}]` };
+          }
+        }
+        return att; // images pass through as-is
+      })
+    );
+  } catch (err) {
+    processedAttachments = [];
+  }
+
   const enabledModels = models.filter(m => m.enabled);
   const results = [];
 
@@ -190,7 +286,7 @@ app.post('/api/research', async (req, res) => {
       const t0 = Date.now();
       try {
         const r = await withTimeout(
-          callModel(m.provider, m.modelId, m.customInstructions || null, question, maxTokens),
+          callModel(m.provider, m.modelId, m.customInstructions || null, question, maxTokens, processedAttachments),
           90_000,
           m.modelId
         );
@@ -244,7 +340,7 @@ app.post('/api/research', async (req, res) => {
     try {
       const t0 = Date.now();
       const r = await withTimeout(
-        callModel(integrator.provider, integrator.modelId, sysPrompt, userMsg, maxTokensIntegrator),
+        callModel(integrator.provider, integrator.modelId, sysPrompt, userMsg, maxTokensIntegrator, processedAttachments),
         120_000,
         'integrator'
       );
