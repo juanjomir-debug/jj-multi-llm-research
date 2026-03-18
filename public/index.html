@@ -882,6 +882,9 @@ function costClass(v) {
   return 'pricey';
 }
 
+// ── Copy text buffer (avoids HTML injection via onclick attributes) ───────────
+const _copyBuf = {};
+
 // ── State ────────────────────────────────────────────────────────────────────
 const state = {
   models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({
@@ -1276,7 +1279,8 @@ function updateResultCard(modelId, status, data) {
       <span title="Tokens entrada/salida">${data.inputTokens}↑ ${data.outputTokens}↓</span>
       <span title="Duración">${dur}s</span>
       <span title="Costo" style="color:var(--${costClass(data.cost) === 'cheap' ? 'success' : costClass(data.cost) === 'medium' ? 'warn' : 'danger'})">${fmtCost(data.cost)}</span>`;
-    foot.innerHTML = `<button class="copy-btn" onclick="copyText(this, \`${escapeForAttr(data.text)}\`)">Copiar</button>`;
+    _copyBuf[safeId] = data.text;
+    foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copiar</button>`;
   } else if (status === 'error') {
     body.innerHTML = `<div class="result-error">⚠ ${data.error}</div>`;
   }
@@ -1316,7 +1320,8 @@ function updateIntegratorCard(status, data) {
     body.innerHTML = `<div class="md-content">${renderMarkdown(data.text)}</div>`;
     const dur = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : '';
     meta.innerHTML = `${data.inputTokens}↑ ${data.outputTokens}↓ &nbsp;${fmtCost(data.cost)} &nbsp;${dur}`;
-    foot.innerHTML = `<button class="copy-btn" onclick="copyText(this, \`${escapeForAttr(data.text)}\`)">Copiar síntesis</button>`;
+    _copyBuf['integrator'] = data.text;
+    foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copiar síntesis</button>`;
   } else if (status === 'error') {
     body.innerHTML = `<div class="result-error">⚠ Error en integrador: ${data.error}</div>`;
   }
@@ -1329,11 +1334,16 @@ function renderMarkdown(text) {
   return marked.parse(text);
 }
 
-function escapeForAttr(str) {
-  return (str || '')
-    .replace(/\\/g, '\\\\')
-    .replace(/`/g, '\\`')
-    .replace(/\$/g, '\\$');
+function copyFromBuf(key, btn) {
+  const text = _copyBuf[key] || '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = key === 'integrator' ? 'Copiar síntesis' : 'Copiar'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    btn.textContent = '✗ Error';
+    setTimeout(() => { btn.textContent = key === 'integrator' ? 'Copiar síntesis' : 'Copiar'; }, 2000);
+  });
 }
 
 function copyText(btn, text) {
