@@ -46,7 +46,6 @@ const PRICING = {
   'gemini-1.5-pro':                       { input: 1.25,  output: 5.00 },
   'gemini-1.5-flash':                     { input: 0.075, output: 0.30 },
   // xAI Grok
-  'grok-4.2':                          { input: 3.00,  output: 15.00 },
   'grok-4.20-beta-0309':               { input: 3.00,  output: 15.00 },
   'grok-4.20-beta-0309-non-reasoning': { input: 3.00,  output: 15.00 },
   'grok-3':                            { input: 3.00,  output: 15.00 },
@@ -149,9 +148,9 @@ async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachm
     messages.push({ role: 'user', content: userMessage });
   }
 
-  // o-series reasoning models use max_completion_tokens instead of max_tokens
-  const isOSeries = /^o\d/.test(modelId);
-  const completionOpts = isOSeries
+  // o-series AND gpt-5 family use max_completion_tokens instead of max_tokens
+  const useMaxCompletionTokens = /^o\d/.test(modelId) || modelId.startsWith('gpt-5');
+  const completionOpts = useMaxCompletionTokens
     ? { model: modelId, messages, max_completion_tokens: maxTokens }
     : { model: modelId, messages, max_tokens: maxTokens };
   const r = await client.chat.completions.create(completionOpts);
