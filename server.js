@@ -149,10 +149,11 @@ async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachm
   }
 
   // o-series AND gpt-5 family use max_completion_tokens instead of max_tokens
-  // For o-series, ensure enough tokens for reasoning + output (min 4096)
-  const isOSeries = /^o\d/.test(modelId);
-  const useMaxCompletionTokens = isOSeries || modelId.startsWith('gpt-5');
-  const effectiveMaxTokens = isOSeries ? Math.max(maxTokens, 4096) : maxTokens;
+  // Both families may use internal reasoning tokens, so enforce min 4096 to avoid empty responses
+  const isOSeries    = /^o\d/.test(modelId);
+  const isGpt5Family = modelId.startsWith('gpt-5');
+  const useMaxCompletionTokens = isOSeries || isGpt5Family;
+  const effectiveMaxTokens = (isOSeries || isGpt5Family) ? Math.max(maxTokens, 4096) : maxTokens;
   const completionOpts = useMaxCompletionTokens
     ? { model: modelId, messages, max_completion_tokens: effectiveMaxTokens }
     : { model: modelId, messages, max_tokens: effectiveMaxTokens };
