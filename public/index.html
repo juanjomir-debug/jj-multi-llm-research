@@ -743,7 +743,7 @@ const PROVIDERS = {
       { id: 'claude-3-5-haiku-20241022',  label: 'Haiku 3.5'  },
       { id: 'claude-3-opus-20240229',     label: 'Opus 3'     },
     ],
-    defaultModel: 'claude-opus-4-6',
+    defaultModel: 'claude-haiku-4-5-20251001',
   },
   openai: {
     label: 'OpenAI',
@@ -996,6 +996,7 @@ function onIntProviderChange() {
   sel.innerHTML = prov.models.map(m =>
     `<option value="${m.id}">${m.label}</option>`
   ).join('');
+  sel.value = prov.defaultModel; // default to provider's recommended model
   updateEstimate();
 }
 
