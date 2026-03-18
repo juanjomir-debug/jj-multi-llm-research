@@ -12,6 +12,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Pricing (USD per 1M tokens: input / output) ────────────────────────────
 const PRICING = {
+  // Anthropic Claude 3.7 (Extended Thinking)
+  'claude-3-7-sonnet-20250219': { input:  3.00, output: 15.00 },
   // Anthropic Claude 4
   'claude-opus-4-6':            { input: 15.00, output: 75.00 },
   'claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
@@ -23,6 +25,8 @@ const PRICING = {
   'claude-3-5-haiku-20241022':  { input:  0.80, output:  4.00 },
   'claude-3-opus-20240229':     { input: 15.00, output: 75.00 },
   // OpenAI GPT / o-series
+  'gpt-5.4':                    { input:  7.00, output: 28.00 },
+  'gpt-5':                      { input:  5.00, output: 20.00 },
   'gpt-4o':                     { input:  2.50, output: 10.00 },
   'gpt-4o-mini':                { input:  0.15, output:  0.60 },
   'gpt-5-mini':                 { input:  0.15, output:  0.60 },
@@ -34,6 +38,7 @@ const PRICING = {
   'o3-mini':                    { input:  1.10, output:  4.40 },
   'o4-mini':                    { input:  1.10, output:  4.40 },
   // Google Gemini
+  'gemini-2.0-flash-thinking-exp': { input: 0.10,  output: 0.40 },
   'models/gemini-3.1-flash-lite-preview': { input: 0.075, output: 0.30 },
   'gemini-2.5-pro-preview-03-25':         { input: 1.25,  output: 5.00 },
   'gemini-2.0-flash':                     { input: 0.10,  output: 0.40 },
@@ -41,6 +46,8 @@ const PRICING = {
   'gemini-1.5-pro':                       { input: 1.25,  output: 5.00 },
   'gemini-1.5-flash':                     { input: 0.075, output: 0.30 },
   // xAI Grok
+  'grok-4.2':                          { input: 3.00,  output: 15.00 },
+  'grok-4.20-beta-0309':               { input: 3.00,  output: 15.00 },
   'grok-4.20-beta-0309-non-reasoning': { input: 3.00,  output: 15.00 },
   'grok-3':                            { input: 3.00,  output: 15.00 },
   'grok-3-mini':                       { input: 0.30,  output:  0.50 },
@@ -69,9 +76,13 @@ async function extractPdfText(base64) {
 
 // ─── LLM callers ─────────────────────────────────────────────────────────────
 
+// Models that require Extended Thinking API params
+const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219']);
+
 async function callClaude(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const useThinking = CLAUDE_THINKING_MODELS.has(modelId);
 
   // Build multimodal content array if attachments present
   let userContent;
@@ -89,15 +100,28 @@ async function callClaude(modelId, systemPrompt, userMessage, maxTokens, attachm
     userContent = userMessage;
   }
 
+  // Extended thinking requires max_tokens >= budget_tokens + output
+  const effectiveMaxTokens = useThinking ? Math.max(maxTokens, 16000) : maxTokens;
   const params = {
     model: modelId,
-    max_tokens: maxTokens,
+    max_tokens: effectiveMaxTokens,
     messages: [{ role: 'user', content: userContent }],
   };
   if (systemPrompt) params.system = systemPrompt;
+  if (useThinking) {
+    params.thinking = { type: 'enabled', budget_tokens: Math.min(10000, effectiveMaxTokens - 2000) };
+    params.temperature = 1; // Required for extended thinking
+  }
+
   const r = await client.messages.create(params);
+
+  // For thinking models, extract only the text blocks (skip thinking blocks)
+  const text = useThinking
+    ? r.content.filter(b => b.type === 'text').map(b => b.text).join('\n')
+    : r.content[0].text;
+
   return {
-    text: r.content[0].text,
+    text,
     inputTokens:  r.usage.input_tokens,
     outputTokens: r.usage.output_tokens,
   };
