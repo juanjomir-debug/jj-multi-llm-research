@@ -12,29 +12,45 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Pricing (USD per 1M tokens: input / output) ────────────────────────────
 const PRICING = {
-  // Anthropic
-  'claude-opus-4-6':          { input: 15.00, output: 75.00 },
-  'claude-sonnet-4-6':        { input:  3.00, output: 15.00 },
-  'claude-haiku-4-5-20251001':{ input:  0.80, output:  4.00 },
-  'claude-opus-4-5':          { input: 15.00, output: 75.00 },
-  'claude-sonnet-4-5':        { input:  3.00, output: 15.00 },
-  // OpenAI
-  'gpt-4o':                   { input:  2.50, output: 10.00 },
-  'gpt-4o-mini':              { input:  0.15, output:  0.60 },
-  'gpt-5-mini':               { input:  0.15, output:  0.60 },
-  'o1':                       { input: 15.00, output: 60.00 },
-  'o3-mini':                  { input:  1.10, output:  4.40 },
+  // Anthropic Claude 4
+  'claude-opus-4-6':            { input: 15.00, output: 75.00 },
+  'claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
+  'claude-haiku-4-5-20251001':  { input:  0.80, output:  4.00 },
+  'claude-opus-4-5':            { input: 15.00, output: 75.00 },
+  'claude-sonnet-4-5':          { input:  3.00, output: 15.00 },
+  // Anthropic Claude 3.x
+  'claude-3-5-sonnet-20241022': { input:  3.00, output: 15.00 },
+  'claude-3-5-haiku-20241022':  { input:  0.80, output:  4.00 },
+  'claude-3-opus-20240229':     { input: 15.00, output: 75.00 },
+  // OpenAI GPT / o-series
+  'gpt-4o':                     { input:  2.50, output: 10.00 },
+  'gpt-4o-mini':                { input:  0.15, output:  0.60 },
+  'gpt-5-mini':                 { input:  0.15, output:  0.60 },
+  'gpt-4.1':                    { input:  2.00, output:  8.00 },
+  'gpt-4.1-mini':               { input:  0.40, output:  1.60 },
+  'gpt-4.1-nano':               { input:  0.10, output:  0.40 },
+  'o1':                         { input: 15.00, output: 60.00 },
+  'o3':                         { input: 10.00, output: 40.00 },
+  'o3-mini':                    { input:  1.10, output:  4.40 },
+  'o4-mini':                    { input:  1.10, output:  4.40 },
   // Google Gemini
-  'gemini-2.0-flash':                        { input: 0.10,  output: 0.40  },
-  'gemini-2.0-flash-lite':                   { input: 0.075, output: 0.30  },
-  'gemini-1.5-pro':                          { input: 1.25,  output: 5.00  },
-  'gemini-2.5-pro-preview-03-25':            { input: 1.25,  output: 5.00  },
-  'models/gemini-3.1-flash-lite-preview':    { input: 0.075, output: 0.30  },
+  'models/gemini-3.1-flash-lite-preview': { input: 0.075, output: 0.30 },
+  'gemini-2.5-pro-preview-03-25':         { input: 1.25,  output: 5.00 },
+  'gemini-2.0-flash':                     { input: 0.10,  output: 0.40 },
+  'gemini-2.0-flash-lite':                { input: 0.075, output: 0.30 },
+  'gemini-1.5-pro':                       { input: 1.25,  output: 5.00 },
+  'gemini-1.5-flash':                     { input: 0.075, output: 0.30 },
   // xAI Grok
-  'grok-3':                              { input: 3.00,  output: 15.00 },
-  'grok-3-mini':                         { input: 0.30,  output:  0.50 },
-  'grok-beta':                           { input: 5.00,  output: 15.00 },
-  'grok-4.20-beta-0309-non-reasoning':   { input: 3.00,  output: 15.00 },
+  'grok-4.20-beta-0309-non-reasoning': { input: 3.00,  output: 15.00 },
+  'grok-3':                            { input: 3.00,  output: 15.00 },
+  'grok-3-mini':                       { input: 0.30,  output:  0.50 },
+  'grok-2-1212':                       { input: 2.00,  output: 10.00 },
+  'grok-beta':                         { input: 5.00,  output: 15.00 },
+  // Moonshot (Kimi)
+  'kimi-latest':        { input: 2.00, output: 6.00  },
+  'moonshot-v1-128k':   { input: 8.00, output: 8.00  },
+  'moonshot-v1-32k':    { input: 2.40, output: 2.40  },
+  'moonshot-v1-8k':     { input: 0.80, output: 0.80  },
 };
 
 function calcCost(modelId, inputTok, outputTok) {
@@ -182,6 +198,35 @@ async function callGrok(modelId, systemPrompt, userMessage, maxTokens, attachmen
   };
 }
 
+async function callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
+  if (!process.env.MOONSHOT_API_KEY) throw new Error('MOONSHOT_API_KEY not configured');
+  const client = new OpenAI({ apiKey: process.env.MOONSHOT_API_KEY, baseURL: 'https://api.moonshot.cn/v1' });
+  const messages = [];
+  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+
+  if (attachments.length > 0) {
+    const userContent = [];
+    for (const att of attachments) {
+      if (att.type.startsWith('image/')) {
+        userContent.push({ type: 'image_url', image_url: { url: `data:${att.type};base64,${att.content}` } });
+      } else if (att.textContent) {
+        userContent.push({ type: 'text', text: `[Archivo adjunto: ${att.name}]\n\n${att.textContent}` });
+      }
+    }
+    userContent.push({ type: 'text', text: userMessage });
+    messages.push({ role: 'user', content: userContent });
+  } else {
+    messages.push({ role: 'user', content: userMessage });
+  }
+
+  const r = await client.chat.completions.create({ model: modelId, messages, max_tokens: maxTokens });
+  return {
+    text: r.choices[0].message.content,
+    inputTokens:  r.usage.prompt_tokens,
+    outputTokens: r.usage.completion_tokens,
+  };
+}
+
 // Dispatch to the right caller
 async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   switch (provider) {
@@ -189,6 +234,7 @@ async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens
     case 'openai':    return callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachments);
     case 'google':    return callGemini(modelId, systemPrompt, userMessage, attachments);
     case 'xai':       return callGrok(modelId, systemPrompt, userMessage, maxTokens, attachments);
+    case 'moonshot':  return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments);
     default: throw new Error(`Unknown provider: ${provider}`);
   }
 }
@@ -210,6 +256,7 @@ app.get('/api/config', (_req, res) => {
     openai:    !!process.env.OPENAI_API_KEY,
     google:    !!process.env.GOOGLE_API_KEY,
     xai:       !!process.env.XAI_API_KEY,
+    moonshot:  !!process.env.MOONSHOT_API_KEY,
   });
 });
 
