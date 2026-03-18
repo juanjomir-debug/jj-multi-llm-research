@@ -149,13 +149,22 @@ async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachm
   }
 
   // o-series AND gpt-5 family use max_completion_tokens instead of max_tokens
-  const useMaxCompletionTokens = /^o\d/.test(modelId) || modelId.startsWith('gpt-5');
+  // For o-series, ensure enough tokens for reasoning + output (min 4096)
+  const isOSeries = /^o\d/.test(modelId);
+  const useMaxCompletionTokens = isOSeries || modelId.startsWith('gpt-5');
+  const effectiveMaxTokens = isOSeries ? Math.max(maxTokens, 4096) : maxTokens;
   const completionOpts = useMaxCompletionTokens
-    ? { model: modelId, messages, max_completion_tokens: maxTokens }
-    : { model: modelId, messages, max_tokens: maxTokens };
+    ? { model: modelId, messages, max_completion_tokens: effectiveMaxTokens }
+    : { model: modelId, messages, max_tokens: effectiveMaxTokens };
   const r = await client.chat.completions.create(completionOpts);
+
+  // content can be null if reasoning consumed all tokens or on refusal
+  const msg = r.choices[0].message;
+  const text = msg.content || msg.refusal || '';
+  if (!text) throw new Error(`Respuesta vacía de ${modelId}. Prueba aumentando Max Tokens o usando otro modelo.`);
+
   return {
-    text: r.choices[0].message.content,
+    text,
     inputTokens:  r.usage.prompt_tokens,
     outputTokens: r.usage.completion_tokens,
   };
