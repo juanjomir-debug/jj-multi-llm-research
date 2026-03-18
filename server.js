@@ -125,7 +125,12 @@ async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachm
     messages.push({ role: 'user', content: userMessage });
   }
 
-  const r = await client.chat.completions.create({ model: modelId, messages, max_tokens: maxTokens });
+  // o-series reasoning models use max_completion_tokens instead of max_tokens
+  const isOSeries = /^o\d/.test(modelId);
+  const completionOpts = isOSeries
+    ? { model: modelId, messages, max_completion_tokens: maxTokens }
+    : { model: modelId, messages, max_tokens: maxTokens };
+  const r = await client.chat.completions.create(completionOpts);
   return {
     text: r.choices[0].message.content,
     inputTokens:  r.usage.prompt_tokens,
