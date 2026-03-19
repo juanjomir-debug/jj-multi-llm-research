@@ -764,6 +764,7 @@ const PROVIDERS = {
       // Claude 3.7 (Extended Thinking)
       { id: 'claude-3-7-sonnet-20250219', label: 'Sonnet 3.7 (Thinking)' },
       // Claude 4
+      { id: 'claude-opus-4-6-thinking',  label: 'Opus 4.6 (Thinking)' },
       { id: 'claude-opus-4-6',           label: 'Opus 4.6'    },
       { id: 'claude-sonnet-4-6',         label: 'Sonnet 4.6'  },
       { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5'   },
@@ -783,6 +784,7 @@ const PROVIDERS = {
     dotColor: '#10a37f',
     models: [
       // GPT
+      { id: 'gpt-5.4-high', label: 'GPT-5.4 High'  },
       { id: 'gpt-5.4',      label: 'GPT-5.4'       },
       { id: 'gpt-5',        label: 'GPT-5'         },
       { id: 'gpt-5-mini',   label: 'GPT-5 Mini'    },
@@ -805,6 +807,7 @@ const PROVIDERS = {
     color: 'var(--gemini)',
     dotColor: '#4285f4',
     models: [
+      { id: 'models/gemini-3.1-pro-preview',        label: 'Gemini 3.1 Pro (preview)'        },
       { id: 'models/gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite (preview)' },
       { id: 'gemini-2.5-pro-preview-03-25',         label: 'Gemini 2.5 Pro (Thinking)'       },
       { id: 'gemini-2.0-flash-thinking-exp',        label: 'Gemini 2.0 Flash Thinking'       },
@@ -852,6 +855,7 @@ const PRICING = {
   // Claude 3.7 (Extended Thinking)
   'claude-3-7-sonnet-20250219': { i:  3.00, o: 15.00 },
   // Claude 4
+  'claude-opus-4-6-thinking':   { i: 15.00, o: 75.00 },
   'claude-opus-4-6':            { i: 15.00, o: 75.00 },
   'claude-sonnet-4-6':          { i:  3.00, o: 15.00 },
   'claude-haiku-4-5-20251001':  { i:  0.80, o:  4.00 },
@@ -862,6 +866,7 @@ const PRICING = {
   'claude-3-5-haiku-20241022':  { i:  0.80, o:  4.00 },
   'claude-3-opus-20240229':     { i: 15.00, o: 75.00 },
   // OpenAI
+  'gpt-5.4-high': { i: 15.00, o: 60.00 },
   'gpt-5.4':      { i:  7.00, o: 28.00 },
   'gpt-5':        { i:  5.00, o: 20.00 },
   'gpt-5-mini':   { i:  0.15, o:  0.60 },
@@ -875,6 +880,7 @@ const PRICING = {
   'o3-mini':      { i:  1.10, o:  4.40 },
   'o1':           { i: 15.00, o: 60.00 },
   // Gemini
+  'models/gemini-3.1-pro-preview':        { i: 1.25,  o: 5.00 },
   'gemini-2.0-flash-thinking-exp':        { i: 0.10,  o: 0.40 },
   'models/gemini-3.1-flash-lite-preview': { i: 0.075, o: 0.30 },
   'gemini-2.5-pro-preview-03-25':         { i: 1.25,  o: 5.00 },
