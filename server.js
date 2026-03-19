@@ -26,7 +26,10 @@ const PRICING = {
   'claude-3-5-haiku-20241022':  { input:  0.80, output:  4.00 },
   'claude-3-opus-20240229':     { input: 15.00, output: 75.00 },
   // OpenAI GPT / o-series
+  'gpt-5.4-pro':                { input: 15.00, output: 60.00 },
   'gpt-5.4':                    { input:  7.00, output: 28.00 },
+  'gpt-5.4-mini':               { input:  1.25, output:  5.00 },
+  'gpt-5.4-nano':               { input:  0.15, output:  0.60 },
   'gpt-5':                      { input:  5.00, output: 20.00 },
   'gpt-4o':                     { input:  2.50, output: 10.00 },
   'gpt-4o-mini':                { input:  0.15, output:  0.60 },
@@ -47,6 +50,8 @@ const PRICING = {
   'gemini-1.5-pro':                       { input: 1.25,  output: 5.00 },
   'gemini-1.5-flash':                     { input: 0.075, output: 0.30 },
   // xAI Grok
+  'grok-4.20-0309-reasoning':          { input: 3.00,  output: 15.00 },
+  'grok-4.20-0309-non-reasoning':      { input: 3.00,  output: 15.00 },
   'grok-4.20-beta-0309':               { input: 3.00,  output: 15.00 },
   'grok-4.20-beta-0309-non-reasoning': { input: 3.00,  output: 15.00 },
   'grok-3':                            { input: 3.00,  output: 15.00 },
