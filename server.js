@@ -15,6 +15,7 @@ const PRICING = {
   // Anthropic Claude 3.7 (Extended Thinking)
   'claude-3-7-sonnet-20250219': { input:  3.00, output: 15.00 },
   // Anthropic Claude 4
+  'claude-opus-4-6-thinking':   { input: 15.00, output: 75.00 },
   'claude-opus-4-6':            { input: 15.00, output: 75.00 },
   'claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
   'claude-haiku-4-5-20251001':  { input:  0.80, output:  4.00 },
@@ -25,6 +26,7 @@ const PRICING = {
   'claude-3-5-haiku-20241022':  { input:  0.80, output:  4.00 },
   'claude-3-opus-20240229':     { input: 15.00, output: 75.00 },
   // OpenAI GPT / o-series
+  'gpt-5.4-high':               { input: 15.00, output: 60.00 },
   'gpt-5.4':                    { input:  7.00, output: 28.00 },
   'gpt-5':                      { input:  5.00, output: 20.00 },
   'gpt-4o':                     { input:  2.50, output: 10.00 },
@@ -38,7 +40,8 @@ const PRICING = {
   'o3-mini':                    { input:  1.10, output:  4.40 },
   'o4-mini':                    { input:  1.10, output:  4.40 },
   // Google Gemini
-  'gemini-2.0-flash-thinking-exp': { input: 0.10,  output: 0.40 },
+  'models/gemini-3.1-pro-preview':        { input: 1.25,  output: 5.00 },
+  'gemini-2.0-flash-thinking-exp':        { input: 0.10,  output: 0.40 },
   'models/gemini-3.1-flash-lite-preview': { input: 0.075, output: 0.30 },
   'gemini-2.5-pro-preview-03-25':         { input: 1.25,  output: 5.00 },
   'gemini-2.0-flash':                     { input: 0.10,  output: 0.40 },
@@ -78,7 +81,9 @@ async function extractPdfText(base64) {
 // ─── LLM callers ─────────────────────────────────────────────────────────────
 
 // Models that require Extended Thinking API params
-const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219']);
+const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking']);
+// Maps "virtual" thinking model IDs → real Anthropic API model IDs
+const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6' };
 
 async function callClaude(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
@@ -101,10 +106,13 @@ async function callClaude(modelId, systemPrompt, userMessage, maxTokens, attachm
     userContent = userMessage;
   }
 
+  // Map virtual thinking IDs to real API model IDs (e.g. claude-opus-4-6-thinking → claude-opus-4-6)
+  const actualModelId = CLAUDE_THINKING_MODEL_MAP[modelId] || modelId;
+
   // Extended thinking requires max_tokens >= budget_tokens + output
   const effectiveMaxTokens = useThinking ? Math.max(maxTokens, 16000) : maxTokens;
   const params = {
-    model: modelId,
+    model: actualModelId,
     max_tokens: effectiveMaxTokens,
     messages: [{ role: 'user', content: userContent }],
   };
@@ -344,6 +352,9 @@ app.post('/api/estimate', (req, res) => {
   res.json({ modelBreakdown, intCost, intInTok, intOutTok, total });
 });
 
+// Diversity note appended to every research model's user message
+const DIVERSITY_NOTE = '\n\n---\nEsta respuesta se consolidará con otras 4 de modelos diferentes. Aporta perspectiva única/novedosa.';
+
 // ─── API: run research (SSE stream) ──────────────────────────────────────────
 app.post('/api/research', async (req, res) => {
   const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096, attachments = [] } = req.body;
@@ -394,7 +405,7 @@ app.post('/api/research', async (req, res) => {
       const t0 = Date.now();
       try {
         const r = await withTimeout(
-          callModel(m.provider, m.modelId, m.customInstructions || null, question, maxTokens, processedAttachments),
+          callModel(m.provider, m.modelId, m.customInstructions || null, question + DIVERSITY_NOTE, maxTokens, processedAttachments),
           90_000,
           m.modelId
         );
