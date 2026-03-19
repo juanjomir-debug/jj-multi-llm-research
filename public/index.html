@@ -782,7 +782,10 @@ const PROVIDERS = {
     dotColor: '#10a37f',
     models: [
       // GPT
+      { id: 'gpt-5.4-pro',  label: 'GPT-5.4 Pro'   },
       { id: 'gpt-5.4',      label: 'GPT-5.4'       },
+      { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini'  },
+      { id: 'gpt-5.4-nano', label: 'GPT-5.4 Nano'  },
       { id: 'gpt-5',        label: 'GPT-5'         },
       { id: 'gpt-5-mini',   label: 'GPT-5 Mini'    },
       { id: 'gpt-4.1',      label: 'GPT-4.1'       },
@@ -820,6 +823,8 @@ const PROVIDERS = {
     color: 'var(--grok)',
     dotColor: '#a78bfa',
     models: [
+      { id: 'grok-4.20-0309-reasoning',          label: 'Grok 4 (Reasoning)'          },
+      { id: 'grok-4.20-0309-non-reasoning',      label: 'Grok 4 (non-reasoning)'      },
       { id: 'grok-4.20-beta-0309',               label: 'Grok 4 Beta (Thinking)'      },
       { id: 'grok-4.20-beta-0309-non-reasoning', label: 'Grok 4 Beta (non-reasoning)' },
       { id: 'grok-3',                            label: 'Grok 3'                      },
@@ -847,8 +852,10 @@ const PRICING = {
   'claude-3-5-haiku-20241022':  { i:  0.80, o:  4.00 },
   'claude-3-opus-20240229':     { i: 15.00, o: 75.00 },
   // OpenAI
-  'gpt-5.4-high': { i: 15.00, o: 60.00 },
+  'gpt-5.4-pro':  { i: 15.00, o: 60.00 },
   'gpt-5.4':      { i:  7.00, o: 28.00 },
+  'gpt-5.4-mini': { i:  1.25, o:  5.00 },
+  'gpt-5.4-nano': { i:  0.15, o:  0.60 },
   'gpt-5':        { i:  5.00, o: 20.00 },
   'gpt-5-mini':   { i:  0.15, o:  0.60 },
   'gpt-4.1':      { i:  2.00, o:  8.00 },
@@ -869,6 +876,8 @@ const PRICING = {
   'gemini-1.5-pro':                       { i: 1.25,  o: 5.00 },
   'gemini-1.5-flash':                     { i: 0.075, o: 0.30 },
   // Grok
+  'grok-4.20-0309-reasoning':          { i: 3.00,  o: 15.00 },
+  'grok-4.20-0309-non-reasoning':      { i: 3.00,  o: 15.00 },
   'grok-4.20-beta-0309':               { i: 3.00,  o: 15.00 },
   'grok-4.20-beta-0309-non-reasoning': { i: 3.00,  o: 15.00 },
   'grok-3':                            { i: 3.00,  o: 15.00 },
