@@ -26,10 +26,7 @@ const PRICING = {
   'claude-3-5-haiku-20241022':  { input:  0.80, output:  4.00 },
   'claude-3-opus-20240229':     { input: 15.00, output: 75.00 },
   // OpenAI GPT / o-series
-  'gpt-5.4-pro':                { input: 15.00, output: 60.00 },
   'gpt-5.4':                    { input:  7.00, output: 28.00 },
-  'gpt-5.4-mini':               { input:  1.25, output:  5.00 },
-  'gpt-5.4-nano':               { input:  0.15, output:  0.60 },
   'gpt-5':                      { input:  5.00, output: 20.00 },
   'gpt-4o':                     { input:  2.50, output: 10.00 },
   'gpt-4o-mini':                { input:  0.15, output:  0.60 },
