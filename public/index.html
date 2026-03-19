@@ -638,7 +638,6 @@
           <div class="key-item"><div class="key-dot" id="dot-openai"></div>OpenAI</div>
           <div class="key-item"><div class="key-dot" id="dot-google"></div>Gemini</div>
           <div class="key-item"><div class="key-dot" id="dot-xai"></div>Grok</div>
-          <div class="key-item"><div class="key-dot" id="dot-moonshot"></div>Kimi</div>
         </div>
       </div>
 
@@ -664,7 +663,6 @@
                 <option value="openai">OpenAI</option>
                 <option value="google">Gemini</option>
                 <option value="xai">Grok</option>
-                <option value="moonshot">Kimi</option>
               </select>
               <select id="intModel" onchange="updateEstimate()"></select>
             </div>
@@ -834,20 +832,6 @@ const PROVIDERS = {
     ],
     defaultModel: 'grok-4.20-beta-0309-non-reasoning',
   },
-  moonshot: {
-    label: 'Kimi',
-    icon: '🌙',
-    color: 'var(--kimi)',
-    dotColor: '#06b6d4',
-    models: [
-      { id: 'moonshot-v1-8k',   label: 'Moonshot 8K'    },
-      { id: 'moonshot-v1-32k',  label: 'Moonshot 32K'   },
-      { id: 'moonshot-v1-128k', label: 'Moonshot 128K'  },
-      { id: 'kimi-latest',      label: 'Kimi Latest'    },
-      { id: 'kimi-k2-5',        label: 'Kimi K2.5'      },
-    ],
-    defaultModel: 'moonshot-v1-8k',
-  },
 };
 
 // Pricing (USD / 1M tokens)
@@ -896,12 +880,6 @@ const PRICING = {
   'grok-3-mini':                       { i: 0.30,  o:  0.50 },
   'grok-2-1212':                       { i: 2.00,  o: 10.00 },
   'grok-beta':                         { i: 5.00,  o: 15.00 },
-  // Kimi (Moonshot) — prices approx. USD
-  'kimi-k2-5':        { i: 2.00, o: 8.00 },
-  'kimi-latest':      { i: 2.00, o: 6.00 },
-  'moonshot-v1-128k': { i: 8.00, o: 8.00 },
-  'moonshot-v1-32k':  { i: 2.40, o: 2.40 },
-  'moonshot-v1-8k':   { i: 0.80, o: 0.80 },
 };
 
 function calcCost(modelId, inTok, outTok) {
@@ -948,7 +926,7 @@ async function loadKeyStatus() {
   try {
     const r = await fetch('/api/config');
     const cfg = await r.json();
-    const map = { anthropic: 'dot-anthropic', openai: 'dot-openai', google: 'dot-google', xai: 'dot-xai', moonshot: 'dot-moonshot' };
+    const map = { anthropic: 'dot-anthropic', openai: 'dot-openai', google: 'dot-google', xai: 'dot-xai' };
     for (const [k, id] of Object.entries(map)) {
       const dot = document.getElementById(id);
       if (cfg[k]) { dot.classList.add('ok'); } else { dot.classList.add('err'); }
@@ -1416,8 +1394,6 @@ const MODEL_STRENGTHS = {
   openai: `Actúa como sintetizador maestro de perspectivas múltiples. Estructura tu respuesta en subsecciones claras con resumen ejecutivo inicial. Incluye ejemplos concretos y verificables, referencias comprobables, y diseña el formato para facilitar consolidación posterior. Equilibra profundidad con accesibilidad. Tu respuesta es la "versión base" que otros modelos mejorarán.`,
 
   xai: `Asume rol de crítico radical. Cuestiona directamente las premisas subyacentes de esta pregunta; ¿qué asumen erróneamente quienes la formulan? Presenta argumentos contraintuitivos o socialmente incómodos que sean defensibles. Incluye evidencia actualizada (2024-2025) que contradiga consensos. Sé directo sin rodeos diplomáticos.`,
-
-  moonshot: `Proporciona perspectiva de profundidad histórica y civilizacional. Desarrolla línea de tiempo relevante con hitos clave, analiza desde tradiciones de pensamiento no occidentales (china, india, islámica), e identifica dónde el framing occidental sesga la pregunta. Sugiere fuentes primarias clásicas. Ofrece visión verdaderamente universal, no eurocéntrica.`,
 
   google: `Actúa como integrador sistémico multidisciplinario. Mapea cómo esta pregunta conecta múltiples disciplinas (ciencia, tecnología, economía, ética, sistemas complejos). Proporciona visión actualizada a 2024-2025 e identifica escenarios probables con roadmap de evolución (hitos a 6/12/24 meses). Detecta patrones de segundo y tercer orden, efectos sistémicos no obvios.`,
 };
