@@ -612,15 +612,239 @@
       .main { height: 100%; }
       .mobile-toggle-btn { display: none; }
     }
+
+    /* ── Auth modal ──────────────────────────────────────────────────────────── */
+    .auth-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000;
+    }
+    .auth-overlay.hidden { display: none; }
+    .auth-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      width: 360px;
+      max-width: 95vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .auth-box h2 { font-size: 1.2rem; margin-bottom: 20px; text-align: center; }
+    .auth-box h2 span { color: var(--accent); }
+    .auth-tabs {
+      display: flex; gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .auth-tab {
+      flex: 1; padding: 8px; text-align: center;
+      background: var(--surface2); border: none;
+      color: var(--text-muted); font-size: .85rem; cursor: pointer;
+      transition: all .15s;
+    }
+    .auth-tab.active { background: var(--accent); color: #000; font-weight: 600; }
+    .auth-form { display: flex; flex-direction: column; gap: 12px; }
+    .auth-form input {
+      width: 100%; padding: 9px 12px; font-size: .9rem;
+      border-radius: var(--radius);
+    }
+    .auth-submit {
+      background: var(--accent); color: #000;
+      border: none; border-radius: var(--radius);
+      padding: 10px; font-weight: 700; font-size: .95rem;
+      cursor: pointer; transition: background .15s;
+    }
+    .auth-submit:hover { background: #79b8ff; }
+    .auth-error {
+      color: var(--danger); font-size: .8rem;
+      text-align: center; min-height: 18px;
+    }
+
+    /* ── User bar (header) ───────────────────────────────────────────────────── */
+    .user-bar {
+      display: flex; align-items: center; gap: 10px;
+      margin-left: auto;
+    }
+    .user-bar.hidden { display: none; }
+    .user-greeting { font-size: .82rem; color: var(--text-muted); }
+    .user-greeting strong { color: var(--text); }
+    .user-spend {
+      font-size: .78rem; font-family: monospace; font-weight: 700;
+      background: var(--accent-dim); color: var(--accent);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .user-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text-muted); border-radius: var(--radius);
+      padding: 4px 10px; font-size: .8rem; cursor: pointer;
+      transition: all .15s;
+    }
+    .user-btn:hover { background: var(--border); color: var(--text); }
+    .user-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── History panel ───────────────────────────────────────────────────────── */
+    .history-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 8000;
+      display: flex; justify-content: flex-end;
+    }
+    .history-overlay.hidden { display: none; }
+    .history-panel {
+      width: min(680px, 100vw);
+      height: 100%;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      box-shadow: -8px 0 30px rgba(0,0,0,.4);
+    }
+    .history-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .history-header h2 { font-size: 1rem; flex: 1; }
+    .history-body { flex: 1; overflow-y: auto; padding: 16px; }
+    .history-session {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .history-session-header {
+      padding: 10px 14px;
+      background: var(--surface2);
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer;
+    }
+    .history-session-header:hover { background: var(--border); }
+    .history-session-prompt {
+      flex: 1; font-size: .82rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .history-session-meta {
+      font-size: .72rem; color: var(--text-muted);
+      display: flex; gap: 10px; flex-shrink: 0;
+    }
+    .history-session-rows { display: none; }
+    .history-session-rows.open { display: block; }
+    .history-row {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      font-size: .8rem;
+    }
+    .history-row-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .history-row-model { font-weight: 600; flex: 1; }
+    .history-row-cost { font-family: monospace; color: var(--text-muted); }
+    .history-row-response {
+      color: var(--text-muted); font-size: .78rem; line-height: 1.5;
+      max-height: 120px; overflow: hidden; position: relative;
+    }
+    .history-row-response.expanded { max-height: none; }
+    .history-expand-btn {
+      background: none; border: none; color: var(--accent);
+      font-size: .75rem; cursor: pointer; padding: 4px 0;
+    }
+    .history-del-session {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: .85rem; padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .history-del-session:hover { color: var(--danger); background: rgba(248,81,73,.1); }
+    .history-empty { text-align: center; color: var(--text-muted); padding: 40px; font-size: .85rem; }
+
+    /* ── Web search toggle ───────────────────────────────────────────────────── */
+    .websearch-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .78rem; color: var(--text-muted);
+    }
+    .websearch-toggle {
+      width: 28px; height: 16px; border-radius: 8px;
+      background: var(--border); border: none; position: relative;
+      flex-shrink: 0; cursor: pointer; transition: background .2s;
+    }
+    .websearch-toggle::after {
+      content:''; position: absolute; width: 10px; height: 10px;
+      border-radius: 50%; background: #fff; top: 3px; left: 3px;
+      transition: transform .2s;
+    }
+    .websearch-toggle.on { background: var(--success); }
+    .websearch-toggle.on::after { transform: translateX(12px); }
+    .websearch-label { flex: 1; }
+    .websearch-note { font-size: .68rem; color: var(--text-muted); opacity: .7; }
+
+    /* ── Confidence / hallucination badges ───────────────────────────────────── */
+    .score-row {
+      display: flex; gap: 6px; align-items: center;
+      padding: 5px 12px;
+      border-top: 1px solid var(--border);
+      font-size: .72rem;
+      flex-wrap: wrap;
+    }
+    .score-badge {
+      display: flex; align-items: center; gap: 4px;
+      border-radius: 20px; padding: 2px 8px;
+      font-weight: 600; font-family: monospace;
+    }
+    .score-badge.confidence-high  { background: rgba(63,185,80,.15);  color: var(--success); }
+    .score-badge.confidence-med   { background: rgba(210,153,34,.15); color: var(--warn); }
+    .score-badge.confidence-low   { background: rgba(248,81,73,.15);  color: var(--danger); }
+    .score-badge.halluc-low       { background: rgba(63,185,80,.15);  color: var(--success); }
+    .score-badge.halluc-med       { background: rgba(210,153,34,.15); color: var(--warn); }
+    .score-badge.halluc-high      { background: rgba(248,81,73,.15);  color: var(--danger); }
+
+    /* ── Amplitude selector ──────────────────────────────────────────────────── */
+    .amplitude-select {
+      width: 100%; padding: 5px 8px; font-size: .82rem;
+      border-radius: var(--radius);
+    }
   </style>
 </head>
 <body>
+
+<!-- ── Auth modal ─────────────────────────────────────────────────────────── -->
+<div class="auth-overlay hidden" id="authOverlay">
+  <div class="auth-box">
+    <h2>JJ <span>Multi-LLM</span> Research</h2>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Registrarse</button>
+    </div>
+    <!-- Login form -->
+    <form class="auth-form" id="loginForm" onsubmit="submitLogin(event)">
+      <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email" />
+      <input type="password" id="loginPassword" placeholder="Contraseña" required autocomplete="current-password" />
+      <div class="auth-error" id="loginError"></div>
+      <button type="submit" class="auth-submit">Entrar</button>
+    </form>
+    <!-- Register form -->
+    <form class="auth-form" id="registerForm" style="display:none" onsubmit="submitRegister(event)">
+      <input type="text" id="regUsername" placeholder="Nombre de usuario" required autocomplete="username" />
+      <input type="email" id="regEmail" placeholder="Email" required autocomplete="email" />
+      <input type="password" id="regPassword" placeholder="Contraseña (mín. 6 caracteres)" required autocomplete="new-password" />
+      <div class="auth-error" id="registerError"></div>
+      <button type="submit" class="auth-submit">Crear cuenta</button>
+    </form>
+  </div>
+</div>
 
 <!-- ── Header ──────────────────────────────────────────────────────────────── -->
 <header class="app-header">
   <h1>JJ <span>Multi-LLM</span> Research</h1>
   <span class="header-badge" id="enabledBadge">0 modelos</span>
   <button class="btn-icon mobile-toggle-btn" id="mobileToggleBtn" onclick="toggleMobileSidebar()">⚙ Config</button>
+  <!-- User bar (shown after login) -->
+  <div class="user-bar hidden" id="userBar">
+    <span class="user-greeting">Hola, <strong id="userName"></strong></span>
+    <span class="user-spend" id="userSpend" title="Gasto acumulado">$0.0000</span>
+    <button class="user-btn" onclick="openHistory()">📋 Historial</button>
+    <button class="user-btn danger" onclick="logout()">Salir</button>
+  </div>
 </header>
 
 <!-- ── Layout ──────────────────────────────────────────────────────────────── -->
@@ -691,8 +915,13 @@
         </button>
         <div class="adv-body" id="advBody">
           <div class="field-row">
-            <label>Max tokens por modelo</label>
-            <input type="number" id="maxTokens" value="2048" min="256" max="16384" step="256" oninput="updateEstimate()" />
+            <label>Amplitud de respuesta</label>
+            <select class="amplitude-select" id="responseAmplitude" onchange="updateEstimate()">
+              <option value="concise">Concisa (~512 tok)</option>
+              <option value="normal" selected>Normal (~2048 tok)</option>
+              <option value="detailed">Detallada (~4096 tok)</option>
+              <option value="exhaustive">Exhaustiva (~8192 tok)</option>
+            </select>
           </div>
           <div class="field-row">
             <label>Max tokens integrador</label>
@@ -745,6 +974,19 @@
     </div>
 
   </main>
+</div>
+
+<!-- ── History panel ───────────────────────────────────────────────────────── -->
+<div class="history-overlay hidden" id="historyOverlay" onclick="closeHistory(event)">
+  <div class="history-panel" onclick="event.stopPropagation()">
+    <div class="history-header">
+      <h2>📋 Historial de búsquedas</h2>
+      <button class="user-btn" onclick="closeHistory()">✕ Cerrar</button>
+    </div>
+    <div class="history-body" id="historyBody">
+      <div class="history-empty">Cargando...</div>
+    </div>
+  </div>
 </div>
 
 <!-- Toast container -->
@@ -900,6 +1142,12 @@ function costClass(v) {
 // ── Copy text buffer (avoids HTML injection via onclick attributes) ───────────
 const _copyBuf = {};
 
+// ── Amplitude token map ───────────────────────────────────────────────────────
+const AMPLITUDE_TOKENS = { concise: 512, normal: 2048, detailed: 4096, exhaustive: 8192 };
+
+// Providers that support web search
+const WEB_SEARCH_PROVIDERS = new Set(['google', 'xai']);
+
 // ── State ────────────────────────────────────────────────────────────────────
 const state = {
   models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({
@@ -907,9 +1155,11 @@ const state = {
     modelId: cfg.defaultModel,
     enabled: true,
     customInstructions: '',
+    webSearch: false,
   })),
   attachments: [],   // { name, type, content (base64), size }
   isRunning: false,
+  currentUser: null,
 };
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
@@ -918,6 +1168,7 @@ async function init() {
   populateIntegratorDropdowns();
   await loadKeyStatus();
   updateEstimate();
+  await checkAuth();
 }
 
 async function loadKeyStatus() {
@@ -960,6 +1211,13 @@ function renderModelCards() {
           <span>Costo est.:</span>
           <span class="cost-val" id="mcost-${m.provider}">$0.0000</span>
         </div>
+        ${WEB_SEARCH_PROVIDERS.has(m.provider) ? `
+        <div class="websearch-row">
+          <button class="websearch-toggle ${m.webSearch ? 'on' : ''}" id="wsToggle-${m.provider}"
+            onclick="toggleWebSearch(${idx})" title="Activar búsqueda web en tiempo real"></button>
+          <span class="websearch-label">🌐 Búsqueda web</span>
+          <span class="websearch-note">${m.provider === 'google' ? 'Google Search' : 'Grok Live Search'}</span>
+        </div>` : ''}
         <button class="instr-toggle" id="instrToggle-${m.provider}"
           onclick="toggleInstrArea('${m.provider}')">
           <span class="arrow">▶</span> Instrucciones personalizadas
@@ -998,6 +1256,13 @@ function onModelChange(idx, newId) {
 function onInstrChange(idx, val) {
   state.models[idx].customInstructions = val;
   updateEstimate();
+}
+
+function toggleWebSearch(idx) {
+  state.models[idx].webSearch = !state.models[idx].webSearch;
+  const m = state.models[idx];
+  const btn = document.getElementById(`wsToggle-${m.provider}`);
+  if (btn) btn.className = `websearch-toggle ${m.webSearch ? 'on' : ''}`;
 }
 
 function toggleInstrArea(key) {
@@ -1047,10 +1312,15 @@ function toggleAdv() {
 }
 
 // ── Cost estimate ─────────────────────────────────────────────────────────────
+function getAmplitudeTokens() {
+  const amp = document.getElementById('responseAmplitude')?.value || 'normal';
+  return AMPLITUDE_TOKENS[amp] || 2048;
+}
+
 function updateEstimate() {
   const question = document.getElementById('questionInput').value;
   const qTok = Math.ceil(question.length / 4);
-  const estOut = parseInt(document.getElementById('maxTokens').value) || 2048;
+  const estOut = getAmplitudeTokens();
   const estIntOut = parseInt(document.getElementById('maxTokensInt').value) || 4096;
 
   let totalCost = 0;
@@ -1129,13 +1399,15 @@ async function runResearch() {
 
   // SSE stream
   try {
+    const amplitude = document.getElementById('responseAmplitude')?.value || 'normal';
     const body = {
       question,
       models: state.models,
       integrator: getIntegratorConfig(),
-      maxTokens: parseInt(document.getElementById('maxTokens').value) || 2048,
+      maxTokens: getAmplitudeTokens(),
       maxTokensIntegrator: parseInt(document.getElementById('maxTokensInt').value) || 4096,
       attachments: state.attachments,
+      amplitude,
     };
 
     const response = await fetch('/api/research', {
@@ -1246,6 +1518,12 @@ function handleSSEEvent(event, data) {
     case 'integrator:error':
       updateIntegratorCard('error', data);
       break;
+    case 'cost:update':
+      if (data.total_cost_usd !== undefined) {
+        state.currentUser && (state.currentUser.total_cost_usd = data.total_cost_usd);
+        updateUserSpend(data.total_cost_usd);
+      }
+      break;
   }
 }
 
@@ -1295,6 +1573,25 @@ function updateResultCard(modelId, status, data) {
       <span title="Duración">${dur}s</span>
       <span title="Costo" style="color:var(--${costClass(data.cost) === 'cheap' ? 'success' : costClass(data.cost) === 'medium' ? 'warn' : 'danger'})">${fmtCost(data.cost)}</span>`;
     _copyBuf[safeId] = data.text;
+
+    // Score badges
+    const score = analyzeResponseScore(data.text);
+    const card = document.getElementById(`rcard-${safeId}`);
+    const existingScore = card?.querySelector('.score-row');
+    if (existingScore) existingScore.remove();
+    const scoreRow = document.createElement('div');
+    scoreRow.className = 'score-row';
+    scoreRow.innerHTML = `
+      <span style="color:var(--text-muted)">Confianza:</span>
+      <span class="score-badge confidence-${score.confidenceClass}" title="Estimación basada en el texto">
+        ${score.confidence}%
+      </span>
+      <span style="color:var(--text-muted);margin-left:6px">Alucinación:</span>
+      <span class="score-badge halluc-${score.hallucClass}" title="Riesgo estimado de información incorrecta">
+        ${score.hallucLabel}
+      </span>`;
+    if (card) card.insertBefore(scoreRow, foot);
+
     foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copiar</button>`;
   } else if (status === 'error') {
     body.innerHTML = `<div class="result-error">⚠ ${data.error}</div>`;
@@ -1416,6 +1713,198 @@ function applyModelStrengths() {
   });
   updateEstimate();
   toast(`⚡ Fortalezas aplicadas a ${applied} modelos.`, 'success');
+}
+
+// ── Response scoring (heuristic, client-side) ─────────────────────────────────
+const HEDGE_WORDS = /\b(might|could|possibly|may|perhaps|uncertain|unclear|not sure|approximately|roughly|seems|appears|suggests|likely|probably|generally|typically|some|often|usually|sometimes|podría|quizás|puede que|aproximadamente|probablemente|generalmente|parece|sugiere|normalmente)\b/gi;
+const STRONG_WORDS = /\b(definitively|clearly|certainly|confirmed|research shows|studies confirm|it is|demonstrably|is proven|definitivamente|claramente|está demostrado|confirma|es sabido|se ha demostrado)\b/gi;
+const DISCLAIMER_WORDS = /\b(I don't know|I'm not sure|hallucination|may be incorrect|verify|fact.?check|no estoy seguro|no sé|podría ser incorrecto|verifica|comprueba)\b/gi;
+
+function analyzeResponseScore(text) {
+  if (!text) return { confidence: 50, confidenceClass: 'med', hallucLabel: 'Media', hallucClass: 'med' };
+  const words = text.split(/\s+/).length || 1;
+  const hedges = (text.match(HEDGE_WORDS) || []).length;
+  const strongs = (text.match(STRONG_WORDS) || []).length;
+  const disclaimers = (text.match(DISCLAIMER_WORDS) || []).length;
+
+  const hedgeRatio = hedges / words;
+  const strongBonus = Math.min(strongs / words, 0.02) * 500;
+  const raw = Math.max(20, Math.min(98, Math.round(85 - hedgeRatio * 800 + strongBonus - disclaimers * 10)));
+
+  let confidenceClass = raw >= 70 ? 'high' : raw >= 45 ? 'med' : 'low';
+  const hallucRisk = hedgeRatio * 1000 + disclaimers * 5;
+  const hallucClass = hallucRisk < 15 ? 'low' : hallucRisk < 40 ? 'med' : 'high';
+  const hallucLabel = hallucClass === 'low' ? 'Baja' : hallucClass === 'med' ? 'Media' : 'Alta';
+
+  return { confidence: raw, confidenceClass, hallucLabel, hallucClass };
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function checkAuth() {
+  try {
+    const r = await fetch('/api/auth/me');
+    if (r.ok) {
+      const { user } = await r.json();
+      onLoginSuccess(user);
+    } else {
+      document.getElementById('authOverlay').classList.remove('hidden');
+    }
+  } catch {
+    document.getElementById('authOverlay').classList.remove('hidden');
+  }
+}
+
+function onLoginSuccess(user) {
+  state.currentUser = user;
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('userBar').classList.remove('hidden');
+  document.getElementById('userName').textContent = user.username;
+  updateUserSpend(user.total_cost_usd || 0);
+}
+
+function updateUserSpend(cost) {
+  const el = document.getElementById('userSpend');
+  if (el) el.textContent = '$' + (cost || 0).toFixed(4);
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('loginForm').style.display   = tab === 'login' ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('registerError').textContent = '';
+}
+
+async function submitLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  document.getElementById('loginError').textContent = '';
+  const r = await fetch('/api/auth/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await r.json();
+  if (!r.ok) { document.getElementById('loginError').textContent = data.error; return; }
+  onLoginSuccess(data.user);
+}
+
+async function submitRegister(e) {
+  e.preventDefault();
+  const username = document.getElementById('regUsername').value;
+  const email    = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+  document.getElementById('registerError').textContent = '';
+  const r = await fetch('/api/auth/register', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password }),
+  });
+  const data = await r.json();
+  if (!r.ok) { document.getElementById('registerError').textContent = data.error; return; }
+  onLoginSuccess(data.user);
+}
+
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  state.currentUser = null;
+  document.getElementById('userBar').classList.add('hidden');
+  document.getElementById('authOverlay').classList.remove('hidden');
+}
+
+// ── History panel ─────────────────────────────────────────────────────────────
+function openHistory() {
+  document.getElementById('historyOverlay').classList.remove('hidden');
+  loadHistory();
+}
+
+function closeHistory(e) {
+  if (!e || e.target === document.getElementById('historyOverlay'))
+    document.getElementById('historyOverlay').classList.add('hidden');
+}
+
+async function loadHistory() {
+  const body = document.getElementById('historyBody');
+  body.innerHTML = '<div class="history-empty">Cargando...</div>';
+  try {
+    const r = await fetch('/api/history?limit=200');
+    if (!r.ok) { body.innerHTML = '<div class="history-empty">Error al cargar historial</div>'; return; }
+    const { rows, total } = await r.json();
+    renderHistory(rows, total);
+  } catch {
+    body.innerHTML = '<div class="history-empty">Error de conexión</div>';
+  }
+}
+
+function renderHistory(rows, total) {
+  const body = document.getElementById('historyBody');
+  if (!rows.length) { body.innerHTML = '<div class="history-empty">No hay búsquedas guardadas aún.</div>'; return; }
+
+  // Group by session_id
+  const sessions = {};
+  const sessionOrder = [];
+  for (const row of rows) {
+    if (!sessions[row.session_id]) { sessions[row.session_id] = []; sessionOrder.push(row.session_id); }
+    sessions[row.session_id].push(row);
+  }
+
+  const fmt = (d) => new Date(d).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+
+  body.innerHTML = `<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:12px">${total} entradas guardadas</div>`;
+  for (const sid of sessionOrder) {
+    const sRows = sessions[sid];
+    const first = sRows[0];
+    const totalCost = sRows.reduce((s, r) => s + r.cost_usd, 0);
+    const div = document.createElement('div');
+    div.className = 'history-session';
+
+    const rowsHtml = sRows.map(r => `
+      <div class="history-row">
+        <div class="history-row-header">
+          <span class="history-row-model">${r.is_integrator ? '🔮 Integrador' : PROVIDERS[r.provider]?.icon + ' ' + (r.model_label || r.model_id)}</span>
+          <span class="history-row-cost">${fmtCost(r.cost_usd)}</span>
+        </div>
+        <div class="history-row-response" id="hres-${r.id}">${r.response.slice(0, 300).replace(/</g,'&lt;')}${r.response.length > 300 ? '...' : ''}</div>
+        ${r.response.length > 300 ? `<button class="history-expand-btn" onclick="toggleHistoryRow(${r.id})">Ver más</button>` : ''}
+      </div>`).join('');
+
+    div.innerHTML = `
+      <div class="history-session-header" onclick="toggleSession(this)">
+        <span class="history-session-prompt">${first.prompt.slice(0, 80)}${first.prompt.length > 80 ? '...' : ''}</span>
+        <div class="history-session-meta">
+          <span>${sRows.length} modelos</span>
+          <span>${fmtCost(totalCost)}</span>
+          <span>${fmt(first.created_at)}</span>
+        </div>
+        <button class="history-del-session" title="Eliminar sesión" onclick="event.stopPropagation(); deleteSession('${sid}', this)">🗑</button>
+      </div>
+      <div class="history-session-rows">${rowsHtml}</div>`;
+    body.appendChild(div);
+  }
+}
+
+function toggleSession(header) {
+  const rows = header.nextElementSibling;
+  rows.classList.toggle('open');
+}
+
+function toggleHistoryRow(id) {
+  const el = document.getElementById(`hres-${id}`);
+  const btn = el?.nextElementSibling;
+  if (!el) return;
+  el.classList.toggle('expanded');
+  if (btn) btn.textContent = el.classList.contains('expanded') ? 'Ver menos' : 'Ver más';
+}
+
+async function deleteSession(sessionId, btn) {
+  if (!confirm('¿Eliminar toda esta sesión del historial?')) return;
+  const r = await fetch(`/api/history/session/${sessionId}`, { method: 'DELETE' });
+  if (r.ok) {
+    const data = await r.json();
+    updateUserSpend(data.total_cost_usd);
+    btn.closest('.history-session').remove();
+    toast('Sesión eliminada', 'success');
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
