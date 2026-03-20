@@ -1,14 +1,28 @@
 require('dotenv').config();
+const crypto  = require('crypto');
 const express = require('express');
-const path = require('path');
+const path    = require('path');
 const Anthropic = require('@anthropic-ai/sdk');
-const OpenAI = require('openai');
+const OpenAI  = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const pdfParse = require('pdf-parse');
+const bcrypt  = require('bcryptjs');
+const session = require('express-session');
+const connectSQLite3 = require('connect-sqlite3');
+const db      = require('./db');
+
+const SQLiteStore = connectSQLite3(session);
 
 const app = express();
 app.use(express.json({ limit: '25mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  store: new SQLiteStore({ db: 'sessions.db', dir: __dirname }),
+  cookie: { secure: false, maxAge: 30 * 24 * 60 * 60 * 1000 }, // 30 days
+}));
 
 // ─── Pricing (USD per 1M tokens: input / output) ────────────────────────────
 const PRICING = {
@@ -180,13 +194,14 @@ async function callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachm
   };
 }
 
-async function callGemini(modelId, systemPrompt, userMessage, attachments = []) {
+async function callGemini(modelId, systemPrompt, userMessage, attachments = [], webSearch = false) {
   if (!process.env.GOOGLE_API_KEY) throw new Error('GOOGLE_API_KEY not configured');
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
   const cleanId = modelId.startsWith('models/') ? modelId.slice(7) : modelId;
   const model = genAI.getGenerativeModel({
     model: cleanId,
     ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
+    ...(webSearch ? { tools: [{ googleSearch: {} }] } : {}),
   });
 
   // Build multimodal parts if attachments present
@@ -215,7 +230,7 @@ async function callGemini(modelId, systemPrompt, userMessage, attachments = []) 
   };
 }
 
-async function callGrok(modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
+async function callGrok(modelId, systemPrompt, userMessage, maxTokens, attachments = [], webSearch = false) {
   if (!process.env.XAI_API_KEY) throw new Error('XAI_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.XAI_API_KEY, baseURL: 'https://api.x.ai/v1' });
   const messages = [];
@@ -237,7 +252,9 @@ async function callGrok(modelId, systemPrompt, userMessage, maxTokens, attachmen
     messages.push({ role: 'user', content: userMessage });
   }
 
-  const r = await client.chat.completions.create({ model: modelId, messages, max_tokens: maxTokens });
+  const grokOpts = { model: modelId, messages, max_tokens: maxTokens };
+  if (webSearch) grokOpts.search_parameters = { mode: 'auto' };
+  const r = await client.chat.completions.create(grokOpts);
   return {
     text: r.choices[0].message.content,
     inputTokens:  r.usage.prompt_tokens,
@@ -277,12 +294,12 @@ async function callKimi(modelId, systemPrompt, userMessage, maxTokens, attachmen
 }
 
 // Dispatch to the right caller
-async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens, attachments = []) {
+async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens, attachments = [], webSearch = false) {
   switch (provider) {
     case 'anthropic': return callClaude(modelId, systemPrompt, userMessage, maxTokens, attachments);
     case 'openai':    return callOpenAI(modelId, systemPrompt, userMessage, maxTokens, attachments);
-    case 'google':    return callGemini(modelId, systemPrompt, userMessage, attachments);
-    case 'xai':       return callGrok(modelId, systemPrompt, userMessage, maxTokens, attachments);
+    case 'google':    return callGemini(modelId, systemPrompt, userMessage, attachments, webSearch);
+    case 'xai':       return callGrok(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch);
     case 'moonshot':  return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments);
     default: throw new Error(`Unknown provider: ${provider}`);
   }
@@ -297,6 +314,88 @@ function withTimeout(promise, ms, label) {
     ),
   ]);
 }
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+app.post('/api/auth/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password)
+    return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  if (password.length < 6)
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const result = db.prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)')
+                     .run(username.trim(), email.trim().toLowerCase(), hash);
+    const user = db.prepare('SELECT id, username, email, total_cost_usd FROM users WHERE id = ?')
+                   .get(result.lastInsertRowid);
+    req.session.userId = user.id;
+    res.json({ user });
+  } catch (err) {
+    if (err.message.includes('UNIQUE')) {
+      const field = err.message.includes('username') ? 'nombre de usuario' : 'email';
+      return res.status(409).json({ error: `El ${field} ya está en uso` });
+    }
+    res.status(500).json({ error: 'Error al crear el usuario' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Faltan campos' });
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.trim().toLowerCase());
+  if (!user || !(await bcrypt.compare(password, user.password_hash)))
+    return res.status(401).json({ error: 'Email o contraseña incorrectos' });
+  req.session.userId = user.id;
+  res.json({ user: { id: user.id, username: user.username, email: user.email, total_cost_usd: user.total_cost_usd } });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }));
+});
+
+app.get('/api/auth/me', (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const user = db.prepare('SELECT id, username, email, total_cost_usd FROM users WHERE id = ?')
+                 .get(req.session.userId);
+  if (!user) return res.status(401).json({ error: 'User not found' });
+  res.json({ user });
+});
+
+// ─── History ──────────────────────────────────────────────────────────────────
+app.get('/api/history', (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const limit  = Math.min(parseInt(req.query.limit)  || 100, 500);
+  const offset = parseInt(req.query.offset) || 0;
+  const rows  = db.prepare(`
+    SELECT id, session_id, created_at, provider, model_id, model_label,
+           prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator
+    FROM history WHERE user_id = ?
+    ORDER BY created_at DESC LIMIT ? OFFSET ?
+  `).all(req.session.userId, limit, offset);
+  const total = db.prepare('SELECT COUNT(*) AS n FROM history WHERE user_id = ?')
+                  .get(req.session.userId).n;
+  res.json({ rows, total, limit, offset });
+});
+
+app.delete('/api/history/session/:sessionId', (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  db.prepare('DELETE FROM history WHERE session_id = ? AND user_id = ?')
+    .run(req.params.sessionId, req.session.userId);
+  // Recalculate total cost
+  const total = db.prepare('SELECT COALESCE(SUM(cost_usd),0) AS t FROM history WHERE user_id = ?')
+                  .get(req.session.userId).t;
+  db.prepare('UPDATE users SET total_cost_usd = ? WHERE id = ?').run(total, req.session.userId);
+  res.json({ ok: true, total_cost_usd: total });
+});
+
+app.delete('/api/history/:id', (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  db.prepare('DELETE FROM history WHERE id = ? AND user_id = ?').run(req.params.id, req.session.userId);
+  const total = db.prepare('SELECT COALESCE(SUM(cost_usd),0) AS t FROM history WHERE user_id = ?')
+                  .get(req.session.userId).t;
+  db.prepare('UPDATE users SET total_cost_usd = ? WHERE id = ?').run(total, req.session.userId);
+  res.json({ ok: true, total_cost_usd: total });
+});
 
 // ─── API: which keys are configured ─────────────────────────────────────────
 app.get('/api/config', (_req, res) => {
@@ -354,9 +453,18 @@ app.post('/api/estimate', (req, res) => {
 // Diversity note appended to every research model's user message
 const DIVERSITY_NOTE = '\n\n---\nEsta respuesta se consolidará con otras 4 de modelos diferentes. Aporta perspectiva única/novedosa.';
 
+const AMPLITUDE_INSTRUCTIONS = {
+  concise:   'Respuesta MUY CONCISA. Máximo 2-3 párrafos. Sin listas largas.',
+  normal:    '',
+  detailed:  'Proporciona una respuesta detallada y bien estructurada con ejemplos.',
+  exhaustive:'Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad.',
+};
+
 // ─── API: run research (SSE stream) ──────────────────────────────────────────
 app.post('/api/research', async (req, res) => {
-  const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096, attachments = [] } = req.body;
+  const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096, attachments = [], amplitude = 'normal' } = req.body;
+  const userId = req.session.userId || null;
+  const sessionId = crypto.randomUUID();
 
   res.writeHead(200, {
     'Content-Type':  'text/event-stream',
@@ -397,18 +505,22 @@ app.post('/api/research', async (req, res) => {
   const enabledModels = models.filter(m => m.enabled);
   const results = [];
 
+  const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[amplitude] || '';
+
   // ── Run all models in parallel ──
   await Promise.allSettled(
     enabledModels.map(async (m) => {
       send('model:start', { modelId: m.modelId, provider: m.provider });
       const t0 = Date.now();
       try {
+        const sysInstr = [m.customInstructions, amplitudeInstr].filter(Boolean).join('\n\n');
         const r = await withTimeout(
-          callModel(m.provider, m.modelId, m.customInstructions || null, question + DIVERSITY_NOTE, maxTokens, processedAttachments),
+          callModel(m.provider, m.modelId, sysInstr || null, question + DIVERSITY_NOTE, maxTokens, processedAttachments, !!m.webSearch),
           90_000,
           m.modelId
         );
         const cost = calcCost(m.modelId, r.inputTokens, r.outputTokens);
+        const durationMs = Date.now() - t0;
         const payload = {
           modelId: m.modelId,
           provider: m.provider,
@@ -416,10 +528,18 @@ app.post('/api/research', async (req, res) => {
           inputTokens:  r.inputTokens,
           outputTokens: r.outputTokens,
           cost,
-          durationMs: Date.now() - t0,
+          durationMs,
         };
         results.push(payload);
         send('model:done', payload);
+
+        // Save to history
+        if (userId) {
+          db.prepare(`INSERT INTO history
+            (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+            .run(userId, sessionId, m.provider, m.modelId, question, r.text, r.inputTokens, r.outputTokens, cost, durationMs);
+        }
       } catch (err) {
         send('model:error', { modelId: m.modelId, provider: m.provider, error: err.message });
       }
@@ -463,13 +583,27 @@ app.post('/api/research', async (req, res) => {
         'integrator'
       );
       const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens);
+      const durationMs = Date.now() - t0;
       send('integrator:done', {
         text: r.text,
         inputTokens:  r.inputTokens,
         outputTokens: r.outputTokens,
         cost,
-        durationMs: Date.now() - t0,
+        durationMs,
       });
+
+      // Save integrator to history + update user total cost
+      if (userId) {
+        db.prepare(`INSERT INTO history
+          (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
+          .run(userId, sessionId, integrator.provider, integrator.modelId, question, r.text, r.inputTokens, r.outputTokens, cost, durationMs);
+
+        // Update user total_cost_usd
+        const allCosts = results.reduce((s, x) => s + x.cost, 0) + cost;
+        db.prepare('UPDATE users SET total_cost_usd = total_cost_usd + ? WHERE id = ?').run(allCosts, userId);
+        send('cost:update', { total_cost_usd: db.prepare('SELECT total_cost_usd FROM users WHERE id = ?').get(userId).total_cost_usd });
+      }
     } catch (err) {
       send('integrator:error', { error: err.message });
     }
