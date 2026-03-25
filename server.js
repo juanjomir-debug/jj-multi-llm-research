@@ -951,8 +951,9 @@ app.post('/api/research', async (req, res) => {
   // ── Run all models in parallel with streaming (improvement #1) ──
   await Promise.allSettled(
     enabledModels.map(async (m) => {
-      // Check cache (improvement #10)
-      const cached = getCached(m.modelId, question, amplitude);
+      // Check cache — skip when attachments present (they change the context)
+      const cached = processedAttachments.length === 0 && conversationHistory.length === 0
+        ? getCached(m.modelId, question, amplitude) : null;
       if (cached) {
         send('model:start', { modelId: m.modelId, provider: m.provider });
         results.push({ ...cached, cached: true });

@@ -2297,6 +2297,14 @@ async function recoverSession(sid) {
   // Set lastSessionId so "Add to project" works on recovered sessions
   state.lastSessionId = sid;
   state.lastResults = nonIntRows.map(r => ({ modelId: r.model_id, provider: r.provider, text: r.response, cost: r.cost_usd }));
+
+  // Rebuild conversation history so follow-up messages have proper context
+  state.conversationHistory = [];
+  const prompt0 = sRows[0].prompt;
+  state.conversationHistory.push({ role: 'user', content: prompt0 });
+  const combined0 = nonIntRows.map(r => r.response).filter(Boolean).join('\n\n---\n\n');
+  if (combined0) state.conversationHistory.push({ role: 'assistant', content: combined0 });
+
   updateConvIndicator();
 
   toast('Session restored', 'success');
