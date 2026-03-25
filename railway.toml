@@ -5,8 +5,8 @@ builder = "nixpacks"
 startCommand = "node server.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-healthcheckPath = "/api/auth/me"
-healthcheckTimeout = 10
+healthcheckPath = "/api/config"
+healthcheckTimeout = 60
 
 [[services]]
 name = "jj-multi-llm"

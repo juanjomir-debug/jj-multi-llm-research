@@ -1,9 +1,14 @@
 // db.js — SQLite database setup (users + history)
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const DB_DIR  = process.env.DB_PATH ? require('path').dirname(process.env.DB_PATH) : __dirname;
+const DB_DIR  = process.env.DB_PATH ? path.dirname(process.env.DB_PATH) : __dirname;
 const DB_FILE = process.env.DB_PATH || path.join(__dirname, 'data.db');
+
+// Ensure directory exists (important for Railway volumes)
+fs.mkdirSync(DB_DIR, { recursive: true });
+
 const db = new Database(DB_FILE);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
