@@ -19,6 +19,9 @@ const SQLiteStore = connectSQLite3(session);
 
 const app = express();
 
+// ── Trust proxy (required for Railway / any reverse proxy) ────────────────────
+app.set('trust proxy', 1);
+
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: false, // disabled because inline scripts are used
@@ -26,8 +29,8 @@ app.use(helmet({
 }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'Too many attempts, try again later.' } });
-const apiLimiter  = rateLimit({ windowMs: 60 * 1000, max: 60,  message: { error: 'Rate limit exceeded.' } });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many attempts, try again later.' } });
+const apiLimiter  = rateLimit({ windowMs: 60 * 1000, max: 60,  standardHeaders: true, legacyHeaders: false, message: { error: 'Rate limit exceeded.' } });
 
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
