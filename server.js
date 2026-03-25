@@ -698,6 +698,9 @@ app.get('/api/votes/stats', (req, res) => {
   res.json({ stats });
 });
 
+// ─── Health check (public, no auth required) ─────────────────────────────────
+app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
 // ─── Config ──────────────────────────────────────────────────────────────────
 app.get('/api/config', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
