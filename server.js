@@ -1451,6 +1451,68 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), asyn
   res.sendStatus(200);
 });
 
+// ─── DB Migration import (temporary, protected by token) ─────────────────────
+const MIGRATE_TOKEN = 'mig_7x9kQpL2wNzR4vT8sY1uJ3bX';
+app.post('/api/migrate-import', express.json({ limit: '50mb' }), (req, res) => {
+  if (req.headers['x-migrate-token'] !== MIGRATE_TOKEN) return res.status(403).json({ error: 'forbidden' });
+  const { users: srcUsers = [], history: srcHistory = [], debate_responses: srcDebate = [],
+          debate_votes: srcVotes = [], projects: srcProjects = [], project_sessions: srcPS = [] } = req.body;
+  let inserted = { users: 0, history: 0, debate_responses: 0, debate_votes: 0, projects: 0, project_sessions: 0 };
+  const userIdMap = {}; // srcId -> destId
+
+  // Users
+  for (const u of srcUsers) {
+    const existing = db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(u.username, u.email);
+    if (existing) { userIdMap[u.id] = existing.id; continue; }
+    const r = db.prepare(`INSERT OR IGNORE INTO users (username, email, password_hash, plan, total_cost_usd, monthly_cost_usd, billing_period_start)
+      VALUES (?,?,?,?,?,?,?)`).run(u.username, u.email, u.password_hash, u.plan||'free', u.total_cost_usd||0, u.monthly_cost_usd||0, u.billing_period_start||null);
+    userIdMap[u.id] = r.lastInsertRowid || u.id;
+    if (r.changes) inserted.users++;
+  }
+
+  // History
+  for (const h of srcHistory) {
+    const newUserId = userIdMap[h.user_id] || h.user_id;
+    try {
+      db.prepare(`INSERT OR IGNORE INTO history (user_id,session_id,created_at,provider,model_id,model_label,prompt,response,input_tokens,output_tokens,cost_usd,duration_ms,is_integrator)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(newUserId,h.session_id,h.created_at,h.provider,h.model_id,h.model_label,h.prompt,h.response,h.input_tokens||0,h.output_tokens||0,h.cost_usd||0,h.duration_ms||0,h.is_integrator||0);
+      inserted.history++;
+    } catch(e) {}
+  }
+
+  // Debate responses
+  for (const d of srcDebate) {
+    const newUserId = userIdMap[d.user_id] || d.user_id;
+    try {
+      db.prepare(`INSERT OR IGNORE INTO debate_responses (user_id,session_id,round,model_id,provider,response,cost_usd,created_at)
+        VALUES (?,?,?,?,?,?,?,?)`).run(newUserId,d.session_id,d.round||0,d.model_id,d.provider,d.response,d.cost_usd||0,d.created_at);
+      inserted.debate_responses++;
+    } catch(e) {}
+  }
+
+  // Debate votes
+  for (const v of srcVotes) {
+    const newUserId = userIdMap[v.user_id] || v.user_id;
+    try {
+      db.prepare(`INSERT OR IGNORE INTO debate_votes (user_id,session_id,voter_model_id,voter_provider,voted_for_model_id,created_at)
+        VALUES (?,?,?,?,?,?)`).run(newUserId,v.session_id,v.voter_model_id,v.voter_provider,v.voted_for_model_id,v.created_at);
+      inserted.debate_votes++;
+    } catch(e) {}
+  }
+
+  // Projects
+  for (const p of srcProjects) {
+    const newUserId = userIdMap[p.user_id] || p.user_id;
+    try {
+      db.prepare(`INSERT OR IGNORE INTO projects (user_id,name,instructions,color,created_at,updated_at)
+        VALUES (?,?,?,?,?,?)`).run(newUserId,p.name,p.instructions||'',p.color||'#58a6ff',p.created_at,p.updated_at);
+      inserted.projects++;
+    } catch(e) {}
+  }
+
+  res.json({ ok: true, inserted, userIdMap });
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => { console.log(`\n  JJ Multi-LLM Research  →  http://localhost:${PORT}\n`); });
