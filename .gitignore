@@ -7,3 +7,6 @@ data.db
 sessions.db
 data.db*
 sessions.db*
+github-deploy.js
+railway-deploy.js
+probe-upload.js

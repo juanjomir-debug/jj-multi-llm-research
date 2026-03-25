@@ -14,7 +14,7 @@ const helmet        = require('helmet');
 const Stripe        = require('stripe');
 const db            = require('./db');
 
-const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const SQLiteStore = connectSQLite3(session);
 
 const app = express();
