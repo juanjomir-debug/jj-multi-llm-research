@@ -169,6 +169,46 @@ async function extractPdfText(base64) {
   return text.trim();
 }
 
+// ─── Universal attachment processor ──────────────────────────────────────────
+// Adds .textContent to any attachment the models can't natively read as binary
+const TEXT_MIME_PREFIXES = ['text/'];
+const TEXT_MIME_EXACT = new Set([
+  'application/json','application/javascript','application/typescript',
+  'application/xml','application/csv','application/x-yaml','application/yaml',
+  'application/x-sh','application/x-python','application/graphql',
+  'application/ld+json','application/x-ndjson',
+]);
+const TEXT_EXTENSIONS = new Set([
+  'txt','md','markdown','csv','tsv','json','jsonl','xml','yaml','yml',
+  'js','ts','jsx','tsx','py','rb','go','java','cs','cpp','c','h','php',
+  'html','htm','css','sql','sh','bash','zsh','env','ini','toml','conf',
+  'log','rst','tex','r','swift','kt','rs','dart','vue','svelte',
+]);
+
+async function processAttachments(attachments = []) {
+  return Promise.all(attachments.map(async (att) => {
+    if (att.textContent) return att; // already processed
+    if (att.type === 'application/pdf') {
+      try { return { ...att, textContent: await extractPdfText(att.content) }; }
+      catch { return { ...att, textContent: `[Error al extraer texto de ${att.name}]` }; }
+    }
+    if (att.type.startsWith('image/')) return att; // handled natively by vision APIs
+    // Text-based files: decode base64 → UTF-8
+    const ext = (att.name || '').split('.').pop().toLowerCase();
+    const isText = TEXT_MIME_PREFIXES.some(p => att.type.startsWith(p))
+                || TEXT_MIME_EXACT.has(att.type)
+                || TEXT_EXTENSIONS.has(ext);
+    if (isText) {
+      try {
+        const textContent = Buffer.from(att.content, 'base64').toString('utf-8');
+        return { ...att, textContent };
+      } catch { return att; }
+    }
+    // Unknown binary — add a note so the model knows a file was attached
+    return { ...att, textContent: `[Archivo binario adjunto: ${att.name} (${att.type}) — contenido no legible como texto]` };
+  }));
+}
+
 // ─── Response cache (improvement #10) ─────────────────────────────────────────
 const responseCache = new Map();
 const CACHE_TTL = 30 * 60 * 1000; // 30 min
@@ -549,17 +589,9 @@ app.post('/api/plan-research', async (req, res) => {
   const send = (event, data) => { res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
 
   try {
-    // Process attachments (PDF text extraction)
+    // Process attachments
     let processedAttachments = [];
-    if (attachments.length > 0) {
-      processedAttachments = await Promise.all(attachments.map(async att => {
-        if (att.type === 'application/pdf') {
-          try { const textContent = await extractPdfText(att.content); return { ...att, textContent }; }
-          catch { return { ...att, textContent: `[Error al extraer texto de ${att.name}]` }; }
-        }
-        return att;
-      }));
-    }
+    try { processedAttachments = await processAttachments(attachments); } catch {}
 
     const ampTokens = { concise: 1024, normal: 2048, detailed: 4096, exhaustive: 8192 }[amplitude] || 2048;
 
@@ -760,12 +792,7 @@ app.post('/api/retry', async (req, res) => {
   const send = (event, data) => { if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
 
   let processedAttachments = [];
-  try {
-    processedAttachments = await Promise.all((attachments || []).map(async (att) => {
-      if (att.type === 'application/pdf') { try { return { ...att, textContent: await extractPdfText(att.content) }; } catch { return { ...att, textContent: `[Error]` }; } }
-      return att;
-    }));
-  } catch {}
+  try { processedAttachments = await processAttachments(attachments || []); } catch {}
 
   const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[amplitude] || '';
   const sysInstr = [customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
@@ -799,10 +826,7 @@ app.post('/api/integrate', async (req, res) => {
   const sessionId = req.body.sessionId || crypto.randomUUID();
 
   let processedAttachments = [];
-  try { processedAttachments = await Promise.all((attachments || []).map(async att => {
-    if (att.type === 'application/pdf') { try { return { ...att, textContent: await extractPdfText(att.content) }; } catch { return att; } }
-    return att;
-  })); } catch {}
+  try { processedAttachments = await processAttachments(attachments || []); } catch {}
 
   send('integrator:start', { modelId: integrator.modelId, provider: integrator.provider });
 
@@ -941,12 +965,7 @@ app.post('/api/research', async (req, res) => {
 
   // Process attachments
   let processedAttachments = [];
-  try {
-    processedAttachments = await Promise.all(attachments.map(async (att) => {
-      if (att.type === 'application/pdf') { try { const textContent = await extractPdfText(att.content); return { ...att, textContent }; } catch { return { ...att, textContent: `[Error al extraer texto de ${att.name}]` }; } }
-      return att;
-    }));
-  } catch { processedAttachments = []; }
+  try { processedAttachments = await processAttachments(attachments); } catch { processedAttachments = []; }
 
   const enabledModels = models.filter(m => m.enabled);
   const results = [];
