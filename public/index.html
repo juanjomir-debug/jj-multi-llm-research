@@ -248,6 +248,32 @@
     .integrator-result-footer { padding: 8px 14px; border-top: 1px solid rgba(167,139,250,.2); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .integrator-result-footer .tval { font-family: monospace; font-weight: 600; font-size: .8rem; }
 
+    /* ── Reliability Index ──────────────────────────────────────────────────── */
+    .reliability-index { border-top: 1px solid rgba(167,139,250,.25); padding: 14px 16px; background: rgba(167,139,250,.04); }
+    .reliability-index h4 { font-size: .8rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--grok); margin-bottom: 12px; }
+    .ri-global { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding: 10px 14px; background: rgba(167,139,250,.1); border-radius: 8px; border: 1px solid rgba(167,139,250,.25); }
+    .ri-global-label { font-size: .8rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+    .ri-global-score { font-size: 1.6rem; font-weight: 900; min-width: 56px; }
+    .ri-global-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .ri-global-bar-fill { height: 100%; border-radius: 4px; transition: width .6s; }
+    .ri-section { margin-bottom: 12px; }
+    .ri-section-title { font-size: .75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .ri-section-title .ri-sect-score { font-size: .82rem; font-weight: 800; margin-left: auto; }
+    .ri-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: .78rem; }
+    .ri-row-label { min-width: 70px; color: var(--text-muted); }
+    .ri-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .ri-bar-fill { height: 100%; border-radius: 3px; transition: width .5s; }
+    .ri-row-val { min-width: 34px; text-align: right; font-family: monospace; font-size: .75rem; }
+    .ri-table { width: 100%; border-collapse: collapse; font-size: .75rem; margin-top: 4px; }
+    .ri-table th { color: var(--text-muted); font-weight: 600; padding: 3px 8px; text-align: center; border-bottom: 1px solid var(--border); }
+    .ri-table th:first-child { text-align: left; }
+    .ri-table td { padding: 4px 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .ri-table td:first-child { text-align: left; color: var(--text-muted); }
+    .ri-pill { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: .7rem; font-weight: 700; }
+    .ri-pill.high { background: rgba(63,185,80,.15); color: var(--success); }
+    .ri-pill.med  { background: rgba(210,153,34,.15); color: var(--warn); }
+    .ri-pill.low  { background: rgba(248,81,73,.15);  color: var(--danger); }
+
     .md-content h1 { font-size: 1.15rem; margin: 14px 0 8px; } .md-content h2 { font-size: 1rem; margin: 12px 0 6px; }
     .md-content h3 { font-size: .9rem; margin: 10px 0 5px; color: var(--accent); } .md-content p { margin-bottom: 8px; }
     .md-content ul, .md-content ol { margin: 6px 0 8px 18px; } .md-content li { margin-bottom: 3px; }
@@ -1820,6 +1846,103 @@ function buildIntegratorCard(status) {
   return div;
 }
 
+function renderReliabilityIndex() {
+  const card = document.getElementById('intResultCard'); if (!card) return;
+  const existing = card.querySelector('.reliability-index'); if (existing) existing.remove();
+
+  const provName = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi' };
+  const models = Object.keys(_resultData);
+  if (!models.length) return;
+
+  // ── 1. CONSENSO ENTRE MODELOS ───────────────────────────────────────────────
+  const consensusScores = models.map(id => ({ id, score: _consensusScores[id] ?? null }));
+  const validConsensus  = consensusScores.filter(m => m.score !== null);
+  const avgConsensus    = validConsensus.length
+    ? Math.round(validConsensus.reduce((s, m) => s + m.score, 0) / validConsensus.length)
+    : null;
+
+  // ── 2. AUTOEVALUACIÓN DE LOS MODELOS ───────────────────────────────────────
+  const selfData = models.map(id => {
+    const { selfScore, text } = _resultData[id] || {};
+    const heuristic = analyzeResponseScore(text || '');
+    return {
+      id,
+      label: provName[id.split('-')[0]] || id,
+      conf: selfScore?.confidence ?? heuristic.confidence,
+      evidenceQuality:  selfScore?.breakdown?.evidenceQuality  ?? null,
+      sourceReliability:selfScore?.breakdown?.sourceReliability?? null,
+      bdConsensus:      selfScore?.breakdown?.consensus        ?? null,
+      hallucClass: computeFinalScore(id, selfScore, text || '').hallucClass,
+    };
+  });
+  const avgSelf = Math.round(selfData.reduce((s, m) => s + m.conf, 0) / selfData.length);
+
+  // ── ÍNDICE GLOBAL (consensus 45% + self 55% si hay consensus, else 100% self) ──
+  const globalScore = avgConsensus !== null
+    ? Math.max(10, Math.min(97, Math.round(avgConsensus * 0.45 + avgSelf * 0.55)))
+    : Math.max(10, Math.min(97, avgSelf));
+  const gColor = globalScore >= 70 ? 'var(--success)' : globalScore >= 45 ? 'var(--warn)' : 'var(--danger)';
+
+  // ── RENDER ──────────────────────────────────────────────────────────────────
+  function bar(val, color) {
+    return `<div class="ri-bar"><div class="ri-bar-fill" style="width:${val}%;background:${color}"></div></div>`;
+  }
+  function rowColor(v) { return v >= 70 ? 'var(--success)' : v >= 45 ? 'var(--warn)' : 'var(--danger)'; }
+
+  // Consensus rows
+  let consensusRows = '';
+  if (validConsensus.length) {
+    consensusRows = validConsensus.map(m => {
+      const c = rowColor(m.score); const lbl = provName[m.id.split('-')[0]] || m.id;
+      return `<div class="ri-row"><span class="ri-row-label">${lbl}</span>${bar(m.score, c)}<span class="ri-row-val" style="color:${c}">${m.score}%</span></div>`;
+    }).join('');
+  } else {
+    consensusRows = `<div style="font-size:.74rem;color:var(--text-muted)">Requiere 2+ modelos activos</div>`;
+  }
+
+  // Self-eval table
+  const hasBreakdown = selfData.some(m => m.evidenceQuality !== null);
+  let selfTable = `<table class="ri-table"><thead><tr>
+    <th>Modelo</th><th>Confianza</th>
+    ${hasBreakdown ? '<th>Evidencia</th><th>Fuentes</th><th>Consenso</th>' : ''}
+    <th>Alucinac.</th></tr></thead><tbody>`;
+  selfData.forEach(m => {
+    const hClass = m.hallucClass === 'low' ? 'high' : m.hallucClass === 'med' ? 'med' : 'low';
+    const hLabel = m.hallucClass === 'low' ? 'Baja' : m.hallucClass === 'med' ? 'Media' : 'Alta';
+    const cell = v => v !== null ? `<span style="color:${rowColor(v)};font-weight:700">${v}%</span>` : `<span style="color:var(--text-muted)">—</span>`;
+    selfTable += `<tr><td>${m.label}</td><td>${cell(m.conf)}</td>
+      ${hasBreakdown ? `<td>${cell(m.evidenceQuality)}</td><td>${cell(m.sourceReliability)}</td><td>${cell(m.bdConsensus)}</td>` : ''}
+      <td><span class="ri-pill ${hClass}">${hLabel}</span></td></tr>`;
+  });
+  selfTable += '</tbody></table>';
+
+  const html = `
+    <div class="reliability-index">
+      <h4>Índice Multidimensional de Confiabilidad</h4>
+      <div class="ri-global">
+        <span class="ri-global-label">ÍNDICE GLOBAL</span>
+        <span class="ri-global-score" style="color:${gColor}">${globalScore}%</span>
+        <div class="ri-global-bar"><div class="ri-global-bar-fill" style="width:${globalScore}%;background:${gColor}"></div></div>
+      </div>
+      <div class="ri-section">
+        <div class="ri-section-title">
+          1 · Consenso entre modelos
+          ${avgConsensus !== null ? `<span class="ri-sect-score" style="color:${rowColor(avgConsensus)}">${avgConsensus}%</span>` : ''}
+        </div>
+        ${consensusRows}
+      </div>
+      <div class="ri-section">
+        <div class="ri-section-title">
+          2 · Autoevaluación de los modelos
+          <span class="ri-sect-score" style="color:${rowColor(avgSelf)}">${avgSelf}%</span>
+        </div>
+        ${selfTable}
+      </div>
+    </div>`;
+
+  card.insertAdjacentHTML('beforeend', html);
+}
+
 function updateIntegratorCard(status, data) {
   const body = document.getElementById('intBody'), meta = document.getElementById('intMeta'), foot = document.getElementById('intFoot');
   if (!body) return;
@@ -1830,9 +1953,7 @@ function updateIntegratorCard(status, data) {
     meta.innerHTML = `<span class="duration-badge ${durationClass(data.durationMs || 0)}">${dur}</span> ${data.inputTokens}&#8593; ${data.outputTokens}&#8595; &nbsp;${fmtCost(data.cost)}`;
     _copyBuf['integrator'] = data.text;
     foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copy synthesis</button>`;
-    const score = analyzeResponseScore(data.text);
-    const badges = document.getElementById('intScoreBadges');
-    if (badges) badges.innerHTML = `<span class="score-badge confidence-${score.confidenceClass}">Conf ${score.confidence}%</span><span class="score-badge halluc-${score.hallucClass}">Halluc ${score.hallucLabel}</span>`;
+    renderReliabilityIndex();
   } else if (status === 'error') { body.innerHTML = `<div class="result-error">&#9888; Error: ${data.error}</div>`; }
 }
 
