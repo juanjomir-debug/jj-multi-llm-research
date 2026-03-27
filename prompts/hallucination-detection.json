@@ -1,0 +1,55 @@
+{
+  "_descripcion": {
+    "hedge_words":      "Palabras de cobertura/duda. Aumentan el riesgo de alucinación.",
+    "strong_words":     "Palabras de certeza verificada. Reducen el riesgo de alucinación.",
+    "disclaimer_words": "Frases de descargo explícito. Penalizan fuertemente el score.",
+    "formula": {
+      "base":               "Puntuación base antes de aplicar penalizaciones (0-100)",
+      "hedge_penalty":      "Multiplicador del ratio hedges/palabras (base - hedge_ratio * hedge_penalty)",
+      "strong_bonus":       "Bonus máximo por palabras fuertes (capped at strong_cap_ratio)",
+      "strong_cap_ratio":   "Ratio máximo de palabras fuertes que se bonifica",
+      "disclaimer_penalty": "Penalización por cada disclaimer encontrado",
+      "risk_hedge_mult":    "Multiplicador del ratio hedges para calcular hallucRisk",
+      "risk_disc_mult":     "Multiplicador por disclaimer para calcular hallucRisk",
+      "threshold_low":      "hallucRisk por debajo de este valor → alucinación BAJA",
+      "threshold_med":      "hallucRisk por debajo de este valor → alucinación MEDIA (encima = ALTA)"
+    }
+  },
+
+  "hedge_words": [
+    "might", "could", "possibly", "may", "perhaps", "uncertain", "unclear",
+    "not sure", "approximately", "roughly", "seems", "appears", "suggests",
+    "likely", "probably", "generally", "typically", "sometimes",
+    "podría", "quizás", "puede que", "aproximadamente", "probablemente",
+    "generalmente", "parece", "sugiere", "posiblemente", "tal vez",
+    "en general", "habitualmente", "suele", "a veces", "en ocasiones"
+  ],
+
+  "strong_words": [
+    "definitively", "clearly", "certainly", "confirmed", "research shows",
+    "studies confirm", "demonstrably", "is proven",
+    "definitivamente", "claramente", "está demostrado", "confirma",
+    "es sabido", "se ha demostrado", "según estudios", "evidencia confirma",
+    "datos muestran", "está verificado"
+  ],
+
+  "disclaimer_words": [
+    "I don't know", "I'm not sure", "hallucination", "may be incorrect",
+    "verify", "fact-check", "fact check",
+    "no estoy seguro", "no sé", "podría ser incorrecto", "verifica",
+    "comprueba", "podría estar desactualizado", "mis datos llegan hasta",
+    "mi conocimiento tiene fecha límite", "no tengo acceso a"
+  ],
+
+  "formula": {
+    "base": 85,
+    "hedge_penalty": 800,
+    "strong_bonus": 500,
+    "strong_cap_ratio": 0.02,
+    "disclaimer_penalty": 10,
+    "risk_hedge_mult": 1000,
+    "risk_disc_mult": 5,
+    "threshold_low": 15,
+    "threshold_med": 40
+  }
+}

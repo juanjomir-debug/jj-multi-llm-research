@@ -837,6 +837,16 @@ function loadModelStrengths() {
   return { preamble, data };
 }
 
+// ─── Hallucination detection config ──────────────────────────────────────────
+app.get('/api/hallucination-config', (req, res) => {
+  try {
+    const data = JSON.parse(fs.readFileSync(path.join(PROMPTS_DIR, 'hallucination-detection.json'), 'utf-8'));
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'No se pudo leer hallucination-detection.json: ' + e.message });
+  }
+});
+
 app.get('/api/model-strengths', (req, res) => {
   try {
     const { data } = loadModelStrengths();

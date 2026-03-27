@@ -2132,9 +2132,24 @@ async function applyModelStrengths() {
   updateEstimate(); toast(`Strengths applied to ${applied} models.`, 'success');
 }
 
-const HEDGE_WORDS = /\b(might|could|possibly|may|perhaps|uncertain|unclear|not sure|approximately|roughly|seems|appears|suggests|likely|probably|generally|typically|sometimes|podr.a|quiz.s|puede que|aproximadamente|probablemente|generalmente|parece|sugiere)\b/gi;
-const STRONG_WORDS = /\b(definitively|clearly|certainly|confirmed|research shows|studies confirm|demonstrably|is proven|definitivamente|claramente|est. demostrado|confirma|es sabido|se ha demostrado)\b/gi;
-const DISCLAIMER_WORDS = /\b(I don't know|I'm not sure|hallucination|may be incorrect|verify|fact.?check|no estoy seguro|no s.|podr.a ser incorrecto|verifica|comprueba)\b/gi;
+// ── Hallucination detection — cargado desde /api/hallucination-config ────────
+let _hallucinationCfg = null;
+let HEDGE_WORDS      = /\b(might|could|possibly|may|perhaps|uncertain|unclear|not sure|approximately|roughly|seems|appears|suggests|likely|probably|generally|typically|sometimes|podr.a|quiz.s|puede que|aproximadamente|probablemente|generalmente|parece|sugiere)\b/gi;
+let STRONG_WORDS     = /\b(definitively|clearly|certainly|confirmed|research shows|studies confirm|demonstrably|is proven|definitivamente|claramente|est. demostrado|confirma|es sabido|se ha demostrado)\b/gi;
+let DISCLAIMER_WORDS = /\b(I don't know|I'm not sure|hallucination|may be incorrect|verify|fact.?check|no estoy seguro|no s.|podr.a ser incorrecto|verifica|comprueba)\b/gi;
+
+function _buildHallucinationRegexes(cfg) {
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  HEDGE_WORDS      = new RegExp('\\b(' + cfg.hedge_words.map(esc).join('|') + ')\\b', 'gi');
+  STRONG_WORDS     = new RegExp('\\b(' + cfg.strong_words.map(esc).join('|') + ')\\b', 'gi');
+  DISCLAIMER_WORDS = new RegExp('(' + cfg.disclaimer_words.map(esc).join('|') + ')', 'gi');
+  _hallucinationCfg = cfg;
+}
+
+fetch('/api/hallucination-config')
+  .then(r => r.ok ? r.json() : null)
+  .then(cfg => { if (cfg && cfg.hedge_words) _buildHallucinationRegexes(cfg); })
+  .catch(() => {});
 
 // ── Scoring ──────────────────────────────────────────────────────────────────
 // Per-model consensus agreement scores (populated when 'consensus' SSE event arrives)
@@ -2144,16 +2159,27 @@ const _resultData = {};      // modelId → { selfScore, text }
 
 function analyzeResponseScore(text) {
   if (!text) return { confidence: 50, hallucClass: 'med' };
+  const f = _hallucinationCfg?.formula || {};
+  const base            = f.base              ?? 85;
+  const hedgePenalty    = f.hedge_penalty     ?? 800;
+  const strongBonus     = f.strong_bonus      ?? 500;
+  const strongCapRatio  = f.strong_cap_ratio  ?? 0.02;
+  const discPenalty     = f.disclaimer_penalty?? 10;
+  const riskHedgeMult   = f.risk_hedge_mult   ?? 1000;
+  const riskDiscMult    = f.risk_disc_mult    ?? 5;
+  const threshLow       = f.threshold_low     ?? 15;
+  const threshMed       = f.threshold_med     ?? 40;
+
   const words = text.split(/\s+/).length || 1;
-  const hedges = (text.match(HEDGE_WORDS) || []).length;
-  const strongs = (text.match(STRONG_WORDS) || []).length;
-  const disclaimers = (text.match(DISCLAIMER_WORDS) || []).length;
+  const hedges     = (text.match(HEDGE_WORDS)      || []).length;
+  const strongs    = (text.match(STRONG_WORDS)     || []).length;
+  const disclaimers= (text.match(DISCLAIMER_WORDS) || []).length;
   const hedgeRatio = hedges / words;
   const raw = Math.max(20, Math.min(98, Math.round(
-    85 - hedgeRatio * 800 + Math.min(strongs / words, 0.02) * 500 - disclaimers * 10
+    base - hedgeRatio * hedgePenalty + Math.min(strongs / words, strongCapRatio) * strongBonus - disclaimers * discPenalty
   )));
-  const hallucRisk = hedgeRatio * 1000 + disclaimers * 5;
-  const hallucClass = hallucRisk < 15 ? 'low' : hallucRisk < 40 ? 'med' : 'high';
+  const hallucRisk  = hedgeRatio * riskHedgeMult + disclaimers * riskDiscMult;
+  const hallucClass = hallucRisk < threshLow ? 'low' : hallucRisk < threshMed ? 'med' : 'high';
   return { confidence: raw, hallucClass };
 }
 
