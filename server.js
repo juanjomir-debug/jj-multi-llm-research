@@ -11,11 +11,21 @@ const PROMPTS_DIR = process.env.PROMPTS_DIR
 function loadPrompt(filename) {
   return fs.readFileSync(path.join(PROMPTS_DIR, filename), 'utf-8');
 }
-const PLANNING_PROMPT      = loadPrompt('planning.md');
-const INTEGRATOR_PROMPT    = loadPrompt('integrator.md');
-const DEBATE_PROMPT        = loadPrompt('debate.md').trim();
-const DEBATE_VOTE_PROMPT   = loadPrompt('debate-vote.md').trim();
-const HIDDEN_INSTRUCTIONS  = loadPrompt('instrucciones-ocultas.md').trim();
+const PLANNING_PROMPT           = loadPrompt('planning.md');
+const INTEGRATOR_PROMPT         = loadPrompt('integrator.md');
+const DEBATE_PROMPT             = loadPrompt('debate.md').trim();
+const DEBATE_VOTE_PROMPT        = loadPrompt('debate-vote.md').trim();
+const HIDDEN_INSTRUCTIONS       = loadPrompt('instrucciones-ocultas.md').trim();
+const DIVERSITY_NOTE_TPL        = loadPrompt('diversity-note.md').trim();
+const CONFIDENCE_INSTRUCTION    = '\n\n' + loadPrompt('confidence-instruction.md').trim();
+const DEBATE_USER_MSG_TPL       = loadPrompt('debate-user-message.md').trim();
+const DEBATE_VOTE_MSG_TPL       = loadPrompt('debate-vote-user-message.md').trim();
+const AMPLITUDE_INSTRUCTIONS    = JSON.parse(fs.readFileSync(path.join(PROMPTS_DIR, 'amplitude.json'), 'utf-8'));
+
+// Helper: aplica {{placeholders}} en templates
+function tpl(template, vars) {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? '');
+}
 const Anthropic     = require('@anthropic-ai/sdk');
 const OpenAI        = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -855,21 +865,8 @@ app.post('/api/estimate', (req, res) => {
   res.json({ modelBreakdown, intCost, intInTok, intOutTok, total });
 });
 
-const DIVERSITY_NOTE = '\n\n---\nEsta respuesta se consolidará con otras de modelos diferentes. Aporta perspectiva única/novedosa.';
-
-const AMPLITUDE_INSTRUCTIONS = {
-  concise:   'Respuesta MUY CONCISA. Máximo 2-3 párrafos. Sin listas largas.',
-  normal:    '',
-  detailed:  'Proporciona una respuesta detallada y bien estructurada con ejemplos.',
-  exhaustive:'Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad.',
-};
-
-// ─── Confidence scoring instruction (improvement #5) ──────────────────────────
-const CONFIDENCE_INSTRUCTION = `
-
-Al finalizar tu respuesta, añade en la ÚLTIMA línea (y solo en la última línea) un bloque JSON invisible con tu autoevaluación:
-<!--SELF_SCORE:{"confidence":N,"uncertainAreas":["area1","area2"]}-->
-Donde N es un número 0-100 indicando tu confianza general en la respuesta.`;
+// ─── DIVERSITY_NOTE: se añade al final del user message en cada llamada ────────
+const DIVERSITY_NOTE = '\n\n---\n' + DIVERSITY_NOTE_TPL;
 
 // ─── Retry individual model (improvement #14) ─────────────────────────────────
 app.post('/api/retry', async (req, res) => {
@@ -970,8 +967,7 @@ app.post('/api/debate-run', async (req, res) => {
     for (const r of results) {
       const otherResponses = results.filter(o => o.modelId !== r.modelId)
         .map(o => `[${o.modelId}]: ${o.text.slice(0, 1500)}`).join('\n\n');
-      const debatePrompt = `Critically analyze these responses from other models to the question "${question}". ` +
-        `Identify errors, biases, or weak points. Defend your position or correct it if others are right.\n\n${otherResponses}`;
+      const debatePrompt = tpl(DEBATE_USER_MSG_TPL, { question, otherResponses });
       try {
         const dr = await withTimeout(
           callModel(r.provider, r.modelId, DEBATE_PROMPT, debatePrompt, 1024, [], false, []),
@@ -997,10 +993,9 @@ app.post('/api/debate-run', async (req, res) => {
     const candidateIds = results.map(r => r.modelId);
     await Promise.allSettled(results.map(async (r) => {
       const others = results.filter(o => o.modelId !== r.modelId);
-      const candidateBlock = others.map((o, i) => `CANDIDATE ${String.fromCharCode(65 + i)} (${o.modelId}):\n${o.text.slice(0, 900)}`).join('\n\n---\n\n');
-      const votePrompt = `Original question: "${question}"\n\nInitial responses:\n\n${candidateBlock}\n\n` +
-        `Being completely unbiased and honest, which candidate gave the BEST initial response? ` +
-        `Briefly reason (1-2 sentences) and end with exactly: VOTE:${others.map(o => o.modelId).join(' or VOTE:')}`;
+      const candidateBlock = others.map((o, i) => `CANDIDATO ${String.fromCharCode(65 + i)} (${o.modelId}):\n${o.text.slice(0, 900)}`).join('\n\n---\n\n');
+      const voteOptions = others.map(o => `VOTE:${o.modelId}`).join(' o ');
+      const votePrompt = tpl(DEBATE_VOTE_MSG_TPL, { question, candidateBlock, voteOptions });
       try {
         const vr = await withTimeout(callModel(r.provider, r.modelId, DEBATE_VOTE_PROMPT, votePrompt, 300, [], false, []), 30_000, `vote-${r.modelId}`);
         const match = vr.text.match(/VOTE:([^\s\n,\.]+)/i);

@@ -1,0 +1,6 @@
+{
+  "concise":   "Respuesta MUY CONCISA. Máximo 2-3 párrafos. Sin listas largas.",
+  "normal":    "",
+  "detailed":  "Proporciona una respuesta detallada y bien estructurada con ejemplos.",
+  "exhaustive": "Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad."
+}

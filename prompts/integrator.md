@@ -50,6 +50,14 @@ Key conclusions and recommendations, justified (with reasoning), in a few lines.
 
 
 
+
+
+FURTHER INVESTIGATION
+
+Identify if there is further questions to make to the model or research outside the models to confirm the conclusiones and recomendations.
+
+
+
 FORMAT
 
 
@@ -65,6 +73,4 @@ FORMAT
 \* Consolidate redundancy, avoid repetition
 
 \* Infer the professional context from the question (lawyers, consultants, academics, analysts, researchers, etc.) and calibrate formality, terminology, and depth accordingly
-
-
 
