@@ -11,10 +11,11 @@ const PROMPTS_DIR = process.env.PROMPTS_DIR
 function loadPrompt(filename) {
   return fs.readFileSync(path.join(PROMPTS_DIR, filename), 'utf-8');
 }
-const PLANNING_PROMPT     = loadPrompt('planning.md');
-const INTEGRATOR_PROMPT   = loadPrompt('integrator.md');
-const DEBATE_PROMPT       = loadPrompt('debate.md').trim();
-const DEBATE_VOTE_PROMPT  = loadPrompt('debate-vote.md').trim();
+const PLANNING_PROMPT      = loadPrompt('planning.md');
+const INTEGRATOR_PROMPT    = loadPrompt('integrator.md');
+const DEBATE_PROMPT        = loadPrompt('debate.md').trim();
+const DEBATE_VOTE_PROMPT   = loadPrompt('debate-vote.md').trim();
+const HIDDEN_INSTRUCTIONS  = loadPrompt('instrucciones-ocultas.md').trim();
 const Anthropic     = require('@anthropic-ai/sdk');
 const OpenAI        = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -295,7 +296,7 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
     params.temperature = 1;
   }
   if (useSearch) {
-    params.tools = [{ type: 'web_search_20250305' }];
+    params.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
   }
 
   let text = '', inputTokens = 0, outputTokens = 0;
@@ -882,7 +883,7 @@ app.post('/api/retry', async (req, res) => {
   try { processedAttachments = await processAttachments(attachments || []); } catch {}
 
   const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[amplitude] || '';
-  const sysInstr = [customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
+  const sysInstr = [HIDDEN_INSTRUCTIONS, customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
 
   send('model:start', { modelId, provider });
   const t0 = Date.now();
@@ -1061,7 +1062,7 @@ app.post('/api/research', async (req, res) => {
       send('model:start', { modelId: m.modelId, provider: m.provider });
       const t0 = Date.now();
       try {
-        const sysInstr = [m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
+        const sysInstr = [HIDDEN_INSTRUCTIONS, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
         const r = await withTimeout(
           callModelStream(m.provider, m.modelId, sysInstr || null, question + DIVERSITY_NOTE, maxTokens,
             processedAttachments, !!m.webSearch, conversationHistory,
@@ -1194,8 +1195,8 @@ app.post('/api/research', async (req, res) => {
 
     const defaultSysPrompt = INTEGRATOR_PROMPT + `\nAvailable models: ${Object.values(modelLabels).join(', ')}`;
     const sysPrompt = integrator.customInstructions
-      ? `${integrator.customInstructions}\n\n${defaultSysPrompt}`
-      : defaultSysPrompt;
+      ? `${HIDDEN_INSTRUCTIONS}\n\n${integrator.customInstructions}\n\n${defaultSysPrompt}`
+      : `${HIDDEN_INSTRUCTIONS}\n\n${defaultSysPrompt}`;
 
     const userMsg = `Pregunta original: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}`;
 
