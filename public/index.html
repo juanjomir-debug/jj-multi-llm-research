@@ -816,6 +816,9 @@ const PROVIDERS = {
   anthropic: {
     label: 'Claude', icon: '&#128311;', color: 'var(--claude)', dotColor: '#cc785c',
     models: [
+      // Gen 4.6 — Search (web tool nativo)
+      { id: 'claude-opus-4-6-search',      label: 'Claude Opus 4.6 Search 🔍' },
+      { id: 'claude-sonnet-4-6-search',    label: 'Claude Sonnet 4.6 Search 🔍' },
       // Gen 4.6
       { id: 'claude-opus-4-6-thinking',    label: 'Claude Opus 4.6 (Thinking)' },
       { id: 'claude-opus-4-6',             label: 'Claude Opus 4.6' },
@@ -830,6 +833,8 @@ const PROVIDERS = {
   openai: {
     label: 'OpenAI', icon: '&#9889;', color: 'var(--openai)', dotColor: '#10a37f',
     models: [
+      // GPT-5 — Search
+      { id: 'gpt-5.2',     label: 'GPT-5.2 Search 🔍' },
       // GPT-5
       { id: 'gpt-5.4',     label: 'GPT-5.4' },
       { id: 'gpt-5.3',     label: 'GPT-5.3' },
@@ -875,6 +880,9 @@ const PROVIDERS = {
 
 // Prices in USD per million tokens (input / output) — updated March 2026
 const PRICING = {
+  // Claude 4.6 Search
+  'claude-opus-4-6-search':   { i: 15,   o: 75  },
+  'claude-sonnet-4-6-search': { i:  3,   o: 15  },
   // Claude 4.6
   'claude-opus-4-6-thinking': { i: 15,   o: 75  },
   'claude-opus-4-6':          { i: 15,   o: 75  },
@@ -883,6 +891,8 @@ const PRICING = {
   'claude-opus-4-5':          { i: 15,   o: 75  },
   'claude-sonnet-4-5':        { i:  3,   o: 15  },
   'claude-haiku-4-5-20251001':{ i:  0.8, o:  4  },
+  // GPT-5 Search
+  'gpt-5.2':                  { i:  5,   o: 20  },
   // GPT-5
   'gpt-5.4':                  { i:  5,   o: 20  },
   'gpt-5.3':                  { i:  5,   o: 20  },

@@ -256,11 +256,15 @@ function setCache(modelId, question, amplitude, data) {
 const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking']);
 const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6' };
 
+const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search']);
+const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6' };
+
 // Streaming caller for Claude (improvement #1)
 async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, onChunk) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const useThinking = CLAUDE_THINKING_MODELS.has(modelId);
+  const useSearch   = CLAUDE_SEARCH_MODELS.has(modelId);
 
   let userContent;
   if (attachments.length > 0) {
@@ -277,7 +281,7 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
     userContent = userMessage;
   }
 
-  const actualModelId = CLAUDE_THINKING_MODEL_MAP[modelId] || modelId;
+  const actualModelId = CLAUDE_THINKING_MODEL_MAP[modelId] || CLAUDE_SEARCH_MODEL_MAP[modelId] || modelId;
   const effectiveMaxTokens = useThinking ? Math.max(maxTokens, 16000) : maxTokens;
   const params = {
     model: actualModelId,
@@ -289,6 +293,9 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
   if (useThinking) {
     params.thinking = { type: 'enabled', budget_tokens: Math.min(10000, effectiveMaxTokens - 2000) };
     params.temperature = 1;
+  }
+  if (useSearch) {
+    params.tools = [{ type: 'web_search_20250305' }];
   }
 
   let text = '', inputTokens = 0, outputTokens = 0;
@@ -334,7 +341,7 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
   }
 
   const isOSeries = /^o\d/.test(modelId);
-  const isGpt5Family = modelId.startsWith('gpt-5');
+  const isGpt5Family = modelId.startsWith('gpt-5') || modelId === 'gpt-5.2';
   const useMaxCompletionTokens = isOSeries || isGpt5Family;
   const effectiveMaxTokens = (isOSeries || isGpt5Family) ? Math.max(maxTokens, 4096) : maxTokens;
 
