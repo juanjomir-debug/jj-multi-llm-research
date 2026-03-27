@@ -2020,22 +2020,30 @@ function computeFinalScore(modelId, selfScore, text) {
   const heuristic = analyzeResponseScore(text);
   const agreement = _consensusScores[modelId]; // undefined if only 1 model active
   const selfConf = selfScore?.confidence ?? heuristic.confidence;
+  const bd = selfScore?.breakdown; // { evidenceQuality, sourceReliability, consensus }
 
   let confidence;
   let factors = [];
   if (agreement !== undefined) {
     confidence = Math.round(agreement * 0.40 + selfConf * 0.35 + heuristic.confidence * 0.25);
-    factors = [`Consenso ${agreement}%`, `Autoeval ${selfConf}%`, `Léxico ${heuristic.confidence}%`];
+    factors = [`Consenso entre modelos ${agreement}%`, `Autoeval global ${selfConf}%`, `Análisis léxico ${heuristic.confidence}%`];
   } else {
     confidence = Math.round(selfConf * 0.60 + heuristic.confidence * 0.40);
-    factors = [`Autoeval ${selfConf}%`, `Léxico ${heuristic.confidence}%`];
+    factors = [`Autoeval global ${selfConf}%`, `Análisis léxico ${heuristic.confidence}%`];
   }
   confidence = Math.max(15, Math.min(97, confidence));
+
+  // Desglose del modelo si está disponible
+  const breakdownLines = bd ? [
+    `· Calidad evidencia ${bd.evidenceQuality}%`,
+    `· Fiabilidad fuentes ${bd.sourceReliability}%`,
+    `· Consenso fuentes   ${bd.consensus}%`,
+  ] : [];
 
   // Hallucination: consensus divergence takes priority over heuristic
   let hallucClass;
   if (agreement !== undefined) {
-    if (agreement < 25) hallucClass = 'high';   // outlier — diverge del resto
+    if (agreement < 25) hallucClass = 'high';
     else if (agreement < 50) hallucClass = 'med';
     else hallucClass = heuristic.hallucClass === 'high' ? 'med' : 'low';
   } else {
@@ -2044,7 +2052,7 @@ function computeFinalScore(modelId, selfScore, text) {
 
   const confClass = confidence >= 70 ? 'high' : confidence >= 45 ? 'med' : 'low';
   const hallucLabel = hallucClass === 'low' ? 'Low' : hallucClass === 'med' ? 'Med' : 'High';
-  const tooltip = factors.join(' · ');
+  const tooltip = [...factors, ...(breakdownLines.length ? ['── Desglose autoeval ──', ...breakdownLines] : [])].join('\n');
   return { confidence, confClass, hallucClass, hallucLabel, tooltip };
 }
 
