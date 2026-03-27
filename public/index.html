@@ -354,7 +354,11 @@
     .websearch-toggle.on { background: var(--success); } .websearch-toggle.on::after { transform: translateX(12px); }
     .websearch-label { flex: 1; } .websearch-note { font-size: .68rem; color: var(--text-muted); opacity: .7; }
 
-    .score-row { display: flex; gap: 6px; align-items: center; padding: 5px 12px; border-top: 1px solid var(--border); font-size: .72rem; flex-wrap: wrap; }
+    .score-row { display: flex; flex-direction: column; gap: 4px; padding: 6px 12px; border-top: 1px solid var(--border); font-size: .72rem; }
+    .score-row-main { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .score-breakdown { display: flex; gap: 10px; padding: 4px 2px 2px; flex-wrap: wrap; }
+    .score-bd-item { display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: .68rem; }
+    .score-bd-val { font-family: monospace; font-weight: 700; }
     .score-badge { display: flex; align-items: center; gap: 4px; border-radius: 20px; padding: 2px 8px; font-weight: 600; font-family: monospace; }
     .score-badge.confidence-high { background: rgba(63,185,80,.15); color: var(--success); }
     .score-badge.confidence-med { background: rgba(210,153,34,.15); color: var(--warn); }
@@ -1861,18 +1865,18 @@ function renderReliabilityIndex() {
     ? Math.round(validConsensus.reduce((s, m) => s + m.score, 0) / validConsensus.length)
     : null;
 
-  // ── 2. AUTOEVALUACIÓN DE LOS MODELOS ───────────────────────────────────────
+  // ── 2. AUTOEVALUACIÓN DE LOS MODELOS (usa computeFinalScore para consistencia) ─
   const selfData = models.map(id => {
     const { selfScore, text } = _resultData[id] || {};
-    const heuristic = analyzeResponseScore(text || '');
+    const finalScore = computeFinalScore(id, selfScore, text || '');
     return {
       id,
       label: provName[id.split('-')[0]] || id,
-      conf: selfScore?.confidence ?? heuristic.confidence,
-      evidenceQuality:  selfScore?.breakdown?.evidenceQuality  ?? null,
-      sourceReliability:selfScore?.breakdown?.sourceReliability?? null,
-      bdConsensus:      selfScore?.breakdown?.consensus        ?? null,
-      hallucClass: computeFinalScore(id, selfScore, text || '').hallucClass,
+      conf: finalScore.confidence,           // mismo valor que muestra la tarjeta
+      evidenceQuality:  selfScore?.breakdown?.evidenceQuality   ?? null,
+      sourceReliability:selfScore?.breakdown?.sourceReliability ?? null,
+      bdConsensus:      selfScore?.breakdown?.consensus         ?? null,
+      hallucClass: finalScore.hallucClass,
     };
   });
   const avgSelf = Math.round(selfData.reduce((s, m) => s + m.conf, 0) / selfData.length);
@@ -2184,17 +2188,31 @@ function updateScoreRow(modelId, selfScore, text) {
   const foot = document.getElementById(`rfoot-${safeId}`);
   if (!card || !foot) return;
   const score = computeFinalScore(modelId, selfScore, text);
+  const bd = selfScore?.breakdown;
+
+  // Fila principal
+  const mainRow =
+    `<span style="color:var(--text-muted)">Confianza:</span>` +
+    `<span class="score-badge confidence-${score.confClass}">${score.confidence}%</span>` +
+    `<span style="color:var(--text-muted);margin-left:6px">Alucinación:</span>` +
+    `<span class="score-badge halluc-${score.hallucClass}">${score.hallucLabel === 'Low' ? 'Baja' : score.hallucLabel === 'Med' ? 'Media' : 'Alta'}</span>` +
+    (_consensusScores[modelId] !== undefined
+      ? `<span style="color:var(--text-muted);font-size:.68rem;margin-left:auto">Acuerdo ${_consensusScores[modelId]}%</span>`
+      : '');
+
+  // Desglose inline si el modelo lo devolvió
+  const bdRow = bd ? (() => {
+    const c = v => { const col = v >= 70 ? 'var(--success)' : v >= 45 ? 'var(--warn)' : 'var(--danger)'; return `<span class="score-bd-val" style="color:${col}">${v}%</span>`; };
+    return `<div class="score-breakdown">` +
+      `<span class="score-bd-item">Solidez evidencia ${c(bd.evidenceQuality)}</span>` +
+      `<span class="score-bd-item">Calidad fuentes ${c(bd.sourceReliability)}</span>` +
+      `<span class="score-bd-item">Consenso fuentes ${c(bd.consensus)}</span>` +
+      `</div>`;
+  })() : '';
+
   const existing = card.querySelector('.score-row'); if (existing) existing.remove();
   const scoreRow = document.createElement('div'); scoreRow.className = 'score-row';
-  scoreRow.title = score.tooltip; // breakdown tooltip on hover
-  scoreRow.innerHTML =
-    `<span style="color:var(--text-muted)">Confidence:</span>` +
-    `<span class="score-badge confidence-${score.confClass}" title="${score.tooltip}">${score.confidence}%</span>` +
-    `<span style="color:var(--text-muted);margin-left:6px">Hallucination:</span>` +
-    `<span class="score-badge halluc-${score.hallucClass}">${score.hallucLabel}</span>` +
-    (_consensusScores[modelId] !== undefined
-      ? `<span style="color:var(--text-muted);font-size:.68rem;margin-left:auto" title="Agreement with other models">agreement ${_consensusScores[modelId]}%</span>`
-      : '');
+  scoreRow.innerHTML = `<div class="score-row-main">${mainRow}</div>${bdRow}`;
   card.insertBefore(scoreRow, foot);
 }
 
