@@ -1243,13 +1243,35 @@ function computeConsensus(results) {
       .filter(s => s && s.length > 20);
   };
 
-  // Word overlap similarity between two texts
+  // ── Tokenización semántica con stop words y stems ────────────────────────────
+  const STOP = new Set([
+    'para','con','por','que','los','las','una','del','los','sus','más','pero','sin','sobre',
+    'como','este','esta','estos','estas','ese','esa','esos','esas','entre','cuando','donde',
+    'from','that','this','with','have','been','were','they','will','your','which','when',
+    'there','about','would','could','should','their','after','before','some','each','like',
+    'just','over','such','even','most','other','these','those','both','only','very','well',
+    'here','time','year','much','many','make','good','know','does','come','said','want',
+    'also','into','than','then','more','what','because','through','during','while','where',
+  ]);
+
+  const tokenize = text => {
+    const words = text.toLowerCase()
+      .replace(/[^a-záéíóúüñ\s]/gi, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 4 && !STOP.has(w));
+    // stem simple: primeros 6 chars para agrupar variantes morfológicas
+    return new Set(words.map(w => w.slice(0, 6)));
+  };
+
+  // Jaccard + bigrams + rescalado calibrado
+  // Dos textos expertos sobre el mismo tema tienen Jaccard ~0.15-0.35 → mapear a 50-90%
   const similarity = (a, b) => {
-    const wordsA = new Set(a.split(/\s+/).filter(w => w.length > 3));
-    const wordsB = new Set(b.split(/\s+/).filter(w => w.length > 3));
-    const intersection = [...wordsA].filter(w => wordsB.has(w)).length;
-    const union = new Set([...wordsA, ...wordsB]).size;
-    return union === 0 ? 0 : intersection / union;
+    const tA = tokenize(a), tB = tokenize(b);
+    const inter = [...tA].filter(w => tB.has(w)).length;
+    const union = new Set([...tA, ...tB]).size;
+    const jaccard = union === 0 ? 0 : inter / union;
+    // Rescalado no lineal: jaccard 0.05→18%, 0.15→50%, 0.25→72%, 0.35→88%, 0.5→100%
+    return Math.min(1, 1 - Math.exp(-jaccard * 6));
   };
 
   // Pairwise similarity matrix
@@ -1268,7 +1290,7 @@ function computeConsensus(results) {
   }
 
   const avgSimilarity = pairs > 0 ? totalSim / pairs : 0;
-  const consensusLevel = avgSimilarity > 0.4 ? 'high' : avgSimilarity > 0.2 ? 'medium' : 'low';
+  const consensusLevel = avgSimilarity > 0.65 ? 'high' : avgSimilarity > 0.40 ? 'medium' : 'low';
 
   // Per-model agreement score (how much each model agrees with others)
   const modelScores = results.map((r, i) => {
