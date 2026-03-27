@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Board — Multi-model Reliable Intelligence</title>
+  <title>ReliableAI — Multi-model Reliable Intelligence</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -92,7 +92,7 @@
     .inline-model-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s, opacity .15s; min-width: 0; }
     .imc-result-area { display: flex; flex-direction: column; }
     .inline-model-card.active { border-color: var(--accent); }
-    .inline-model-card.disabled { opacity: .4; pointer-events: none; }
+    .inline-model-card.disabled { display: none; }
     .inline-model-card-header { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: var(--surface2); border-bottom: 1px solid var(--border); }
     .inline-model-card-header .model-name { font-weight: 600; font-size: .82rem; flex: 1; }
     .inline-model-card-header .imc-research-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-size: .72rem; font-weight: 700; padding: 3px 10px; cursor: pointer; transition: all .15s; white-space: nowrap; }
@@ -222,7 +222,7 @@
     .result-model-name { font-size: .82rem; font-weight: 600; flex: 1; }
     .result-meta { font-size: .72rem; color: var(--text-muted); display: flex; gap: 10px; }
     .result-meta span { display: flex; align-items: center; gap: 3px; }
-    .result-body { padding: 12px; font-size: .85rem; line-height: 1.6; overflow-y: auto; height: var(--result-h, 380px); min-height: 100px; resize: vertical; }
+    .result-body { padding: 12px; font-size: .85rem; line-height: 1.6; overflow-y: auto; height: var(--result-h, 1000px); min-height: 100px; }
     .result-height-bar { display: none; align-items: center; gap: 10px; padding: 6px 0 2px; }
     .result-height-bar.visible { display: flex; }
     .rh-label { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
@@ -521,7 +521,7 @@
 <header class="app-header">
   <span class="header-badge" id="enabledBadge">0 models</span>
   <div class="app-header-brand">
-    <h1>The Board</h1>
+    <h1>ReliableAI</h1>
     <div class="app-claim">Multi-model Reliable Intelligence</div>
   </div>
   <div class="user-bar hidden" id="userBar">
@@ -560,12 +560,7 @@
             <option value="xai">Grok</option>
           </select>
           <select id="planModel"></select>
-          <label>Amplitude:</label>
-          <select id="planAmplitude">
-            <option value="concise">Concise</option>
-            <option value="normal" selected>Normal</option>
-            <option value="detailed">Detailed</option>
-          </select>
+          <input type="hidden" id="planAmplitude" value="concise">
           <button class="plan-btn" id="planBtn" onclick="runPlanResearch()">
             <span id="planBtnIcon">&#9881;</span> <span id="planBtnLabel">Plan Research</span>
           </button>
@@ -607,8 +602,8 @@
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">Amplitude:</label>
           <select class="amplitude-select" id="responseAmplitude" onchange="updateEstimate()">
-            <option value="concise">Concise (~512 tok)</option>
-            <option value="normal" selected>Normal (~2048 tok)</option>
+            <option value="concise" selected>Concise (~512 tok)</option>
+            <option value="normal">Normal (~2048 tok)</option>
             <option value="detailed">Detailed (~4096 tok)</option>
             <option value="exhaustive">Exhaustive (~8192 tok)</option>
           </select>
@@ -649,6 +644,15 @@
           <button class="strengths-btn" onclick="applyModelStrengths()" style="width:auto;padding:5px 12px;font-size:.75rem;margin:0">
             Leverage Model Strengths
           </button>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:8px">
+            <label style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">Height:</label>
+            <div class="rh-presets">
+              <button class="rh-preset" onclick="applyResultHeight(180)">XS</button>
+              <button class="rh-preset" onclick="applyResultHeight(380)">M</button>
+              <button class="rh-preset" onclick="applyResultHeight(620)">L</button>
+              <button class="rh-preset active" onclick="applyResultHeight(1000)">XL</button>
+            </div>
+          </div>
         </div>
         <!-- Model cards + inline results grid -->
         <div class="inline-models-grid" id="modelCards"></div>
@@ -703,19 +707,6 @@
     <!-- Integrator / Synthesis result (below debate) -->
     <div id="integratorResultArea"></div>
 
-    <!-- Height control -->
-    <div class="result-height-bar" id="resultHeightBar">
-      <span class="rh-label">Result height</span>
-      <input type="range" class="rh-slider" id="rhSlider" min="100" max="1200" value="380" step="20"
-        oninput="applyResultHeight(+this.value)">
-      <span class="rh-val" id="rhVal">380px</span>
-      <div class="rh-presets">
-        <button class="rh-preset" onclick="applyResultHeight(180)">XS</button>
-        <button class="rh-preset active" onclick="applyResultHeight(380)">M</button>
-        <button class="rh-preset" onclick="applyResultHeight(620)">L</button>
-        <button class="rh-preset" onclick="applyResultHeight(1000)">XL</button>
-      </div>
-    </div>
     <!-- Legacy results section (consensus panel, etc.) -->
     <div class="results-section" id="resultsSection" style="padding:0"></div>
   </main>
@@ -840,6 +831,8 @@ const PROVIDERS = {
     label: 'OpenAI', icon: '&#9889;', color: 'var(--openai)', dotColor: '#10a37f',
     models: [
       // GPT-5
+      { id: 'gpt-5.4',     label: 'GPT-5.4' },
+      { id: 'gpt-5.3',     label: 'GPT-5.3' },
       { id: 'gpt-5',       label: 'GPT-5' },
       { id: 'gpt-5-mini',  label: 'GPT-5 Mini' },
       // GPT-4.1
@@ -891,6 +884,8 @@ const PRICING = {
   'claude-sonnet-4-5':        { i:  3,   o: 15  },
   'claude-haiku-4-5-20251001':{ i:  0.8, o:  4  },
   // GPT-5
+  'gpt-5.4':                  { i:  5,   o: 20  },
+  'gpt-5.3':                  { i:  5,   o: 20  },
   'gpt-5':                    { i:  5,   o: 20  },
   'gpt-5-mini':               { i:  0.15,o:  0.6},
   // GPT-4.1
@@ -942,35 +937,26 @@ const TEMPLATES = {
 const state = {
   models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({ provider, modelId: cfg.defaultModel, enabled: true, customInstructions: '', webSearch: false })),
   attachments: [], conversationHistory: [], integratorEnabled: true, isRunning: false, currentUser: null,
-  debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [], resultBodyHeight: 380,
+  debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [], resultBodyHeight: 1000,
 };
 
 let _lastIntegratorText = null;
 let _abortController = null;
 
 // ── Altura regulable de resultados ──────────────────────────────────────────
-let _syncingResize = false;
+// padding-top + padding-bottom de .result-body (12px + 12px = 24px, border-box)
+const RESULT_BODY_PAD_V = 24;
 let _resizeObserver = null;
 
 function applyResultHeight(px) {
   px = Math.max(100, Math.min(1200, px));
   document.documentElement.style.setProperty('--result-h', px + 'px');
-  _syncingResize = true;
   document.querySelectorAll('.result-body').forEach(el => { el.style.height = px + 'px'; });
-  _syncingResize = false;
-  const slider = document.getElementById('rhSlider');
-  if (slider) {
-    slider.value = px;
-    const pct = ((px - 100) / (1200 - 100) * 100).toFixed(1);
-    slider.style.setProperty('--pct', pct + '%');
-  }
-  const val = document.getElementById('rhVal');
-  if (val) val.textContent = px + 'px';
+  state.resultBodyHeight = px;
   const presets = { 180: 'XS', 380: 'M', 620: 'L', 1000: 'XL' };
   document.querySelectorAll('.rh-preset').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.textContent) === px || presets[px] === btn.textContent);
+    btn.classList.toggle('active', presets[px] === btn.textContent);
   });
-  state.resultBodyHeight = px;
 }
 
 // Sync all .result-body heights when user drags any one of them
@@ -982,9 +968,9 @@ function _watchResultBody(el) {
 function initResultBodySync() {
   if (!window.ResizeObserver) return;
   _resizeObserver = new ResizeObserver(entries => {
-    if (_syncingResize) return;
     for (const entry of entries) {
-      const newH = Math.round(entry.contentRect.height);
+      // contentRect es el content-box; sumamos padding vertical para obtener la altura border-box
+      const newH = Math.round(entry.contentRect.height) + RESULT_BODY_PAD_V;
       if (Math.abs(newH - state.resultBodyHeight) > 4) {
         applyResultHeight(newH);
         break;
@@ -1122,7 +1108,9 @@ async function runPlanResearch() {
             }
             document.getElementById('planApplyBtn').disabled = false;
           } else {
-            body.innerHTML = `<div class="md-content">${renderMarkdown(fullText)}</div>`;
+            body.innerHTML = `<div style="color:var(--warn);font-size:.82rem;padding:8px">
+              ⚠️ No se pudo interpretar el plan automáticamente. Revisa la respuesta y aplica la configuración manualmente.
+            </div><div class="md-content" style="font-size:.78rem;opacity:.6;margin-top:8px">${renderMarkdown(fullText)}</div>`;
           }
         } else if (event === 'plan:error') {
           body.innerHTML = `<div style="color:var(--danger)">Error: ${escHtml(parsed.error||'unknown')}</div>`;
@@ -1292,7 +1280,6 @@ function clearConversation() {
   document.getElementById('integratorResultArea').innerHTML = '';
   document.getElementById('debateResultArea').innerHTML = '';
   document.querySelectorAll('.imc-result-area').forEach(el => el.remove());
-  document.getElementById('resultHeightBar').classList.remove('visible');
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
   document.getElementById('convBar').style.display = 'none';
@@ -1342,8 +1329,8 @@ function renderModelCards() {
           <span class="websearch-label">Web Search</span>
           <span class="websearch-note">${googleUnsupported ? 'Use Flash or 2.5 Pro' : m.provider === 'google' ? 'Google Search' : 'xAI Web Search'}</span>
         </div>` : ''}
-        <button class="instr-toggle" id="instrToggle-${m.provider}" onclick="toggleInstrArea('${m.provider}')"><span class="arrow">&#9654;</span> Custom instructions</button>
-        <div class="instr-area" id="instrArea-${m.provider}">
+        <button class="instr-toggle${m.customInstructions ? ' open' : ''}" id="instrToggle-${m.provider}" onclick="toggleInstrArea('${m.provider}')"><span class="arrow">&#9654;</span> Custom instructions</button>
+        <div class="instr-area${m.customInstructions ? ' open' : ''}" id="instrArea-${m.provider}">
           <textarea id="instr-${m.provider}" rows="3" placeholder="System instructions for ${prov.label}..." oninput="onInstrChange(${idx}, this.value)">${m.customInstructions}</textarea>
           <span class="instr-hint">Optional. Define role, context or constraints.</span>
         </div>
@@ -1527,7 +1514,6 @@ async function runResearch() {
   document.getElementById('stopBtn').classList.remove('visible');
   updateRunBtn();
   document.getElementById('exportBtn').style.display = state.lastResults.length > 0 ? '' : 'none';
-  if (state.lastResults.length > 0) document.getElementById('resultHeightBar').classList.add('visible');
 }
 
 // Streaming text buffers per model
@@ -1968,15 +1954,24 @@ function toast(msg, type = 'success') { const c = document.getElementById('toast
   t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3000); }
 function toggleMobileSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
 
-const MODEL_STRENGTHS = {
-  anthropic: 'Eres un analista epistemologico riguroso. Chain of Thought explicito, desglosando supuestos verificables. Finaliza con autoevaluacion critica.',
-  openai: 'Sintetizador maestro de perspectivas multiples. Subsecciones claras con resumen ejecutivo. Ejemplos verificables para consolidacion posterior.',
-  xai: 'Critico radical. Cuestiona premisas, argumentos contraintuitivos, evidencia actualizada 2024-2025 que contradiga consensos.',
-  google: 'Integrador sistemico multidisciplinario. Mapea disciplinas, vision actualizada, roadmap 6/12/24 meses, patrones de segundo orden.',
-};
+// MODEL_STRENGTHS se carga desde /api/model-strengths (archivo: prompts/model_strengths.json)
+let MODEL_STRENGTHS = {};
+fetch('/api/model-strengths')
+  .then(r => r.json())
+  .then(data => { MODEL_STRENGTHS = data; })
+  .catch(() => console.warn('No se pudo cargar model_strengths.json'));
 
-function applyModelStrengths() { let applied = 0;
-  state.models.forEach((m, idx) => { const instr = MODEL_STRENGTHS[m.provider]; if (!instr) return;
+async function applyModelStrengths() {
+  // Si MODEL_STRENGTHS no se cargó aún, reintentamos ahora
+  if (!Object.keys(MODEL_STRENGTHS).length) {
+    try {
+      const r = await fetch('/api/model-strengths');
+      if (r.ok) MODEL_STRENGTHS = await r.json();
+    } catch (_) {}
+  }
+  let applied = 0;
+  state.models.forEach((m, idx) => {
+    const instr = MODEL_STRENGTHS[m.provider]; if (!instr) return;
     m.customInstructions = instr; const ta = document.getElementById(`instr-${m.provider}`); if (ta) ta.value = instr;
     const area = document.getElementById(`instrArea-${m.provider}`), btn = document.getElementById(`instrToggle-${m.provider}`);
     if (area && !area.classList.contains('open')) { area.classList.add('open'); if (btn) btn.classList.add('open'); }
@@ -2273,7 +2268,6 @@ async function recoverSession(sid) {
   }
 
   document.getElementById('exportBtn').style.display = '';
-  document.getElementById('resultHeightBar').classList.add('visible');
 
   // Recover debate if available
   try {

@@ -2,6 +2,19 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env'), overri
 const crypto        = require('crypto');
 const express       = require('express');
 const path          = require('path');
+const fs            = require('fs');
+
+// ── Prompts — loaded from ./prompts/ (or PROMPTS_DIR env var in production) ───
+const PROMPTS_DIR = process.env.PROMPTS_DIR
+  ? path.resolve(process.env.PROMPTS_DIR)
+  : path.join(__dirname, 'prompts');
+function loadPrompt(filename) {
+  return fs.readFileSync(path.join(PROMPTS_DIR, filename), 'utf-8');
+}
+const PLANNING_PROMPT     = loadPrompt('planning.md');
+const INTEGRATOR_PROMPT   = loadPrompt('integrator.md');
+const DEBATE_PROMPT       = loadPrompt('debate.md').trim();
+const DEBATE_VOTE_PROMPT  = loadPrompt('debate-vote.md').trim();
 const Anthropic     = require('@anthropic-ai/sdk');
 const OpenAI        = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -36,6 +49,7 @@ app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
 app.use(express.json({ limit: '25mb' }));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
@@ -125,6 +139,8 @@ const PRICING = {
   'claude-sonnet-4-5':          { input:  3.00, output: 15.00 },
   'claude-haiku-4-5-20251001':  { input:  0.80, output:  4.00 },
   // GPT-5
+  'gpt-5.4':                    { input:  5.00, output: 20.00 },
+  'gpt-5.3':                    { input:  5.00, output: 20.00 },
   'gpt-5':                      { input:  5.00, output: 20.00 },
   'gpt-5-mini':                 { input:  0.15, output:  0.60 },
   // GPT-4.1
@@ -382,20 +398,34 @@ async function callGemini(modelId, systemPrompt, userMessage, attachments = [], 
   const chat = model.startChat({ history: geminiHistory });
 
   if (onChunk) {
-    // Streaming mode
-    const streamResult = await chat.sendMessageStream(msgArg);
-    let fullText = '';
-    for await (const chunk of streamResult.stream) {
-      const t = chunk.text();
-      if (t) { fullText += t; onChunk(t); }
+    // Streaming mode — with fallback to non-streaming if stream parse fails (preview models)
+    try {
+      const streamResult = await chat.sendMessageStream(msgArg);
+      let fullText = '';
+      for await (const chunk of streamResult.stream) {
+        const t = chunk.text();
+        if (t) { fullText += t; onChunk(t); }
+      }
+      const resp = await streamResult.response;
+      if (!fullText) fullText = resp.text?.() || '';
+      return {
+        text: fullText,
+        inputTokens:  resp.usageMetadata?.promptTokenCount     || 0,
+        outputTokens: resp.usageMetadata?.candidatesTokenCount || 0,
+      };
+    } catch (streamErr) {
+      if (!streamErr.message?.includes('parse stream')) throw streamErr;
+      // Fallback: non-streaming for models that don't support stream parsing
+      const result = await chat.sendMessage(msgArg);
+      const resp = result.response;
+      const text = resp.text();
+      onChunk(text);
+      return {
+        text,
+        inputTokens:  resp.usageMetadata?.promptTokenCount     || 0,
+        outputTokens: resp.usageMetadata?.candidatesTokenCount || 0,
+      };
     }
-    const resp = await streamResult.response;
-    if (!fullText) fullText = resp.text?.() || '';
-    return {
-      text: fullText,
-      inputTokens:  resp.usageMetadata?.promptTokenCount     || 0,
-      outputTokens: resp.usageMetadata?.candidatesTokenCount || 0,
-    };
   } else {
     // Non-streaming fallback
     const result = await chat.sendMessage(msgArg);
@@ -509,8 +539,29 @@ function modelTimeout(modelId) {
     /thinking|reasoning|o3|o4/.test(modelId);
   if (isThinking) return 300_000; // 5 min for thinking
   const isGemini = /gemini/.test(modelId);
-  if (isGemini) return 180_000; // 3 min for Gemini (web search is slow)
+  if (isGemini) return 240_000; // 4 min for Gemini (web search is slow)
   return 120_000; // 2 min default
+}
+
+// Retry con backoff exponencial para errores transitorios (overloaded, 529, 503)
+function isRetryableError(err) {
+  const msg = err?.message || '';
+  return msg.includes('overloaded') || msg.includes('529') || msg.includes('503') ||
+         msg.includes('overloaded_error') || msg.includes('rate_limit') || msg.includes('RATE_LIMIT');
+}
+async function withRetry(fn, maxAttempts = 3, label = '') {
+  let lastErr;
+  for (let i = 0; i < maxAttempts; i++) {
+    try { return await fn(); }
+    catch (err) {
+      lastErr = err;
+      if (!isRetryableError(err) || i === maxAttempts - 1) throw err;
+      const wait = (i + 1) * 8000; // 8s, 16s
+      console.warn(`[retry] ${label} attempt ${i + 1} failed (${err.message}), retrying in ${wait / 1000}s…`);
+      await new Promise(r => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
 }
 
 // ── Input sanitisation helpers ────────────────────────────────────────────────
@@ -570,10 +621,6 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 // ─── Research Planning ────────────────────────────────────────────────────────
-const PLANNING_PROMPT = require('fs').readFileSync(
-  path.join(__dirname, 'research-planning-prompt.md'), 'utf-8'
-);
-
 app.post('/api/plan-research', async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
   const objective = sanitizeStr(req.body.objective, 2000);
@@ -593,7 +640,19 @@ app.post('/api/plan-research', async (req, res) => {
     let processedAttachments = [];
     try { processedAttachments = await processAttachments(attachments); } catch {}
 
-    const ampTokens = { concise: 1024, normal: 2048, detailed: 4096, exhaustive: 8192 }[amplitude] || 2048;
+    // El planning siempre necesita al menos 2048 tokens para generar el JSON completo
+    const ampTokens = Math.max(2048, { concise: 1024, normal: 2048, detailed: 4096, exhaustive: 8192 }[amplitude] || 2048);
+
+    // Inyectar roles base de model_strengths.json como contexto para el planner
+    let strengthsBlock = '';
+    try {
+      const { preamble, data: strengths } = loadModelStrengths();
+      const labels = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok' };
+      const rolesLines = Object.entries(strengths).map(([k, v]) => `- ${labels[k] || k}: ${v}`).join('\n');
+      strengthsBlock = '\n\nCRITERIOS DE ESPECIALIZACIÓN POR MODELO'
+        + (preamble ? ` (contexto: ${preamble})` : '') + ':\n' + rolesLines;
+    } catch (_) {}
+    const planObjective = objective + strengthsBlock;
 
     let fullText = '';
     send('plan:start', { provider, modelId });
@@ -603,7 +662,7 @@ app.post('/api/plan-research', async (req, res) => {
         provider || 'anthropic',
         modelId || 'claude-sonnet-4-6',
         PLANNING_PROMPT,
-        objective,
+        planObjective,
         ampTokens,
         processedAttachments,
         false,
@@ -749,6 +808,27 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// ─── Model strengths — lee el archivo en cada request (sin cache) ────────────
+// El archivo puede tener texto libre ANTES del bloque JSON (contexto/instrucciones para el planner).
+// Esta función separa ambas partes.
+function loadModelStrengths() {
+  const raw = fs.readFileSync(path.join(PROMPTS_DIR, 'model_strengths.json'), 'utf-8');
+  const jsonStart = raw.indexOf('{');
+  if (jsonStart === -1) throw new Error('No se encontró bloque JSON en model_strengths.json');
+  const preamble = raw.slice(0, jsonStart).trim();        // texto libre previo al JSON
+  const data     = JSON.parse(raw.slice(jsonStart));       // objeto JSON
+  return { preamble, data };
+}
+
+app.get('/api/model-strengths', (req, res) => {
+  try {
+    const { data } = loadModelStrengths();
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'No se pudo leer model_strengths.json: ' + e.message });
+  }
+});
+
 // ─── Cost estimate ───────────────────────────────────────────────────────────
 app.post('/api/estimate', (req, res) => {
   const { question = '', models = [], integrator = {} } = req.body;
@@ -800,11 +880,11 @@ app.post('/api/retry', async (req, res) => {
   send('model:start', { modelId, provider });
   const t0 = Date.now();
   try {
-    const r = await withTimeout(
+    const r = await withRetry(() => withTimeout(
       callModelStream(provider, modelId, sysInstr || null, question + DIVERSITY_NOTE, maxTokens || 2048, processedAttachments, !!webSearch, conversationHistory || [],
         (chunk) => send('model:chunk', { modelId, provider, chunk })),
       modelTimeout(modelId), modelId
-    );
+    ), 3, `${provider}:${modelId}`);
     const cost = calcCost(modelId, r.inputTokens, r.outputTokens);
     send('model:done', { modelId, provider, text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs: Date.now() - t0 });
   } catch (err) {
@@ -837,20 +917,7 @@ app.post('/api/integrate', async (req, res) => {
   }
   const allResponsesBlock = results.map((r, i) => `### Response ${i + 1} — [${modelLabels[r.modelId]}] (${r.modelId})\n\n${r.text}`).join('\n\n---\n\n');
 
-  const defaultSysPrompt =
-    `You are an expert research synthesizer. Multiple AI models answered the same question.\n\n` +
-    `CRITICAL INSTRUCTIONS:\n` +
-    `1. CITATIONS: Whenever you mention information from a specific model, cite the source with format [ModelName]. Example: "According to [Claude], the rate is 3.5%".\n` +
-    `2. CONTRADICTIONS: If two or more models contradict each other, create a special block: "⚔ CONTRADICTION: [ModelA] claims X while [ModelB] argues Y. Analysis: ..."\n` +
-    `3. CONSENSUS: When all or most agree, state it explicitly: "All models agree that..."\n` +
-    `4. RELIABILITY: Assess which model provides the most reliable information on each point.\n\n` +
-    `Format:\n` +
-    `- Clean, professional Markdown, max 3 heading levels.\n` +
-    `- No excessive horizontal rules, pipes, or bold.\n` +
-    `- Respond ONLY with the final analysis, no meta-commentary.\n` +
-    `- Respond in the SAME LANGUAGE as the original question.\n\n` +
-    `Available models: ${Object.values(modelLabels).join(', ')}`;
-
+  const defaultSysPrompt = INTEGRATOR_PROMPT + `\nAvailable models: ${Object.values(modelLabels).join(', ')}`;
   const sysPrompt = integrator.customInstructions ? `${integrator.customInstructions}\n\n${defaultSysPrompt}` : defaultSysPrompt;
   const debateSection = debateContext
     ? `\n\n---\n\n## Model Debate Transcript\n\nThe models also engaged in a structured debate. Use this as additional context for your synthesis:\n\n${debateContext}`
@@ -859,11 +926,11 @@ app.post('/api/integrate', async (req, res) => {
 
   try {
     const t0 = Date.now();
-    const r = await withTimeout(
+    const r = await withRetry(() => withTimeout(
       callModelStream(integrator.provider, integrator.modelId, sysPrompt, userMsg, maxTokensIntegrator, processedAttachments, false, conversationHistory,
         (chunk) => send('integrator:chunk', { chunk })),
-      120_000, 'integrator'
-    );
+      modelTimeout(integrator.modelId), 'integrator'
+    ), 3, `integrator:${integrator.modelId}`);
     const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens);
     const durationMs = Date.now() - t0;
     send('integrator:done', { text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs });
@@ -899,7 +966,7 @@ app.post('/api/debate-run', async (req, res) => {
         `Identify errors, biases, or weak points. Defend your position or correct it if others are right.\n\n${otherResponses}`;
       try {
         const dr = await withTimeout(
-          callModel(r.provider, r.modelId, 'You are a rigorous debater. Be concise (max 400 words).', debatePrompt, 1024, [], false, []),
+          callModel(r.provider, r.modelId, DEBATE_PROMPT, debatePrompt, 1024, [], false, []),
           60_000, `debate-${r.modelId}`
         );
         const cost = calcCost(r.modelId, dr.inputTokens, dr.outputTokens);
@@ -927,7 +994,7 @@ app.post('/api/debate-run', async (req, res) => {
         `Being completely unbiased and honest, which candidate gave the BEST initial response? ` +
         `Briefly reason (1-2 sentences) and end with exactly: VOTE:${others.map(o => o.modelId).join(' or VOTE:')}`;
       try {
-        const vr = await withTimeout(callModel(r.provider, r.modelId, 'You are an unbiased AI response quality judge.', votePrompt, 300, [], false, []), 30_000, `vote-${r.modelId}`);
+        const vr = await withTimeout(callModel(r.provider, r.modelId, DEBATE_VOTE_PROMPT, votePrompt, 300, [], false, []), 30_000, `vote-${r.modelId}`);
         const match = vr.text.match(/VOTE:([^\s\n,\.]+)/i);
         if (match) {
           const raw = match[1].trim();
@@ -1118,21 +1185,7 @@ app.post('/api/research', async (req, res) => {
       .map((r, i) => `### Respuesta ${i + 1} — [${modelLabels[r.modelId]}] (${r.modelId})\n\n${r.text}`)
       .join('\n\n---\n\n');
 
-    // Enhanced integrator prompt with citation and contradiction instructions (improvements #3, #4)
-    const defaultSysPrompt =
-      `Eres un sintetizador de investigación experto. Múltiples modelos de IA respondieron la misma pregunta.\n\n` +
-      `INSTRUCCIONES CRÍTICAS:\n` +
-      `1. CITACIONES: Cada vez que menciones información de un modelo específico, cita la fuente con formato [NombreModelo]. Ejemplo: "Según [Claude], la tasa es del 3.5%".\n` +
-      `2. CONTRADICCIONES: Si dos o más modelos se contradicen, crea un bloque especial: "⚔ CONTRADICCIÓN: [ModeloA] afirma X mientras que [ModeloB] sostiene Y. Análisis: ..."\n` +
-      `3. CONSENSO: Cuando todos o la mayoría coincidan, indícalo explícitamente: "Todos los modelos coinciden en que..."\n` +
-      `4. FIABILIDAD: Evalúa qué modelo aporta la información más fiable en cada punto.\n\n` +
-      `Formato:\n` +
-      `- Markdown limpio y profesional, máximo 3 niveles de encabezado.\n` +
-      `- Sin reglas horizontales, pipes, ni negritas excesivas.\n` +
-      `- Responde SOLO con el análisis final, sin meta-comentarios.\n` +
-      `- Responde en el MISMO IDIOMA de la pregunta original.\n\n` +
-      `Los modelos disponibles son: ${Object.values(modelLabels).join(', ')}`;
-
+    const defaultSysPrompt = INTEGRATOR_PROMPT + `\nAvailable models: ${Object.values(modelLabels).join(', ')}`;
     const sysPrompt = integrator.customInstructions
       ? `${integrator.customInstructions}\n\n${defaultSysPrompt}`
       : defaultSysPrompt;

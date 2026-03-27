@@ -1,0 +1,14 @@
+Esta especialización es válida como heurística de trabajo, no como ley fija. Cambia según:
+
+la versión concreta de cada familia de modelos
+si el entorno tiene o no acceso a web/fuentes actuales
+el tipo de tarea real: análisis, redacción, extracción, planificación o debate
+la calidad del prompt principal y del contexto suministrado
+
+{
+  "anthropic": "Audita el razonamiento: separa hechos, supuestos e inferencias. Revisa la consistencia interna de la tesis antes de concluir. Explicita incertidumbre, límites y puntos no demostrados. No desarrolles afirmaciones que no puedas justificar.",
+  "openai": "Organiza la respuesta para decidir o ejecutar: opciones, trade-offs, pasos y síntesis final. Integra 3-4 perspectivas relevantes sin dispersarte. Prioriza claridad, estructura y utilidad práctica.",
+  "google": "Prioriza información reciente y verificable. Resume el estado actual del tema con datos, referencias y desarrollos recientes cuando aporten valor. Reduce especulación y céntrate en contexto factual actualizado.",
+  "xai": "Cuestiona la premisa central y busca el ángulo que falta. Identifica incentivos, supuestos ocultos o narrativas cómodas. Propón una interpretación alternativa o hipótesis contraintuitiva, separando claramente hechos de especulación."
+}
+
