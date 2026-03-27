@@ -16,7 +16,6 @@ const INTEGRATOR_PROMPT         = loadPrompt('integrator.md');
 const DEBATE_PROMPT             = loadPrompt('debate.md').trim();
 const DEBATE_VOTE_PROMPT        = loadPrompt('debate-vote.md').trim();
 const HIDDEN_INSTRUCTIONS       = loadPrompt('instrucciones-ocultas.md').trim();
-const DIVERSITY_NOTE_TPL        = loadPrompt('diversity-note.md').trim();
 const CONFIDENCE_INSTRUCTION    = '\n\n' + loadPrompt('confidence-instruction.md').trim();
 const DEBATE_USER_MSG_TPL       = loadPrompt('debate-user-message.md').trim();
 const DEBATE_VOTE_MSG_TPL       = loadPrompt('debate-vote-user-message.md').trim();
@@ -865,8 +864,6 @@ app.post('/api/estimate', (req, res) => {
   res.json({ modelBreakdown, intCost, intInTok, intOutTok, total });
 });
 
-// ─── DIVERSITY_NOTE: se añade al final del user message en cada llamada ────────
-const DIVERSITY_NOTE = '\n\n---\n' + DIVERSITY_NOTE_TPL;
 
 // ─── Retry individual model (improvement #14) ─────────────────────────────────
 app.post('/api/retry', async (req, res) => {
@@ -886,7 +883,7 @@ app.post('/api/retry', async (req, res) => {
   const t0 = Date.now();
   try {
     const r = await withRetry(() => withTimeout(
-      callModelStream(provider, modelId, sysInstr || null, question + DIVERSITY_NOTE, maxTokens || 2048, processedAttachments, !!webSearch, conversationHistory || [],
+      callModelStream(provider, modelId, sysInstr || null, question, maxTokens || 2048, processedAttachments, !!webSearch, conversationHistory || [],
         (chunk) => send('model:chunk', { modelId, provider, chunk })),
       modelTimeout(modelId), modelId
     ), 3, `${provider}:${modelId}`);
@@ -1059,7 +1056,7 @@ app.post('/api/research', async (req, res) => {
       try {
         const sysInstr = [HIDDEN_INSTRUCTIONS, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
         const r = await withTimeout(
-          callModelStream(m.provider, m.modelId, sysInstr || null, question + DIVERSITY_NOTE, maxTokens,
+          callModelStream(m.provider, m.modelId, sysInstr || null, question, maxTokens,
             processedAttachments, !!m.webSearch, conversationHistory,
             (chunk) => send('model:chunk', { modelId: m.modelId, provider: m.provider, chunk })),
           modelTimeout(m.modelId), m.modelId
