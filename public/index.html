@@ -1323,6 +1323,14 @@ function clearConversation() {
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
   document.getElementById('convBar').style.display = 'none';
+  // Reset Research Planning
+  const planObj = document.getElementById('planObjective');
+  if (planObj) planObj.value = '';
+  const planResult = document.getElementById('planningResult');
+  if (planResult) { planResult.style.display = 'none'; }
+  const planBody = document.getElementById('planResultBody');
+  if (planBody) planBody.innerHTML = '';
+  _lastPlan = null;
 }
 
 async function loadKeyStatus() {
