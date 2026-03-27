@@ -734,10 +734,13 @@
     <!-- Debate result area (above synthesis) -->
     <div id="debateResultArea"></div>
 
-    <!-- Integrator / Synthesis result (below debate) -->
-    <div id="integratorResultArea"></div>
+    <!-- Integrator + Consensus side by side -->
+    <div id="integratorRow" style="display:flex;gap:12px;align-items:flex-start">
+      <div id="integratorResultArea" style="flex:1;min-width:0"></div>
+      <div id="consensusPanelArea" style="width:220px;flex-shrink:0"></div>
+    </div>
 
-    <!-- Legacy results section (consensus panel, etc.) -->
+    <!-- Results section -->
     <div class="results-section" id="resultsSection" style="padding:0"></div>
   </main>
 </div>
@@ -1318,6 +1321,7 @@ function clearConversation() {
   state.lastDebateVotes = null; state.lastDebateResponses = [];
   document.getElementById('resultsSection').innerHTML = '';
   document.getElementById('integratorResultArea').innerHTML = '';
+  document.getElementById('consensusPanelArea').innerHTML = '';
   document.getElementById('debateResultArea').innerHTML = '';
   document.querySelectorAll('.imc-result-area').forEach(el => el.remove());
   document.getElementById('exportBtn').style.display = 'none';
@@ -1969,24 +1973,29 @@ function updateIntegratorCard(status, data) {
   } else if (status === 'error') { body.innerHTML = `<div class="result-error">&#9888; Error: ${data.error}</div>`; }
 }
 
-// Consensus panel (improvement #2)
+// Consensus panel — aparece a la derecha del integrador
 function renderConsensusPanel(data) {
   const existing = document.getElementById('consensusPanel'); if (existing) existing.remove();
   const panel = document.createElement('div'); panel.className = 'consensus-panel'; panel.id = 'consensusPanel';
   const levelColor = data.consensusLevel === 'high' ? 'var(--success)' : data.consensusLevel === 'medium' ? 'var(--warn)' : 'var(--danger)';
-  const levelLabel = data.consensusLevel === 'high' ? 'High' : data.consensusLevel === 'medium' ? 'Medium' : 'Low';
-  let html = `<h4>Model consensus: ${levelLabel} (${data.avgSimilarity}%)</h4>
-    <div class="consensus-bar"><div class="consensus-bar-fill" style="width:${data.avgSimilarity}%;background:${levelColor}"></div></div>`;
+  const levelLabel = data.consensusLevel === 'high' ? 'Alto' : data.consensusLevel === 'medium' ? 'Medio' : 'Bajo';
+  let html = `<h4>Consenso entre modelos</h4>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div class="consensus-bar" style="flex:1"><div class="consensus-bar-fill" style="width:${data.avgSimilarity}%;background:${levelColor}"></div></div>
+      <span style="font-family:monospace;font-weight:700;font-size:.85rem;color:${levelColor}">${data.avgSimilarity}%</span>
+    </div>
+    <div style="font-size:.72rem;color:${levelColor};margin-bottom:8px;font-weight:600">${levelLabel}</div>`;
   if (data.modelScores) { data.modelScores.forEach(s => {
     const provName = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi' }[s.provider] || s.modelId;
     const color = s.agreementScore >= 50 ? 'var(--success)' : s.agreementScore >= 25 ? 'var(--warn)' : 'var(--danger)';
     html += `<div class="consensus-model-row"><span class="model-label">${provName}</span>
       <div class="consensus-bar" style="flex:1"><div class="consensus-bar-fill" style="width:${s.agreementScore}%;background:${color}"></div></div>
-      <span style="font-family:monospace;font-size:.75rem;width:35px;text-align:right">${s.agreementScore}%</span></div>`;
+      <span style="font-family:monospace;font-size:.72rem;width:32px;text-align:right;color:${color}">${s.agreementScore}%</span></div>`;
   }); }
-  if (data.outlier) html += `<div style="font-size:.75rem;color:var(--danger);margin-top:6px">Outlier: ${data.outlier.modelId} (${data.outlier.agreementScore}% agreement)</div>`;
+  if (data.outlier) html += `<div style="font-size:.7rem;color:var(--danger);margin-top:6px">Outlier: ${data.outlier.modelId}</div>`;
   panel.innerHTML = html;
-  const rs = document.getElementById('resultsSection'); rs.appendChild(panel);
+  const area = document.getElementById('consensusPanelArea');
+  if (area) area.appendChild(panel);
 }
 
 // Debate panel (improvement #7)
