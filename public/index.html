@@ -130,7 +130,7 @@
     /* iPad (768–1100px): 2 columns */
     @media (max-width: 1100px) { .inline-models-grid { grid-template-columns: repeat(2, 1fr); } }
     /* Mobile phones (≤768px): 1 column */
-    @media (max-width: 768px) { .inline-models-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 767px) { .inline-models-grid { grid-template-columns: 1fr; } }
 
     .inline-model-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s, opacity .15s; min-width: 0; }
     .imc-result-area { display: flex; flex-direction: column; }
@@ -382,9 +382,6 @@
 
     @media (max-width: 900px) {
       .main { overflow: visible; } body { overflow-y: auto; } .results-grid { grid-template-columns: 1fr !important; }
-    }
-    @media (max-width: 768px) {
-      .inline-models-grid { grid-template-columns: 1fr; }
     }
     @media (min-width: 901px) { .layout { height: calc(100vh - 78px); } .main { height: 100%; overflow-y: auto; } .mobile-toggle-btn { display: none; } }
 
@@ -1519,10 +1516,11 @@ function renderModelCards() {
         <select class="model-select" id="sel-${m.provider}" onchange="onModelChange(${idx}, this.value)">${modelOptions}</select>
         <div class="cost-chip"><span>Est. cost:</span><span class="cost-val" id="mcost-${m.provider}">$0.0000</span></div>
         <div class="temp-row">
-          <span class="temp-label">Temp</span>
+          <span class="temp-label" title="Baja temperatura = más fiable y preciso">🎯</span>
           <input type="range" class="temp-slider" id="tempSlider-${m.provider}" min="0" max="1.5" step="0.05"
             value="${m.temperature ?? 0.7}"
             oninput="onTempSlide('${m.provider}', ${idx}, +this.value)">
+          <span class="temp-label" title="Alta temperatura = más creativo y variado">✨</span>
           <span class="temp-val ${m.temperature == null ? 'auto' : ''}" id="tempVal-${m.provider}">${m.temperature != null ? (+m.temperature).toFixed(2) : 'auto'}</span>
           <button class="temp-reset" id="tempReset-${m.provider}" style="visibility:${m.temperature != null ? 'visible' : 'hidden'}"
             onclick="onTempReset('${m.provider}', ${idx})" title="Reset to auto">×</button>
