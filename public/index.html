@@ -434,8 +434,19 @@
     .websearch-toggle::after { content:''; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: transform .2s; }
     .websearch-toggle.on { background: var(--success); } .websearch-toggle.on::after { transform: translateX(12px); }
     .websearch-label { flex: 1; } .websearch-note { font-size: .68rem; color: var(--text-muted); opacity: .7; }
+    .temp-section { display: flex; flex-direction: column; gap: 2px; }
+    .temp-title { font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
     .temp-row { display: flex; align-items: center; gap: 5px; font-size: .75rem; color: var(--text-muted); }
-    .temp-label { min-width: 28px; font-size: .72rem; }
+    .temp-label { font-size: .68rem; white-space: nowrap; }
+    .temp-label-icon { display: none; font-size: .72rem; min-width: 18px; }
+    @media (min-width: 768px) {
+      .temp-label { display: block; }
+      .temp-label-icon { display: none; }
+    }
+    @media (max-width: 767px) {
+      .temp-label { display: none; }
+      .temp-label-icon { display: inline; }
+    }
     .temp-slider { flex: 1; height: 3px; accent-color: var(--accent); cursor: pointer; }
     .temp-val { min-width: 30px; text-align: right; font-family: monospace; font-size: .72rem; }
     .temp-val.auto { opacity: .5; font-style: italic; }
@@ -1515,15 +1526,20 @@ function renderModelCards() {
       <div class="inline-model-card-body" id="body-${m.provider}">
         <select class="model-select" id="sel-${m.provider}" onchange="onModelChange(${idx}, this.value)">${modelOptions}</select>
         <div class="cost-chip"><span>Est. cost:</span><span class="cost-val" id="mcost-${m.provider}">$0.0000</span></div>
-        <div class="temp-row">
-          <span class="temp-label" title="Baja temperatura = más fiable y preciso">🎯</span>
+        <div class="temp-section">
+          <span class="temp-title">Temperature</span>
+          <div class="temp-row">
+          <span class="temp-label" title="Baja temperatura = más fiable y preciso">Reliability</span>
+          <span class="temp-label-icon" title="Baja temperatura = más fiable y preciso">🎯</span>
           <input type="range" class="temp-slider" id="tempSlider-${m.provider}" min="0" max="1.5" step="0.05"
             value="${m.temperature ?? 0.7}"
             oninput="onTempSlide('${m.provider}', ${idx}, +this.value)">
-          <span class="temp-label" title="Alta temperatura = más creativo y variado">✨</span>
+          <span class="temp-label" title="Alta temperatura = más creativo y variado">Creativity</span>
+          <span class="temp-label-icon" title="Alta temperatura = más creativo y variado">✨</span>
           <span class="temp-val ${m.temperature == null ? 'auto' : ''}" id="tempVal-${m.provider}">${m.temperature != null ? (+m.temperature).toFixed(2) : 'auto'}</span>
           <button class="temp-reset" id="tempReset-${m.provider}" style="visibility:${m.temperature != null ? 'visible' : 'hidden'}"
             onclick="onTempReset('${m.provider}', ${idx})" title="Reset to auto">×</button>
+          </div>
         </div>
         ${WEB_SEARCH_PROVIDERS.has(m.provider) ? `
         <div class="websearch-row" id="wsRow-${m.provider}">
