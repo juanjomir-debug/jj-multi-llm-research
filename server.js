@@ -866,8 +866,11 @@ app.get('/analyze/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 app.get('/api/config', (req, res) => {
-  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  // Returns 200 always (used as healthcheck path by Railway)
+  // Full config only for authenticated users
+  if (!req.session.userId) return res.json({ ok: true });
   res.json({
+    ok: true,
     anthropic: !!process.env.ANTHROPIC_API_KEY,
     openai:    !!process.env.OPENAI_API_KEY,
     google:    !!process.env.GOOGLE_API_KEY,
