@@ -1812,4 +1812,10 @@ app.post('/api/migrate-import', express.json({ limit: '50mb' }), (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { console.log(`\n  JJ Multi-LLM Research  →  http://localhost:${PORT}\n`); });
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n  JJ Multi-LLM Research  →  http://localhost:${PORT}\n`);
+});
+
+server.on('error', (err) => { console.error('SERVER ERROR:', err); process.exit(1); });
+process.on('uncaughtException', (err) => { console.error('UNCAUGHT EXCEPTION:', err.stack || err); process.exit(1); });
+process.on('unhandledRejection', (reason) => { console.error('UNHANDLED REJECTION:', reason); });
