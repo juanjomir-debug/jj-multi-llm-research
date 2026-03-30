@@ -1,6 +1,6 @@
 {
   "name": "jj-multi-llm-research",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Multi-LLM research tool – replicates n8n workflow with model selection, cost estimation & custom instructions",
   "main": "server.js",
   "scripts": {
