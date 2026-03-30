@@ -1,4 +1,10 @@
-require('dotenv').config({ path: require('path').join(__dirname, '.env'), override: true });
+// En producción (NODE_ENV=production) no cargar .env — las vars vienen de Railway.
+// En local sí se carga para desarrollo.
+if (process.env.NODE_ENV !== 'production') {
+  // override:true para que las vars del .env sobreescriban variables de entorno
+  // del sistema Windows que puedan tener valores vacíos/incorrectos
+  require('dotenv').config({ path: require('path').join(__dirname, '.env'), override: true });
+}
 const crypto        = require('crypto');
 const express       = require('express');
 const path          = require('path');
@@ -19,6 +25,7 @@ const HIDDEN_INSTRUCTIONS       = loadPrompt('instrucciones-ocultas.md').trim();
 const CONFIDENCE_INSTRUCTION    = '\n\n' + loadPrompt('confidence-instruction.md').trim();
 const DEBATE_USER_MSG_TPL       = loadPrompt('debate-user-message.md').trim();
 const DEBATE_VOTE_MSG_TPL       = loadPrompt('debate-vote-user-message.md').trim();
+const HALLUCINATION_DETECTOR    = loadPrompt('hallucination-detector.md').trim();
 const AMPLITUDE_INSTRUCTIONS    = JSON.parse(fs.readFileSync(path.join(PROMPTS_DIR, 'amplitude.json'), 'utf-8'));
 
 // Helper: aplica {{placeholders}} en templates
@@ -59,6 +66,10 @@ app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
 app.use(express.json({ limit: '25mb' }));
+
+// ── Health check — ANTES de session para responder siempre ────────────────────
+app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
@@ -76,7 +87,7 @@ app.use(session({
 
 // ── Plan definitions (mirror of DB) ──────────────────────────────────────────
 const PLANS = {
-  free:     { name: 'Free',     price: 0,     budget: 3,   maxModels: 2,  webSearch: false, projects: false, historyDays: 7   },
+  free:     { name: 'Free',     price: 0,     budget: 9999, maxModels: 99, webSearch: true,  projects: true,  historyDays: 365 },
   starter:  { name: 'Starter',  price: 9.99,  budget: 25,  maxModels: 4,  webSearch: true,  projects: true,  historyDays: 30  },
   pro:      { name: 'Pro',      price: 29.99, budget: 100, maxModels: 99, webSearch: true,  projects: true,  historyDays: 90  },
   business: { name: 'Business', price: 99.00, budget: 500, maxModels: 99, webSearch: true,  projects: true,  historyDays: 365 },
@@ -270,7 +281,7 @@ const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opu
 const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6' };
 
 // Streaming caller for Claude (improvement #1)
-async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, onChunk) {
+async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const useThinking = CLAUDE_THINKING_MODELS.has(modelId);
@@ -302,7 +313,9 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
   if (systemPrompt) params.system = systemPrompt;
   if (useThinking) {
     params.thinking = { type: 'enabled', budget_tokens: Math.min(10000, effectiveMaxTokens - 2000) };
-    params.temperature = 1;
+    params.temperature = 1; // required for extended thinking, overrides user setting
+  } else if (temperature != null) {
+    params.temperature = temperature;
   }
   if (useSearch) {
     params.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
@@ -328,7 +341,7 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
 }
 
 // Streaming caller for OpenAI (improvement #1)
-async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, onChunk) {
+async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk) {
   if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const messages = [];
@@ -363,6 +376,8 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
     ...(useMaxCompletionTokens
       ? { max_completion_tokens: effectiveMaxTokens }
       : { max_tokens: effectiveMaxTokens }),
+    // o-series and gpt-5 family don't support custom temperature
+    ...(!isOSeries && !isGpt5Family && temperature != null ? { temperature } : {}),
   };
 
   let text = '', inputTokens = 0, outputTokens = 0;
@@ -386,7 +401,7 @@ const GEMINI_SEARCH_SUPPORTED = new Set([
 ]);
 
 // Gemini — with optional streaming via sendMessageStream
-async function callGemini(modelId, systemPrompt, userMessage, attachments = [], webSearch = false, history = [], onChunk = null) {
+async function callGemini(modelId, systemPrompt, userMessage, attachments = [], webSearch = false, history = [], temperature = null, onChunk = null) {
   if (!process.env.GOOGLE_API_KEY) throw new Error('GOOGLE_API_KEY not configured');
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
   const cleanId = modelId.startsWith('models/') ? modelId.slice(7) : modelId;
@@ -397,6 +412,7 @@ async function callGemini(modelId, systemPrompt, userMessage, attachments = [], 
     model: cleanId,
     ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
     ...(webSearch ? { tools: [{ googleSearch: {} }] } : {}),
+    ...(temperature != null ? { generationConfig: { temperature } } : {}),
   });
   const geminiHistory = history.map(h => ({
     role: h.role === 'assistant' ? 'model' : 'user',
@@ -456,7 +472,7 @@ async function callGemini(modelId, systemPrompt, userMessage, attachments = [], 
 }
 
 // Grok — with web search via Responses API
-async function callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk) {
+async function callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, onChunk) {
   if (!process.env.XAI_API_KEY) throw new Error('XAI_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.XAI_API_KEY, baseURL: 'https://api.x.ai/v1' });
   const messages = [];
@@ -493,7 +509,8 @@ async function callGrokStream(modelId, systemPrompt, userMessage, maxTokens, att
   }
 
   // Standard streaming
-  const grokOpts = { model: modelId, messages, max_tokens: maxTokens, stream: true, stream_options: { include_usage: true } };
+  const grokOpts = { model: modelId, messages, max_tokens: maxTokens, stream: true, stream_options: { include_usage: true },
+    ...(temperature != null ? { temperature } : {}) };
   let text = '', inputTokens = 0, outputTokens = 0;
   const stream = await client.chat.completions.create(grokOpts);
   for await (const chunk of stream) {
@@ -505,7 +522,7 @@ async function callGrokStream(modelId, systemPrompt, userMessage, maxTokens, att
 }
 
 // Kimi (no streaming)
-async function callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments = [], history = []) {
+async function callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments = [], history = [], temperature = null) {
   if (!process.env.MOONSHOT_API_KEY) throw new Error('MOONSHOT_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.MOONSHOT_API_KEY, baseURL: 'https://api.moonshot.ai/v1' });
   const messages = [];
@@ -522,25 +539,27 @@ async function callKimi(modelId, systemPrompt, userMessage, maxTokens, attachmen
   } else {
     messages.push({ role: 'user', content: userMessage });
   }
-  const r = await client.chat.completions.create({ model: modelId, messages, max_tokens: maxTokens });
+  const r = await client.chat.completions.create({ model: modelId, messages, max_tokens: maxTokens,
+    ...(temperature != null ? { temperature } : {}) });
   return { text: r.choices[0].message.content, inputTokens: r.usage.prompt_tokens, outputTokens: r.usage.completion_tokens };
 }
 
 // Streaming dispatcher (improvement #1)
-async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk) {
+// temperature = null → use API default; pass as last arg to preserve backward compat
+async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk, temperature = null) {
   switch (provider) {
-    case 'anthropic': return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, onChunk);
-    case 'openai':    return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, onChunk);
-    case 'google':    return callGemini(modelId, systemPrompt, userMessage, attachments, webSearch, history, onChunk);
-    case 'xai':       return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk);
-    case 'moonshot':  return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments, history);
+    case 'anthropic': return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
+    case 'openai':    return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
+    case 'google':    return callGemini(modelId, systemPrompt, userMessage, attachments, webSearch, history, temperature, onChunk);
+    case 'xai':       return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, onChunk);
+    case 'moonshot':  return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature);
     default: throw new Error(`Unknown provider: ${provider}`);
   }
 }
 
 // Non-streaming fallback for integrator/debate
-async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens, attachments = [], webSearch = false, history = []) {
-  return callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, null);
+async function callModel(provider, modelId, systemPrompt, userMessage, maxTokens, attachments = [], webSearch = false, history = [], temperature = null) {
+  return callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, null, temperature);
 }
 
 function withTimeout(promise, ms, label) {
@@ -638,10 +657,37 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 // ─── Research Planning ────────────────────────────────────────────────────────
+// Helper: return the first provider+model that has a configured API key
+function resolveConfiguredProvider(requestedProvider, requestedModelId) {
+  const KEY_MAP = {
+    anthropic: 'ANTHROPIC_API_KEY',
+    openai:    'OPENAI_API_KEY',
+    google:    'GOOGLE_API_KEY',
+    xai:       'XAI_API_KEY',
+    moonshot:  'MOONSHOT_API_KEY',
+  };
+  const DEFAULT_MODELS = {
+    anthropic: 'claude-sonnet-4-6',
+    openai:    'gpt-4o-mini',
+    google:    'gemini-2.0-flash',
+    xai:       'grok-3-mini',
+    moonshot:  'moonshot-v1-8k',
+  };
+  // Try requested provider first, then fall back in order
+  const order = [requestedProvider, 'anthropic', 'openai', 'google', 'xai', 'moonshot'].filter(Boolean);
+  for (const prov of order) {
+    if (process.env[KEY_MAP[prov]]) {
+      const modelId = (prov === requestedProvider && requestedModelId) ? requestedModelId : DEFAULT_MODELS[prov];
+      return { provider: prov, modelId };
+    }
+  }
+  return null; // no provider configured
+}
+
 app.post('/api/plan-research', async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
   const objective = sanitizeStr(req.body.objective, 2000);
-  const { provider, modelId, amplitude, attachments = [] } = req.body;
+  const { provider: reqProvider, modelId: reqModelId, amplitude, attachments = [] } = req.body;
   if (!objective) return res.status(400).json({ error: 'Falta el objetivo de investigación' });
 
   // Set SSE headers for streaming
@@ -651,6 +697,14 @@ app.post('/api/plan-research', async (req, res) => {
   res.flushHeaders();
 
   const send = (event, data) => { res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
+
+  // Resolve which provider+model to use (auto-fallback if requested key not configured)
+  const resolved = resolveConfiguredProvider(reqProvider || 'anthropic', reqModelId);
+  if (!resolved) {
+    send('plan:error', { error: 'No AI provider API keys are configured on the server. Add at least one key (ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY, or XAI_API_KEY) in Railway environment variables.' });
+    res.end(); return;
+  }
+  const { provider, modelId } = resolved;
 
   try {
     // Process attachments
@@ -672,12 +726,12 @@ app.post('/api/plan-research', async (req, res) => {
     const planObjective = objective + strengthsBlock;
 
     let fullText = '';
-    send('plan:start', { provider, modelId });
+    send('plan:start', { provider, modelId, fallback: provider !== (reqProvider || 'anthropic') });
 
     const result = await withTimeout(
       callModelStream(
-        provider || 'anthropic',
-        modelId || 'claude-sonnet-4-6',
+        provider,
+        modelId,
         PLANNING_PROMPT,
         planObjective,
         ampTokens,
@@ -806,9 +860,6 @@ app.get('/api/votes/stats', (req, res) => {
   res.json({ stats });
 });
 
-// ─── Health check (public, no auth required) ─────────────────────────────────
-app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
-
 // ─── Custom domain entry point (reliableai.net/analyze) ──────────────────────
 app.get('/analyze', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/analyze/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
@@ -847,6 +898,61 @@ app.get('/api/hallucination-config', (req, res) => {
   }
 });
 
+// ─── LLM-based hallucination analysis ────────────────────────────────────────
+app.post('/api/analyze-hallucination', async (req, res) => {
+  const { text } = req.body;
+  if (!text || typeof text !== 'string' || text.trim().length < 20) {
+    return res.status(400).json({ error: 'text is required (min 20 chars)' });
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'ANTHROPIC_API_KEY not configured' });
+  }
+
+  // Read prompt and config fresh each time (user-editable)
+  let analysisPrompt, analysisModel;
+  try {
+    analysisPrompt = fs.readFileSync(path.join(PROMPTS_DIR, 'hallucination-analysis.md'), 'utf-8').trim();
+  } catch (e) {
+    return res.status(500).json({ error: 'No se pudo leer hallucination-analysis.md: ' + e.message });
+  }
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(PROMPTS_DIR, 'hallucination-detection.json'), 'utf-8'));
+    analysisModel = cfg.analysis_model || 'claude-haiku-4-5';
+  } catch { analysisModel = 'claude-haiku-4-5'; }
+
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const msg = await client.messages.create({
+      model: analysisModel,
+      max_tokens: 800,
+      system: analysisPrompt,
+      messages: [{ role: 'user', content: text.slice(0, 8000) }] // cap to avoid huge tokens
+    });
+    const raw = msg.content?.[0]?.text || '';
+    // Extract JSON (handle cases where model wraps it in ```json ... ```)
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(422).json({ error: 'Modelo no devolvió JSON válido', raw: raw.slice(0, 200) });
+    const parsed = JSON.parse(jsonMatch[0]);
+    res.json(parsed);
+  } catch (e) {
+    res.status(500).json({ error: 'Error en análisis LLM: ' + e.message });
+  }
+});
+
+// ─── Standalone hallucination check (multi-model, web-search verified) ────────
+app.post('/api/hallucination-check', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const { question, results } = req.body;
+  if (!question || !Array.isArray(results) || results.length === 0)
+    return res.status(400).json({ error: 'question and results[] required' });
+  try {
+    const result = await withTimeout(runHallucinationCheck(question, results), 180_000, 'hallucination-check');
+    res.json({ report: result.report, cost: result.cost, inputTokens: result.inputTokens, outputTokens: result.outputTokens });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/model-strengths', (req, res) => {
   try {
     const { data } = loadModelStrengths();
@@ -877,7 +983,7 @@ app.post('/api/estimate', (req, res) => {
 
 // ─── Retry individual model (improvement #14) ─────────────────────────────────
 app.post('/api/retry', async (req, res) => {
-  const { provider, modelId, question, customInstructions, maxTokens, amplitude, webSearch, conversationHistory, attachments } = req.body;
+  const { provider, modelId, question, customInstructions, maxTokens, amplitude, webSearch, conversationHistory, attachments, temperature } = req.body;
   if (!provider || !modelId || !question) return res.status(400).json({ error: 'Missing params' });
 
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
@@ -894,7 +1000,8 @@ app.post('/api/retry', async (req, res) => {
   try {
     const r = await withRetry(() => withTimeout(
       callModelStream(provider, modelId, sysInstr || null, question, maxTokens || 2048, processedAttachments, !!webSearch, conversationHistory || [],
-        (chunk) => send('model:chunk', { modelId, provider, chunk })),
+        (chunk) => send('model:chunk', { modelId, provider, chunk }),
+        temperature ?? null),
       modelTimeout(modelId), modelId
     ), 3, `${provider}:${modelId}`);
     const cost = calcCost(modelId, r.inputTokens, r.outputTokens);
@@ -1028,6 +1135,43 @@ app.post('/api/debate-run', async (req, res) => {
   res.end();
 });
 
+// ─── Hallucination check (batch, multi-model, with web search) ────────────────
+async function runHallucinationCheck(question, results) {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  let userMessage = `PREGUNTA ORIGINAL:\n${question}\n\n`;
+  results.forEach(r => {
+    userMessage += `RESPUESTA MODELO ${r.modelId}:\n${r.text.slice(0, 3000)}\n\n`;
+  });
+  userMessage += 'Audita estas respuestas. Busca en la web las afirmaciones sospechosas. Responde SOLO con JSON válido.';
+
+  // Use streaming (same as callClaudeStream) so the SDK handles web_search tool loops properly
+  const stream = await client.messages.stream({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 8000,
+    system: HALLUCINATION_DETECTOR,
+    messages: [{ role: 'user', content: userMessage }],
+    tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+  });
+
+  let fullText = '';
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+      fullText += event.delta.text;
+    }
+  }
+
+  const finalMsg = await stream.finalMessage();
+  const inputTokens  = finalMsg.usage?.input_tokens  || 0;
+  const outputTokens = finalMsg.usage?.output_tokens || 0;
+  const cost = calcCost('claude-sonnet-4-6', inputTokens, outputTokens);
+
+  const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('No JSON in hallucination check response');
+  return { report: JSON.parse(jsonMatch[0]), cost, inputTokens, outputTokens };
+}
+
 // ─── Main research endpoint (SSE stream) — models only ────────────────────────
 app.post('/api/research', async (req, res) => {
   const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096,
@@ -1068,7 +1212,8 @@ app.post('/api/research', async (req, res) => {
         const r = await withTimeout(
           callModelStream(m.provider, m.modelId, sysInstr || null, question, maxTokens,
             processedAttachments, !!m.webSearch, conversationHistory,
-            (chunk) => send('model:chunk', { modelId: m.modelId, provider: m.provider, chunk })),
+            (chunk) => send('model:chunk', { modelId: m.modelId, provider: m.provider, chunk }),
+            m.temperature ?? null),
           modelTimeout(m.modelId), m.modelId
         );
         const cost = calcCost(m.modelId, r.inputTokens, r.outputTokens);
@@ -1552,12 +1697,55 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), asyn
       db.prepare('UPDATE users SET plan = ?, stripe_subscription_id = NULL, plan_expires_at = NULL WHERE id = ?').run('free', user.id);
       db.prepare(`INSERT INTO billing_events (user_id, type, description, stripe_id) VALUES (?,?,?,?)`).run(user.id, 'subscription_cancelled', 'Subscription cancelled', sub.id);
     }
+  } else if (event.type === 'invoice.payment_succeeded') {
+    // Subscription renewal: reset monthly cost and extend plan expiry
+    const inv = event.data.object;
+    if (inv.billing_reason === 'subscription_cycle') {
+      const user = db.prepare('SELECT id FROM users WHERE stripe_customer_id = ?').get(inv.customer);
+      if (user) {
+        const expires = new Date(); expires.setMonth(expires.getMonth() + 1);
+        db.prepare('UPDATE users SET monthly_cost_usd = 0, paused = 0, billing_period_start = ?, plan_expires_at = ? WHERE id = ?')
+          .run(currentPeriodStart(), expires.toISOString(), user.id);
+        db.prepare(`INSERT INTO billing_events (user_id, type, amount_usd, description, stripe_id) VALUES (?,?,?,?,?)`)
+          .run(user.id, 'renewal', inv.amount_paid / 100, `Subscription renewed`, inv.id);
+      }
+    }
   } else if (event.type === 'invoice.payment_failed') {
     const inv = event.data.object;
     const user = db.prepare('SELECT id FROM users WHERE stripe_customer_id = ?').get(inv.customer);
     if (user) db.prepare('UPDATE users SET paused = 1 WHERE id = ?').run(user.id);
+  } else if (event.type === 'customer.subscription.updated') {
+    // Plan change via portal
+    const sub = event.data.object;
+    const user = db.prepare('SELECT id FROM users WHERE stripe_subscription_id = ?').get(sub.id);
+    if (user && sub.items?.data?.[0]?.price?.id) {
+      const newPriceId = sub.items.data[0].price.id;
+      const plan = db.prepare('SELECT id FROM plans WHERE stripe_price_id = ?').get(newPriceId);
+      if (plan) {
+        const expires = new Date(sub.current_period_end * 1000);
+        db.prepare('UPDATE users SET plan = ?, plan_expires_at = ?, paused = 0 WHERE id = ?')
+          .run(plan.id, expires.toISOString(), user.id);
+      }
+    }
   }
   res.sendStatus(200);
+});
+
+// ── Admin: configure Stripe Price IDs ──────────────────────────────────────
+// POST /api/admin/billing/plans  body: { token, plans: [{id:'starter', stripe_price_id:'price_xxx'}, ...] }
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin_change_me';
+app.post('/api/admin/billing/plans', (req, res) => {
+  const { token, plans } = req.body || {};
+  if (token !== ADMIN_TOKEN) return res.status(403).json({ error: 'Forbidden' });
+  if (!Array.isArray(plans)) return res.status(400).json({ error: 'plans must be an array' });
+  const stmt = db.prepare('UPDATE plans SET stripe_price_id = ? WHERE id = ?');
+  const results = [];
+  for (const { id, stripe_price_id } of plans) {
+    if (!id || !stripe_price_id) continue;
+    const info = stmt.run(stripe_price_id, id);
+    results.push({ id, stripe_price_id, updated: info.changes > 0 });
+  }
+  res.json({ ok: true, results });
 });
 
 // ─── DB Migration import (temporary, protected by token) ─────────────────────

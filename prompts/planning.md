@@ -95,6 +95,17 @@ Búsqueda web: Actívala o selecciona modelos con búsqueda web cuando el objeti
 
 
 
+**Temperature por modelo**
+
+Asigna `temperature` (0.0–1.5) a cada modelo según el tipo de pregunta y su rol en la investigación:
+
+- 0.0–0.3 → máxima precisión: verificación, extracción de datos, código, diagnóstico factual
+- 0.4–0.6 → equilibrado: análisis, síntesis, comparación, diagnóstico causal
+- 0.7–0.9 → especulativo: ideas, predicción, argumentación, exploración creativa
+- 1.0–1.5 → alta diversidad: brainstorming extremo (úsalo solo en un modelo, no en todos)
+
+Para maximizar diversidad entre modelos, asigna valores ligeramente distintos dentro del mismo rango (ej. 0.3, 0.4, 0.5 en un análisis factual). El integrador debe ir siempre entre 0.3 y 0.6 para sintetizar con precisión.
+
 **Instrucciones personalizadas por modelo**
 
 Da instrucciones específicas para cada modelo para aprovechar sus fortalezas, para obtener diversidad de perspectivas, manteniendo a la vez un análisis común para poder valorar el nivel de consenso.
@@ -115,7 +126,11 @@ Deben adaptarse:
 
 **Formato de respuesta**
 
-DEBES responder EXCLUSIVAMENTE con un bloque JSON válido (sin texto antes ni después, sin markdown code fences). El JSON debe tener esta estructura exacta:
+DEBES responder EXCLUSIVAMENTE con un bloque JSON válido (sin texto antes ni después, sin markdown code fences).
+
+OBLIGATORIO: cada modelo en `models` DEBE incluir el campo `temperature` (número 0.0–1.5). No lo omitas nunca.
+
+El JSON debe tener esta estructura exacta:
 
 {
 "questionType": "prediction|decision|plan|ideas|diagnosis|risk|comparison|synthesis|argumentation|verification",
@@ -130,21 +145,25 @@ DEBES responder EXCLUSIVAMENTE con un bloque JSON válido (sin texto antes ni de
 "anthropic": {
 "modelId": "claude-sonnet-4-6",
 "instructions": "Instrucciones específicas para este modelo según su rol en la investigación",
+"temperature": 0.4,
 "enabled": true
 },
 "openai": {
 "modelId": "gpt-5-mini",
 "instructions": "Instrucciones específicas...",
+"temperature": 0.5,
 "enabled": true
 },
 "google": {
 "modelId": "models/gemini-3-flash-preview",
 "instructions": "Instrucciones específicas...",
+"temperature": 0.6,
 "enabled": true
 },
 "xai": {
 "modelId": "grok-4.20-0309-non-reasoning",
 "instructions": "Instrucciones específicas...",
+"temperature": 0.3,
 "enabled": true
 }
 },

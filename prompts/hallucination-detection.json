@@ -51,5 +51,7 @@
     "risk_disc_mult": 5,
     "threshold_low": 15,
     "threshold_med": 40
-  }
+  },
+
+  "analysis_model": "claude-haiku-4-5"
 }

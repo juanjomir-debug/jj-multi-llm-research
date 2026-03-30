@@ -7,63 +7,104 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Design tokens — dark (default) ──────────────────────────────────────── */
     :root {
-      --bg: #00080f; --surface: #0b1525; --surface2: #101d30; --border: #1a2d45;
-      --text: #e6edf3; --text-muted: #7a8fa8; --accent: #58a6ff; --accent-dim: #0f2a4a;
-      --success: #3fb950; --warn: #d29922; --danger: #f85149;
+      --bg: #1c1c1c; --surface: #282828; --surface1: #313131; --surface2: #3a3a3a; --border: #484848;
+      --text: #ececec; --text-muted: #9e9e9e; --accent: #cf7d4e; --accent-dim: rgba(207,125,78,.14);
+      --success: #4caf72; --warn: #d4a017; --danger: #e5534b;
       --claude: #cc785c; --openai: #10a37f; --gemini: #4285f4; --grok: #a78bfa; --kimi: #06b6d4;
       --radius: 8px; --sidebar-w: 380px;
       --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --body-bg: #1c1c1c;
     }
-    html { font-size: 14px; scroll-behavior: smooth; background: #000000; }
+    /* ── Light theme ─────────────────────────────────────────────────────────── */
+    [data-theme="light"] {
+      --bg: #f4f1ec; --surface: #ffffff; --surface1: #faf9f7; --surface2: #f0ece6; --border: #e2ddd6;
+      --text: #1c1c1c; --text-muted: #6e6e6e; --accent: #b5622c; --accent-dim: rgba(181,98,44,.1);
+      --success: #2d8f50; --warn: #a37000; --danger: #cc2929;
+      --body-bg: #f4f1ec;
+    }
+    /* ── Auto: respeta preferencia del sistema cuando no hay tema guardado ─────── */
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]):not([data-theme="light"]) {
+        --bg: #f4f1ec; --surface: #ffffff; --surface1: #faf9f7; --surface2: #f0ece6; --border: #e2ddd6;
+        --text: #1c1c1c; --text-muted: #6e6e6e; --accent: #b5622c; --accent-dim: rgba(181,98,44,.1);
+        --success: #2d8f50; --warn: #a37000; --danger: #cc2929;
+        --body-bg: #f4f1ec;
+      }
+    }
+    html { font-size: 14px; scroll-behavior: smooth; background: var(--bg); }
     body {
       font-family: var(--font); color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
-      background:
-        radial-gradient(ellipse at 25% 0%,   rgba(14,40,90,.75)  0%, transparent 55%),
-        radial-gradient(ellipse at 80% 15%,  rgba(6,18,55,.6)    0%, transparent 45%),
-        radial-gradient(ellipse at 55% 85%,  rgba(8,22,68,.5)    0%, transparent 50%),
-        radial-gradient(ellipse at 0%  60%,  rgba(10,30,70,.4)   0%, transparent 40%),
-        linear-gradient(180deg, #000000 0%, #010a18 30%, #020c1e 65%, #010810 100%);
+      background: var(--body-bg);
       background-attachment: fixed;
     }
-    /* ── Estrellas ── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background-image:
-        radial-gradient(circle, rgba(255,255,255,.85) 1px, transparent 1px),
-        radial-gradient(circle, rgba(180,210,255,.55) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,.40) 1px, transparent 1px),
-        radial-gradient(circle, rgba(200,230,255,.30) 1px, transparent 1px);
-      background-size: 320px 220px, 500px 380px, 190px 160px, 700px 500px;
-      background-position: 0 0, 90px 55px, 45px 110px, 200px 180px;
-    }
-    /* todos los elementos por encima del overlay de estrellas */
+    /* todos los elementos por encima del fondo */
     .app-header, .layout, .auth-overlay, .history-overlay, .toast-container { position: relative; z-index: 1; }
 
     /* ── Scrollbars globales ── */
-    * { scrollbar-width: thin; scrollbar-color: #1a3a6a #040d1a; }
+    * { scrollbar-width: thin; scrollbar-color: var(--border) var(--surface); }
     *::-webkit-scrollbar { width: 6px; height: 6px; }
-    *::-webkit-scrollbar-track { background: #040d1a; border-radius: 3px; }
-    *::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #1a3f78 0%, #0f2a56 100%); border-radius: 3px; }
-    *::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #58a6ff 0%, #1a6bbf 100%); }
+    *::-webkit-scrollbar-track { background: var(--surface); border-radius: 3px; }
+    *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    *::-webkit-scrollbar-thumb:hover { background: var(--accent); }
     /* scrollbars específicos de tarjetas de resultado */
     .result-body::-webkit-scrollbar, .integrator-result-body::-webkit-scrollbar,
     .sidebar::-webkit-scrollbar, .main::-webkit-scrollbar, .history-body::-webkit-scrollbar { width: 5px; }
-    .result-body::-webkit-scrollbar-track, .integrator-result-body::-webkit-scrollbar-track { background: #020a14; border-radius: 3px; }
-    .result-body::-webkit-scrollbar-thumb, .integrator-result-body::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #1e5099 0%, #0d2d5e 100%); border-radius: 3px; border: none; }
-    .result-body::-webkit-scrollbar-thumb:hover, .integrator-result-body::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #58a6ff 0%, #1a6bbf 100%); }
+    .result-body::-webkit-scrollbar-track, .integrator-result-body::-webkit-scrollbar-track { background: var(--surface); border-radius: 3px; }
+    .result-body::-webkit-scrollbar-thumb, .integrator-result-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; border: none; }
+    .result-body::-webkit-scrollbar-thumb:hover, .integrator-result-body::-webkit-scrollbar-thumb:hover { background: var(--accent); }
     a { color: var(--accent); } button { cursor: pointer; font-family: inherit; }
     textarea, input, select { font-family: inherit; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); outline: none; }
-    textarea:focus, input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,.15); }
+    textarea:focus, input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(207,125,78,.15); }
     select option { background: var(--surface); }
 
-    .app-header { background: rgba(8,18,40,.95); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(88,166,255,.18); padding: 18px 24px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 100; }
-    .app-header-brand { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; }
-    .app-header-brand h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #c8d0dc; line-height: 1.15; margin: 0; }
-    .app-header-brand .app-claim { font-size: .78rem; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; color: rgba(180,190,205,.5); margin-top: 2px; }
-    .app-header .header-badge { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); }
-    .header-badge { font-size: .7rem; background: var(--accent-dim); color: var(--accent); border-radius: 20px; padding: 2px 8px; }
+    /* ── App Header ─────────────────────────────────────────────────────────── */
+    .app-header { background: rgba(28,28,28,.96); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,.07); padding: 12px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .app-header-brand { flex: 1; min-width: 0; }
+    .app-header-brand h1 { font-size: 1.55rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text); line-height: 1.15; margin: 0; white-space: nowrap; }
+    .app-header-brand .app-claim { font-size: .72rem; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; color: rgba(158,158,158,.7); margin-top: 1px; }
+    /* Badge oculto (se mantiene para JS) */
+    .header-badge { display: none !important; }
+    /* ── User avatar button ──────────────────────────────────────────────────── */
+    .user-menu-wrap { position: relative; flex-shrink: 0; }
+    .user-avatar-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-dim); border: 1.5px solid rgba(207,125,78,.45); color: var(--accent); font-weight: 800; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+    .user-avatar-btn:hover { background: rgba(207,125,78,.22); border-color: var(--accent); }
+    /* ── Dropdown ────────────────────────────────────────────────────────────── */
+    .user-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 10px); background: var(--surface1); border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-width: 210px; z-index: 300; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+    .user-dropdown.open { display: block; }
+    .udd-name { font-size: .9rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .udd-plan-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .udd-plan-badge { font-size: .68rem; font-weight: 700; background: var(--accent-dim); color: var(--accent); border-radius: 12px; padding: 2px 8px; }
+    .udd-spend { font-size: .78rem; font-family: monospace; color: var(--text-muted); }
+    .udd-quota-row { display: flex; align-items: center; gap: 8px; font-size: .72rem; color: var(--text-muted); margin-bottom: 10px; }
+    .udd-sep { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+    .udd-btn { display: block; width: 100%; background: none; border: none; color: var(--text-muted); text-align: left; padding: 8px 6px; font-size: .82rem; cursor: pointer; border-radius: 6px; transition: background .12s, color .12s; }
+    .udd-btn:hover { background: var(--surface2); color: var(--text); }
+    .udd-btn.danger:hover { color: var(--danger); }
+    .udd-theme-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; }
+    .udd-theme-label { font-size: .78rem; color: var(--text-muted); }
+    .udd-theme-btns { display: flex; gap: 4px; }
+    .udd-theme-opt { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 4px 9px; font-size: .78rem; cursor: pointer; transition: all .12s; }
+    .udd-theme-opt:hover { border-color: var(--accent); color: var(--text); }
+    .udd-theme-opt.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+    /* Light mode overrides for key surfaces */
+    [data-theme="light"] .app-header { background: rgba(255,255,255,.96); border-bottom-color: rgba(0,0,0,.1); }
+    [data-theme="light"] .app-header-brand h1 { color: #1c1c1c; }
+    [data-theme="light"] .user-avatar-btn { background: rgba(181,98,44,.12); border-color: rgba(181,98,44,.4); color: #b5622c; }
+    [data-theme="light"] .user-avatar-btn:hover { background: rgba(181,98,44,.22); border-color: #b5622c; }
+    [data-theme="light"] .user-dropdown { box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]):not([data-theme="light"]) .app-header { background: rgba(255,255,255,.96); border-bottom-color: rgba(0,0,0,.1); }
+      :root:not([data-theme="dark"]):not([data-theme="light"]) .app-header-brand h1 { color: #1c1c1c; }
+    }
+    /* Mobile */
+    @media (max-width: 540px) {
+      .app-header { padding: 10px 14px; }
+      .app-header-brand h1 { font-size: 1.2rem; }
+      .app-header-brand .app-claim { display: none; }
+      .user-dropdown { right: -4px; min-width: 190px; }
+    }
     .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 5px 10px; font-size: .85rem; transition: all .15s; }
     .btn-icon:hover { background: var(--surface2); color: var(--text); }
 
@@ -73,7 +114,7 @@
     .section-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); padding: 4px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
 
     /* ── Inline model grid (no sidebar) ── */
-    .inline-section { background: rgba(10,22,50,.5); border: 1px solid rgba(88,166,255,.12); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px; }
+    .inline-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px; }
     .inline-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; user-select: none; }
     .inline-section-header h2 { font-size: .9rem; font-weight: 700; color: var(--text); flex: 1; }
     .inline-section.collapsed .inline-section-body { display: none; }
@@ -107,7 +148,7 @@
     .inline-int-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .int-action-btn { border: none; border-radius: var(--radius); padding: 9px 20px; font-size: .85rem; font-weight: 700; cursor: pointer; transition: all .15s; }
     .int-action-btn.primary { background: var(--accent); color: #000; }
-    .int-action-btn.primary:hover { background: #79c0ff; }
+    .int-action-btn.primary:hover { background: #e8935f; }
     .int-action-btn.secondary { background: rgba(167,139,250,.15); border: 1px solid rgba(167,139,250,.35); color: var(--grok); }
     .int-action-btn.secondary:hover { background: rgba(167,139,250,.25); }
 
@@ -138,7 +179,7 @@
     .integrator-card.disabled { opacity: .5; } .integrator-card.disabled .integrator-body { pointer-events: none; }
 
     /* ── Planning section ── */
-    .planning-section { background: rgba(10,22,50,.7); border: 1px solid rgba(88,166,255,.2); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; position: relative; }
+    .planning-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; position: relative; }
     .planning-section.collapsed .planning-body { display: none; }
     .planning-section.collapsed .planning-result { display: none; }
     .planning-header { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
@@ -152,16 +193,16 @@
     .planning-config-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .planning-config-row label { font-size: .75rem; color: var(--text-muted); white-space: nowrap; }
     .planning-config-row select { padding: 5px 8px; font-size: .82rem; border-radius: var(--radius); }
-    .plan-btn { display: inline-flex; align-items: center; gap: 7px; width: fit-content; max-width: fit-content; flex: 0 0 auto; align-self: center; background: linear-gradient(135deg, #1a4a8a 0%, #0d2d5e 100%); color: var(--accent); border: 1px solid rgba(88,166,255,.3); border-radius: var(--radius); padding: 9px 20px; font-size: .88rem; font-weight: 700; transition: all .2s; cursor: pointer; }
-    .plan-btn:hover { background: linear-gradient(135deg, #1e5a9e 0%, #133d72 100%); border-color: var(--accent); }
+    .plan-btn { display: inline-flex; align-items: center; gap: 7px; width: fit-content; max-width: fit-content; flex: 0 0 auto; align-self: center; background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(207,125,78,.35); border-radius: var(--radius); padding: 9px 20px; font-size: .88rem; font-weight: 700; transition: all .2s; cursor: pointer; }
+    .plan-btn:hover { background: rgba(207,125,78,.22); border-color: var(--accent); }
     .plan-btn:disabled { opacity: .4; cursor: not-allowed; }
-    .plan-btn.running { background: linear-gradient(135deg, #3a2a0a 0%, #2a1a00 100%); border-color: var(--warn); color: var(--warn); }
-    .planning-result { margin-top: 14px; border: 1px solid rgba(88,166,255,.15); border-radius: var(--radius); overflow: hidden; }
-    .planning-result-header { background: rgba(88,166,255,.08); padding: 8px 12px; font-size: .8rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+    .plan-btn.running { background: rgba(212,160,23,.12); border-color: var(--warn); color: var(--warn); }
+    .planning-result { margin-top: 14px; border: 1px solid rgba(207,125,78,.15); border-radius: var(--radius); overflow: hidden; }
+    .planning-result-header { background: rgba(207,125,78,.08); padding: 8px 12px; font-size: .8rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 8px; }
     .planning-result-body { padding: 12px; font-size: .83rem; line-height: 1.6; max-height: 350px; overflow-y: auto; resize: vertical; }
-    .planning-result-footer { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(88,166,255,.05); border-top: 1px solid rgba(88,166,255,.1); flex-wrap: wrap; }
+    .planning-result-footer { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(207,125,78,.05); border-top: 1px solid rgba(207,125,78,.1); flex-wrap: wrap; }
     .plan-apply-btn { background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 7px 18px; font-size: .85rem; font-weight: 700; cursor: pointer; transition: background .15s; }
-    .plan-apply-btn:hover { background: #79c0ff; }
+    .plan-apply-btn:hover { background: #e8935f; }
     .plan-missing-fields { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
     .plan-missing-field { display: flex; align-items: center; gap: 8px; }
     .plan-missing-field label { font-size: .75rem; color: var(--warn); min-width: 140px; }
@@ -200,7 +241,7 @@
     .query-section textarea { width: 100%; min-height: 100px; max-height: 280px; padding: 10px 12px; font-size: .95rem; line-height: 1.5; resize: vertical; border-radius: var(--radius); }
     .query-footer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .run-btn { display: flex; align-items: center; gap: 7px; background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 9px 20px; font-size: .9rem; font-weight: 700; transition: background .15s, opacity .15s; }
-    .run-btn:hover:not(:disabled) { background: #79b8ff; } .run-btn:disabled { opacity: .45; cursor: not-allowed; } .run-btn.running { background: var(--warn); color: #000; }
+    .run-btn:hover:not(:disabled) { background: #e8935f; } .run-btn:disabled { opacity: .45; cursor: not-allowed; } .run-btn.running { background: var(--warn); color: #000; }
     .total-cost-badge { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: .8rem; color: var(--text-muted); }
     .total-cost-badge .tval { font-weight: 700; font-family: monospace; }
     .total-cost-badge .tval.cheap { color: var(--success); } .total-cost-badge .tval.medium { color: var(--warn); } .total-cost-badge .tval.pricey { color: var(--danger); }
@@ -227,7 +268,7 @@
     .result-height-bar.visible { display: flex; }
     .rh-label { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
     .rh-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--pct,40%), var(--border) var(--pct,40%), var(--border) 100%); outline: none; cursor: pointer; }
-    .rh-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(88,166,255,.5); cursor: grab; }
+    .rh-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(207,125,78,.5); cursor: grab; }
     .rh-slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: none; cursor: grab; }
     .rh-presets { display: flex; gap: 4px; }
     .rh-preset { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 5px; font-size: .7rem; padding: 2px 7px; transition: all .12s; }
@@ -248,6 +289,47 @@
     .integrator-result-footer { padding: 8px 14px; border-top: 1px solid rgba(167,139,250,.2); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .integrator-result-footer .tval { font-family: monospace; font-weight: 600; font-size: .8rem; }
 
+    /* ── Hallucination Audit Panel ──────────────────────────────────────────── */
+    .hallucination-panel { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+    .hallucination-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .hallucination-header h4 { font-size: .82rem; font-weight: 700; flex: 1; margin: 0; }
+    .hallucination-header .hall-global-badge { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .hall-badge-BAJO    { background: rgba(76,175,114,.18); color: var(--success); border: 1px solid rgba(76,175,114,.35); }
+    .hall-badge-MEDIO   { background: rgba(212,160,23,.15); color: var(--warn);    border: 1px solid rgba(212,160,23,.35); }
+    .hall-badge-ALTO    { background: rgba(229,83,75,.15);  color: var(--danger);  border: 1px solid rgba(229,83,75,.35); }
+    .hall-badge-CRÍTICO { background: rgba(229,83,75,.25);  color: var(--danger);  border: 1px solid rgba(229,83,75,.5);  font-weight: 900; }
+    .hallucination-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .hall-models-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .hall-model-chip { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface1); font-size: .78rem; }
+    .hall-model-chip .hall-model-name { font-weight: 600; }
+    .hall-model-chip .hall-score { font-family: monospace; font-size: .72rem; opacity: .8; }
+    .hall-model-chip .hall-problem { font-size: .68rem; opacity: .65; }
+    .hall-section { font-size: .78rem; }
+    .hall-section-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 4px; }
+    .hall-section ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 3px; }
+    .hall-verdict { font-size: .8rem; padding: 8px 12px; background: var(--surface1); border-radius: 8px; border-left: 3px solid var(--accent); }
+    .hall-verdict-summary { font-style: italic; color: var(--text-muted); margin-top: 4px; font-size: .76rem; }
+    .hall-loading { padding: 12px 16px; color: var(--text-muted); font-size: .82rem; display: flex; align-items: center; gap: 8px; }
+    .hall-run-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 7px 16px; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .hall-run-btn:hover { background: var(--accent); color: #fff; }
+    /* Follow-up bar */
+    .followup-bar { display: flex; gap: 10px; align-items: flex-end; padding: 12px 16px; background: var(--surface1); border-radius: 12px; border: 1px solid var(--border); margin-top: 16px; }
+    .followup-bar textarea { flex: 1; background: var(--surface0); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 12px; font-size: .85rem; resize: none; font-family: inherit; line-height: 1.4; min-height: 38px; max-height: 140px; overflow-y: auto; }
+    .followup-bar textarea:focus { outline: none; border-color: var(--accent); }
+    .followup-bar textarea::placeholder { color: var(--text-muted); }
+    .followup-label { font-size: .7rem; color: var(--text-muted); letter-spacing: .02em; }
+    .followup-submit { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: .84rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+    .followup-submit:hover { opacity: .85; }
+    .followup-submit:disabled { opacity: .4; cursor: not-allowed; }
+    .followup-targets { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 5px; }
+    .followup-chip { display: flex; align-items: center; gap: 3px; font-size: .71rem; cursor: pointer; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--text-muted); background: var(--surface0); transition: background .12s, border-color .12s, color .12s; user-select: none; }
+    .followup-chip input[type=checkbox] { display: none; }
+    .followup-chip.checked { background: rgba(139,92,246,.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .followup-chip.integrator-chip.checked { background: rgba(167,139,250,.15); border-color: var(--grok); color: var(--grok); }
+    .followup-all-btn { font-size: .68rem; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 0 4px; text-decoration: underline; }
+    .followup-all-btn:hover { color: var(--accent); }
+    .hall-run-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .hall-empty { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
     /* ── Reliability Index ──────────────────────────────────────────────────── */
     .reliability-index { border-top: 1px solid rgba(167,139,250,.25); padding: 14px 16px; background: rgba(167,139,250,.04); }
     .reliability-index h4 { font-size: .8rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--grok); margin-bottom: 12px; }
@@ -285,8 +367,8 @@
     .md-content table { border-collapse: collapse; width: 100%; font-size: .82rem; margin: 8px 0; }
     .md-content th, .md-content td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; } .md-content th { background: var(--surface2); }
 
-    .strengths-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, rgba(88,166,255,.12), rgba(167,139,250,.12)); border: 1px solid rgba(88,166,255,.35); color: var(--accent); border-radius: var(--radius); padding: 6px 10px; font-size: .78rem; font-weight: 600; transition: all .2s; margin-bottom: 4px; letter-spacing: .02em; }
-    .strengths-btn:hover { background: linear-gradient(135deg, rgba(88,166,255,.22), rgba(167,139,250,.22)); border-color: var(--accent); }
+    .strengths-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(207,125,78,.1); border: 1px solid rgba(207,125,78,.35); color: var(--accent); border-radius: var(--radius); padding: 6px 10px; font-size: .78rem; font-weight: 600; transition: all .2s; margin-bottom: 4px; letter-spacing: .02em; }
+    .strengths-btn:hover { background: rgba(207,125,78,.18); border-color: var(--accent); }
 
     .toast-container { position: fixed; bottom: 18px; right: 18px; display: flex; flex-direction: column; gap: 6px; z-index: 9999; pointer-events: none; }
     .toast { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 14px; font-size: .82rem; box-shadow: 0 4px 16px rgba(0,0,0,.4); animation: fadeIn .15s ease; }
@@ -312,13 +394,11 @@
     .auth-form { display: flex; flex-direction: column; gap: 12px; }
     .auth-form input { width: 100%; padding: 9px 12px; font-size: .9rem; border-radius: var(--radius); }
     .auth-submit { background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 10px; font-weight: 700; font-size: .95rem; cursor: pointer; transition: background .15s; }
-    .auth-submit:hover { background: #79b8ff; }
+    .auth-submit:hover { background: #e8935f; }
     .auth-error { color: var(--danger); font-size: .8rem; text-align: center; min-height: 18px; }
-    .user-bar { display: flex; align-items: center; gap: 10px; margin-left: auto; } .user-bar.hidden { display: none; }
-    .user-greeting { font-size: .82rem; color: var(--text-muted); } .user-greeting strong { color: var(--text); }
-    .user-spend { font-size: .78rem; font-family: monospace; font-weight: 700; background: var(--accent-dim); color: var(--accent); border-radius: 20px; padding: 3px 10px; }
-    .user-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 4px 10px; font-size: .8rem; cursor: pointer; transition: all .15s; }
-    .user-btn:hover { background: var(--border); color: var(--text); } .user-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+    /* user-menu-wrap visible/hidden via .hidden class */
+    .user-menu-wrap.hidden { display: none; }
+    .user-menu-wrap { display: block; }
 
     .history-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 8000; display: flex; justify-content: flex-end; }
     .history-overlay.hidden { display: none; }
@@ -353,6 +433,13 @@
     .websearch-toggle::after { content:''; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: transform .2s; }
     .websearch-toggle.on { background: var(--success); } .websearch-toggle.on::after { transform: translateX(12px); }
     .websearch-label { flex: 1; } .websearch-note { font-size: .68rem; color: var(--text-muted); opacity: .7; }
+    .temp-row { display: flex; align-items: center; gap: 5px; font-size: .75rem; color: var(--text-muted); }
+    .temp-label { min-width: 28px; font-size: .72rem; }
+    .temp-slider { flex: 1; height: 3px; accent-color: var(--accent); cursor: pointer; }
+    .temp-val { min-width: 30px; text-align: right; font-family: monospace; font-size: .72rem; }
+    .temp-val.auto { opacity: .5; font-style: italic; }
+    .temp-reset { background: none; border: none; color: var(--text-muted); font-size: .85rem; line-height: 1; padding: 0 1px; cursor: pointer; }
+    .temp-reset:hover { color: var(--danger); }
 
     .score-row { display: flex; flex-direction: column; gap: 4px; padding: 6px 12px; border-top: 1px solid var(--border); font-size: .72rem; }
     .score-row-main { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -366,6 +453,18 @@
     .score-badge.halluc-low { background: rgba(63,185,80,.15); color: var(--success); }
     .score-badge.halluc-med { background: rgba(210,153,34,.15); color: var(--warn); }
     .score-badge.halluc-high { background: rgba(248,81,73,.15); color: var(--danger); }
+    .score-badge.halluc-bajo { background: rgba(63,185,80,.15); color: var(--success); }
+    .score-badge.halluc-medio { background: rgba(210,153,34,.15); color: var(--warn); }
+    .score-badge.halluc-alto { background: rgba(248,81,73,.15); color: var(--danger); }
+    .score-badge.halluc-critico { background: rgba(248,81,73,.25); color: #ff6b6b; font-weight: 800; border: 1px solid rgba(248,81,73,.4); }
+    .score-llm-row { display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; padding: 3px 2px 0; border-top: 1px dashed rgba(207,125,78,.12); margin-top: 2px; }
+    .score-llm-explanation { color: var(--text-muted); font-size: .67rem; line-height: 1.4; flex: 1 1 100%; padding-top: 2px; }
+    .score-llm-loading { color: var(--text-muted); font-size: .67rem; font-style: italic; opacity: .65; }
+    .score-llm-detail { font-size: .67rem; color: var(--text-muted); padding: 4px 2px 0; border-top: 1px solid rgba(255,255,255,.04); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .score-llm-detail-item { display: flex; align-items: center; gap: 3px; }
+    .score-llm-count { font-family: monospace; font-weight: 700; min-width: 14px; text-align: center; }
+    .score-llm-toggle { background: none; border: none; color: var(--accent); font-size: .65rem; cursor: pointer; padding: 0 2px; opacity: .7; }
+    .score-llm-toggle:hover { opacity: 1; }
     .amplitude-select { width: 100%; padding: 5px 8px; font-size: .82rem; border-radius: var(--radius); }
 
     /* Vote buttons (improvement #13) */
@@ -377,7 +476,7 @@
     .retry-btn:hover { border-color: var(--warn); color: var(--warn); }
 
     /* Consensus panel (improvement #2) */
-    .consensus-panel { border: 1px solid var(--accent); border-radius: var(--radius); padding: 12px 16px; background: rgba(88,166,255,.05); }
+    .consensus-panel { border: 1px solid var(--accent); border-radius: var(--radius); padding: 12px 16px; background: rgba(207,125,78,.05); }
     .consensus-panel h4 { font-size: .85rem; color: var(--accent); margin-bottom: 8px; }
     .consensus-bar { height: 6px; border-radius: 3px; background: var(--border); margin: 4px 0; overflow: hidden; }
     .consensus-bar-fill { height: 100%; border-radius: 3px; transition: width .5s; }
@@ -417,10 +516,10 @@
     .projects-header h2 { font-size: 1rem; flex: 1; }
     .projects-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
     .projects-new-btn { display:flex; align-items:center; gap:6px; background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 8px 16px; font-size: .85rem; font-weight: 700; cursor: pointer; transition: background .15s; align-self: flex-start; }
-    .projects-new-btn:hover { background: #79c0ff; }
+    .projects-new-btn:hover { background: #e8935f; }
 
     .project-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color .15s; }
-    .project-card:hover { border-color: rgba(88,166,255,.4); }
+    .project-card:hover { border-color: rgba(207,125,78,.4); }
     .project-card-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface2); cursor: pointer; }
     .project-card-header:hover { background: var(--border); }
     .project-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -458,7 +557,7 @@
     .proj-color-swatch.selected { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.5); }
     .proj-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
     .proj-modal-save { background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 8px 20px; font-weight: 700; font-size: .88rem; cursor: pointer; }
-    .proj-modal-save:hover { background: #79c0ff; }
+    .proj-modal-save:hover { background: #e8935f; }
     .proj-modal-cancel { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 8px 16px; font-size: .88rem; cursor: pointer; }
     .proj-modal-cancel:hover { background: var(--border); }
     .proj-attach-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
@@ -479,7 +578,7 @@
     .atp-new-create:hover { border-color: var(--success); color: var(--success); }
     .atp-actions { display: flex; justify-content: flex-end; gap: 8px; }
     .atp-confirm { background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 8px 18px; font-weight: 700; font-size: .85rem; cursor: pointer; }
-    .atp-confirm:hover { background: #79c0ff; }
+    .atp-confirm:hover { background: #e8935f; }
     .atp-cancel { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 8px 14px; font-size: .85rem; cursor: pointer; }
     .atp-cancel:hover { background: var(--border); }
     .proj-tags-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
@@ -527,7 +626,7 @@
 
 <div class="auth-overlay hidden" id="authOverlay">
   <div class="auth-box">
-    <h2>The <span>Board</span></h2>
+    <h2>Reliable<span>AI</span></h2>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign in</button>
       <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Register</button>
@@ -549,22 +648,44 @@
 </div>
 
 <header class="app-header">
-  <span class="header-badge" id="enabledBadge">0 models</span>
   <div class="app-header-brand">
     <h1>ReliableAI</h1>
     <div class="app-claim">Multi-model Reliable Intelligence</div>
   </div>
-  <div class="user-bar hidden" id="userBar">
-    <span class="user-greeting">Hello, <strong id="userName"></strong></span>
-    <span class="user-spend" id="userSpend" title="Accumulated spend">$0.0000</span>
-    <div class="quota-pill" onclick="openBilling()" title="Monthly API usage — click to manage plan">
-      <span id="quotaPlanBadge" style="font-weight:700;color:var(--accent)">Free</span>
-      <div class="quota-bar-wrap"><div class="quota-bar-fill" id="quotaBarFill" style="width:0%"></div></div>
-      <span id="quotaLabel">$0 / $3</span>
+  <!-- Badge oculto — se mantiene para compatibilidad JS -->
+  <span class="header-badge" id="enabledBadge" style="display:none">0 models</span>
+  <!-- User menu -->
+  <div class="user-menu-wrap hidden" id="userBar">
+    <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu(event)" aria-label="User menu">
+      <span id="userInitial">?</span>
+    </button>
+    <div class="user-dropdown" id="userDropdown">
+      <div class="udd-name" id="userName"></div>
+      <div class="udd-plan-row">
+        <span class="udd-plan-badge" id="quotaPlanBadge">Free</span>
+        <span class="udd-spend" id="userSpend">$0.0000</span>
+      </div>
+      <div class="udd-quota-row">
+        <div class="quota-bar-wrap" style="flex:1"><div class="quota-bar-fill" id="quotaBarFill" style="width:0%"></div></div>
+        <span id="quotaLabel">$0 / $3</span>
+      </div>
+      <div class="udd-sep"></div>
+      <!-- Theme selector -->
+      <div class="udd-theme-row">
+        <span class="udd-theme-label">Tema</span>
+        <div class="udd-theme-btns">
+          <button class="udd-theme-opt" id="themeAuto"  onclick="setTheme('auto')"  title="Automático (sistema)">Auto</button>
+          <button class="udd-theme-opt" id="themeDark"  onclick="setTheme('dark')"  title="Oscuro">&#9790;</button>
+          <button class="udd-theme-opt" id="themeLight" onclick="setTheme('light')" title="Claro">&#9728;</button>
+        </div>
+      </div>
+      <div class="udd-sep"></div>
+      <button class="udd-btn" onclick="openBilling(); closeUserMenu()">&#128179; Plan &amp; Billing</button>
+      <button class="udd-btn" onclick="openProjects(); closeUserMenu()">&#128193; Projects</button>
+      <button class="udd-btn" onclick="openHistory(); closeUserMenu()">History</button>
+      <div class="udd-sep"></div>
+      <button class="udd-btn danger" onclick="logout()">Sign out</button>
     </div>
-    <button class="user-btn" onclick="openProjects()">&#128193; Projects</button>
-    <button class="user-btn" onclick="openHistory()">History</button>
-    <button class="user-btn danger" onclick="logout()">Sign out</button>
   </div>
 </header>
 
@@ -724,6 +845,7 @@
           </div>
         </div>
         <div class="inline-int-actions">
+          <button class="int-action-btn secondary" id="hallucAuditBtn" onclick="runHallucinationAudit()">🔍 Hallucination Check</button>
           <button class="int-action-btn secondary" id="debateBtn" onclick="runDebate()">Establish Debate</button>
           <button class="int-action-btn primary" id="integrateBtn" onclick="runIntegration()">Integrate</button>
         </div>
@@ -734,14 +856,23 @@
     <!-- Debate result area (above synthesis) -->
     <div id="debateResultArea"></div>
 
-    <!-- Integrator + Consensus side by side -->
-    <div id="integratorRow" style="display:flex;gap:12px;align-items:flex-start">
-      <div id="integratorResultArea" style="flex:1;min-width:0"></div>
+    <!-- Hallucination audit (between models and integrator) -->
+    <div id="hallucinationArea"></div>
+    <!-- Integrator (full width) -->
+    <div id="integratorRow">
+      <div id="integratorResultArea"></div>
+    </div>
+    <!-- Reliability Index + Consensus side by side (below integrator) -->
+    <div id="bottomAnalysisRow" style="display:flex;gap:12px;align-items:flex-start;margin-top:12px">
+      <div id="reliabilityIndexArea" style="flex:1;min-width:0"></div>
       <div id="consensusPanelArea" style="width:220px;flex-shrink:0"></div>
     </div>
 
     <!-- Results section -->
     <div class="results-section" id="resultsSection" style="padding:0"></div>
+
+    <!-- Follow-up bar (appears after research completes) -->
+    <div id="followUpArea" style="display:none"></div>
   </main>
 </div>
 
@@ -978,7 +1109,7 @@ const TEMPLATES = {
 };
 
 const state = {
-  models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({ provider, modelId: cfg.defaultModel, enabled: true, customInstructions: '', webSearch: false })),
+  models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({ provider, modelId: cfg.defaultModel, enabled: true, customInstructions: '', webSearch: false, temperature: null })),
   attachments: [], conversationHistory: [], integratorEnabled: true, isRunning: false, currentUser: null,
   debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [], resultBodyHeight: 1000,
 };
@@ -1125,7 +1256,8 @@ async function runPlanResearch() {
               for (const [prov, cfg] of Object.entries(_lastPlan.models)) {
                 const label = PROVIDERS[prov]?.label || prov;
                 const ws = _lastPlan.webSearch?.[prov === 'google' ? 'google' : 'xai'] ? ' · Web Search ON' : '';
-                display += `**${label}** — \`${cfg.modelId}\`${cfg.enabled === false ? ' _(disabled)_' : ''}${ws}\n\n${cfg.instructions}\n\n`;
+                const tempTag = cfg.temperature != null ? ` · T=${cfg.temperature}` : '';
+                display += `**${label}** — \`${cfg.modelId}\`${cfg.enabled === false ? ' _(disabled)_' : ''}${ws}${tempTag}\n\n${cfg.instructions}\n\n`;
               }
             }
             if (_lastPlan.integrator) {
@@ -1220,6 +1352,11 @@ function applyPlan() {
       // Set custom instructions
       if (cfg.instructions) {
         m.customInstructions = cfg.instructions;
+      }
+
+      // Set temperature (plan suggestion; user can override via slider after apply)
+      if (cfg.temperature != null) {
+        m.temperature = cfg.temperature;
       }
 
       // Set web search
@@ -1322,7 +1459,10 @@ function clearConversation() {
   document.getElementById('resultsSection').innerHTML = '';
   document.getElementById('integratorResultArea').innerHTML = '';
   document.getElementById('consensusPanelArea').innerHTML = '';
+  const ria = document.getElementById('reliabilityIndexArea'); if (ria) ria.innerHTML = '';
   document.getElementById('debateResultArea').innerHTML = '';
+  const ha = document.getElementById('hallucinationArea'); if (ha) ha.innerHTML = '';
+  const fua = document.getElementById('followUpArea'); if (fua) { fua.innerHTML = ''; fua.style.display = 'none'; }
   document.querySelectorAll('.imc-result-area').forEach(el => el.remove());
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
@@ -1374,6 +1514,15 @@ function renderModelCards() {
       <div class="inline-model-card-body" id="body-${m.provider}">
         <select class="model-select" id="sel-${m.provider}" onchange="onModelChange(${idx}, this.value)">${modelOptions}</select>
         <div class="cost-chip"><span>Est. cost:</span><span class="cost-val" id="mcost-${m.provider}">$0.0000</span></div>
+        <div class="temp-row">
+          <span class="temp-label">Temp</span>
+          <input type="range" class="temp-slider" id="tempSlider-${m.provider}" min="0" max="1.5" step="0.05"
+            value="${m.temperature ?? 0.7}"
+            oninput="onTempSlide('${m.provider}', ${idx}, +this.value)">
+          <span class="temp-val ${m.temperature == null ? 'auto' : ''}" id="tempVal-${m.provider}">${m.temperature != null ? (+m.temperature).toFixed(2) : 'auto'}</span>
+          <button class="temp-reset" id="tempReset-${m.provider}" style="visibility:${m.temperature != null ? 'visible' : 'hidden'}"
+            onclick="onTempReset('${m.provider}', ${idx})" title="Reset to auto">×</button>
+        </div>
         ${WEB_SEARCH_PROVIDERS.has(m.provider) ? `
         <div class="websearch-row" id="wsRow-${m.provider}">
           <button class="websearch-toggle ${m.webSearch && !googleUnsupported ? 'on' : ''}" id="wsToggle-${m.provider}"
@@ -1437,6 +1586,22 @@ function onModelChange(idx, newId) { const m = state.models[idx]; m.modelId = ne
 }
 
 function onInstrChange(idx, val) { state.models[idx].customInstructions = val; updateEstimate(); }
+function onTempSlide(provider, idx, val) {
+  state.models[idx].temperature = val;
+  const el = document.getElementById(`tempVal-${provider}`);
+  if (el) { el.textContent = val.toFixed(2); el.classList.remove('auto'); }
+  const rst = document.getElementById(`tempReset-${provider}`);
+  if (rst) rst.style.visibility = 'visible';
+}
+function onTempReset(provider, idx) {
+  state.models[idx].temperature = null;
+  const slider = document.getElementById(`tempSlider-${provider}`);
+  if (slider) slider.value = 0.7;
+  const el = document.getElementById(`tempVal-${provider}`);
+  if (el) { el.textContent = 'auto'; el.classList.add('auto'); }
+  const rst = document.getElementById(`tempReset-${provider}`);
+  if (rst) rst.style.visibility = 'hidden';
+}
 function toggleWebSearch(idx) { state.models[idx].webSearch = !state.models[idx].webSearch; const m = state.models[idx];
   const btn = document.getElementById(`wsToggle-${m.provider}`); if (btn) btn.className = `websearch-toggle ${m.webSearch ? 'on' : ''}`;
 }
@@ -1501,7 +1666,8 @@ function applyTemplate(templateId) {
 }
 
 // Run research — models only (no integrator, no debate)
-async function runResearch() {
+// withIntegrator: optional bool to include integrator in this call (used by follow-up)
+async function runResearch(withIntegrator = false) {
   if (state.isRunning) return;
   const question = document.getElementById('questionInput').value.trim(); if (!question) return;
   const enabledModels = state.models.filter(m => m.enabled);
@@ -1509,6 +1675,8 @@ async function runResearch() {
   state.isRunning = true; _lastIntegratorText = null; state.lastResults = [];
   Object.keys(_consensusScores).forEach(k => delete _consensusScores[k]);
   Object.keys(_resultData).forEach(k => delete _resultData[k]);
+  Object.keys(_llmAnalysisCache).forEach(k => delete _llmAnalysisCache[k]);
+  const fua = document.getElementById('followUpArea'); if (fua) fua.style.display = 'none';
   updateRunBtn();
   const runBtn = document.getElementById('runBtn'); runBtn.classList.add('running');
   document.getElementById('runBtnIcon').textContent = '\u23F8';
@@ -1524,12 +1692,17 @@ async function runResearch() {
 
   try {
     const amplitude = document.getElementById('responseAmplitude')?.value || 'normal';
+    const intCfg = withIntegrator ? getIntegratorConfig() : {};
+    if (withIntegrator && intCfg.modelId) {
+      const intArea = document.getElementById('integratorResultArea');
+      if (intArea) { intArea.innerHTML = ''; const card = buildIntegratorCard('pending'); intArea.appendChild(card); }
+    }
     const body = {
       question, models: state.models,
-      integrator: {},           // no integration on this call
+      integrator: intCfg,
       debateEnabled: false,
       maxTokens: getAmplitudeTokens(),
-      maxTokensIntegrator: 4096,
+      maxTokensIntegrator: parseInt(document.getElementById('maxTokensInt')?.value) || 4096,
       attachments: state.attachments, amplitude,
       conversationHistory: state.conversationHistory,
     };
@@ -1600,6 +1773,9 @@ function handleSSEEvent(event, data) {
       });
       renderConsensusPanel(data);
       break;
+    case 'hallucination:start': renderHallucinationLoading(); break;
+    case 'hallucination:done': renderHallucinationReport(data.report, data.cost); break;
+    case 'hallucination:error': renderHallucinationError(data.error); break;
     case 'debate:start': state.lastDebateVotes = null; renderDebateStart(); break;
     case 'debate:response': renderDebateResponse(data); break;
     case 'debate:voting': renderDebateVoting(); break;
@@ -1609,7 +1785,15 @@ function handleSSEEvent(event, data) {
       if (data.total_cost_usd !== undefined) { state.currentUser && (state.currentUser.total_cost_usd = data.total_cost_usd); updateUserSpend(data.total_cost_usd); }
       if (state.currentUser && data.monthly_cost_usd !== undefined) { state.currentUser.monthly_cost_usd = data.monthly_cost_usd; state.currentUser.budget = data.budget; updateQuotaUI(state.currentUser); }
       break;
-    case 'complete': if (data.sessionId) { state.lastSessionId = data.sessionId; updateConvIndicator(); } break;
+    case 'complete':
+      if (data.sessionId) { state.lastSessionId = data.sessionId; updateConvIndicator(); }
+      // Show hallucination button if audit didn't run automatically (no results sent to integrator flow)
+      if (state.lastResults.length > 0) {
+        const ha = document.getElementById('hallucinationArea');
+        if (ha && !ha.innerHTML.trim()) renderHallucinationEmpty();
+        showFollowUpBar();
+      }
+      break;
   }
 }
 
@@ -1649,7 +1833,11 @@ function updateResultCard(modelId, status, data) {
 
     // Store for re-scoring when consensus arrives
     _resultData[modelId] = { selfScore: data.selfScore, text: data.text };
+    // If toggle is ON → undefined shows spinner; if OFF → null shows nothing
+    _llmAnalysisCache[modelId] = _hallucinationDetectionEnabled ? undefined : null;
     updateScoreRow(modelId, data.selfScore, data.text);
+    // Async deep hallucination analysis (updates score row when done)
+    if (_hallucinationDetectionEnabled) triggerLLMHallucinationAnalysis(modelId, data.text);
 
     // Footer: copy + vote + retry
     foot.innerHTML = `
@@ -1670,6 +1858,7 @@ async function retryModel(provider, modelId) {
   const m = state.models.find(x => x.provider === provider);
   // Prepare inline result area for this model
   prepareInlineResultArea(provider, modelId);
+  delete _llmAnalysisCache[modelId]; // reset so new analysis can run after retry
   updateResultCard(modelId, 'loading', null);
   _streamBuf[modelId] = '';
 
@@ -1681,6 +1870,7 @@ async function retryModel(provider, modelId) {
         provider, modelId, question, customInstructions: m?.customInstructions || '',
         maxTokens: getAmplitudeTokens(), amplitude,
         webSearch: m?.webSearch || false,
+        temperature: m?.temperature ?? null,
         conversationHistory: state.conversationHistory, attachments: state.attachments,
       }),
     });
@@ -1863,8 +2053,8 @@ function buildIntegratorCard(status) {
 }
 
 function renderReliabilityIndex() {
-  const card = document.getElementById('intResultCard'); if (!card) return;
-  const existing = card.querySelector('.reliability-index'); if (existing) existing.remove();
+  const area = document.getElementById('reliabilityIndexArea'); if (!area) return;
+  area.innerHTML = ''; // clear previous
 
   const provName = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi' };
   const models = Object.keys(_resultData);
@@ -1956,7 +2146,7 @@ function renderReliabilityIndex() {
       </div>
     </div>`;
 
-  card.insertAdjacentHTML('beforeend', html);
+  area.innerHTML = html;
 }
 
 function updateIntegratorCard(status, data) {
@@ -1996,6 +2186,266 @@ function renderConsensusPanel(data) {
   panel.innerHTML = html;
   const area = document.getElementById('consensusPanelArea');
   if (area) area.appendChild(panel);
+}
+
+// ── Hallucination Audit Panel ────────────────────────────────────────────────
+async function runHallucinationAudit() {
+  const question = document.getElementById('questionInput')?.value?.trim();
+  if (!question) { toast('Write your question first.', 'error'); return; }
+  if (!state.lastResults.length) { toast('Run research first to get model responses.', 'error'); return; }
+  renderHallucinationLoading();
+  try {
+    const res = await fetch('/api/hallucination-check', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, results: state.lastResults }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    renderHallucinationReport(data.report, data.cost);
+  } catch (err) {
+    renderHallucinationError(err.message);
+  }
+}
+
+function renderHallucinationLoading() {
+  const area = document.getElementById('hallucinationArea'); if (!area) return;
+  area.innerHTML = `<div class="hallucination-panel">
+    <div class="hallucination-header"><h4>🔍 Hallucination Audit</h4><span style="font-size:.72rem;color:var(--text-muted)">Verifying with web search…</span></div>
+    <div class="hall-loading"><div class="spinner"></div> Auditing responses and searching the web for suspicious claims…</div>
+  </div>`;
+}
+
+function renderHallucinationEmpty() {
+  const area = document.getElementById('hallucinationArea'); if (!area) return;
+  area.innerHTML = `<div class="hallucination-panel">
+    <div class="hallucination-header"><h4>🔍 Hallucination Audit</h4></div>
+    <div class="hall-empty">
+      <span style="flex:1;font-size:.8rem;color:var(--text-muted)">Verify facts with web search across all model responses.</span>
+      <button class="hall-run-btn" onclick="runHallucinationAudit()">Run Audit</button>
+    </div>
+  </div>`;
+}
+
+function renderHallucinationError(err) {
+  const area = document.getElementById('hallucinationArea'); if (!area) return;
+  area.innerHTML = `<div class="hallucination-panel">
+    <div class="hallucination-header"><h4>🔍 Hallucination Audit</h4></div>
+    <div class="hall-loading" style="color:var(--danger)">⚠ Audit failed: ${err}</div>
+    <div class="hall-empty"><button class="hall-run-btn" onclick="runHallucinationAudit()">Retry</button></div>
+  </div>`;
+}
+
+function renderHallucinationReport(report, cost) {
+  const area = document.getElementById('hallucinationArea'); if (!area || !report) return;
+  const riskColor = { 'BAJO': 'var(--success)', 'MEDIO': 'var(--warn)', 'ALTO': 'var(--danger)', 'CRÍTICO': 'var(--danger)' };
+  const v = report.veredicto || {};
+  const globalLevel = v.riesgo_global || 'MEDIO';
+  const costStr = cost != null ? `$${cost.toFixed(4)}` : '';
+
+  // Per-model chips
+  const modelChips = (report.evaluaciones || []).map(e => {
+    const col = riskColor[e.nivel] || 'var(--text-muted)';
+    const isBest = e.modelo === v.mas_fiable;
+    const isWorst = e.modelo === v.mas_sospechosa;
+    const badge = isBest ? ' ✓' : (isWorst ? ' ⚠' : '');
+    return `<div class="hall-model-chip" style="border-color:${col}40">
+      <span class="hall-badge-${e.nivel} hall-model-chip" style="padding:2px 6px;font-size:.68rem;border-radius:6px">${e.nivel}</span>
+      <span class="hall-model-name">${e.modelo}${badge}</span>
+      <span class="hall-score">${e.puntuacion}/100</span>
+      <span class="hall-problem">${e.problema_dominante || ''}</span>
+    </div>`;
+  }).join('');
+
+  // Comparative sections
+  const comp = report.comparativa || {};
+  const makeSec = (title, items) => items?.length
+    ? `<div class="hall-section"><div class="hall-section-title">${title}</div><ul>${items.map(x => `<li>${x}</li>`).join('')}</ul></div>`
+    : '';
+
+  const contradSec   = makeSec('⚔ Contradictions between models', comp.contradicciones);
+  const espurioSec   = makeSec('⚠ Spurious consensus (unverified)', comp.consenso_espurio);
+  const unresolvedSec= makeSec('❓ Unresolved', comp.sin_resolver);
+
+  const recomColor = { usar: 'var(--success)', usar_con_cautela: 'var(--warn)', verificar_antes: 'var(--warn)', no_usar: 'var(--danger)' };
+  const recomLabel = { usar: 'Use', usar_con_cautela: 'Use with caution', verificar_antes: 'Verify first', no_usar: 'Do not use' };
+
+  area.innerHTML = `<div class="hallucination-panel">
+    <div class="hallucination-header" onclick="this.nextElementSibling.classList.toggle('collapsed')" style="cursor:pointer">
+      <h4>🔍 Hallucination Audit</h4>
+      <span class="hallucination-header hall-global-badge hall-badge-${globalLevel}">${globalLevel}</span>
+      <span style="font-size:.72rem;color:var(--text-muted);margin-left:6px">${v.mas_fiable ? `Most reliable: ${v.mas_fiable}` : ''}</span>
+      ${costStr ? `<span class="cost-chip" style="margin-left:8px">${costStr}</span>` : ''}
+      <button class="hall-run-btn" style="margin-left:auto;padding:3px 10px;font-size:.72rem" onclick="event.stopPropagation();runHallucinationAudit()">↻ Re-run</button>
+    </div>
+    <div class="hallucination-body">
+      <div class="hall-models-row">${modelChips}</div>
+      ${contradSec}${espurioSec}${unresolvedSec}
+      ${v.resumen ? `<div class="hall-verdict">
+        <span style="font-weight:600;color:${recomColor[v.recomendacion]||'var(--text)'}">${recomLabel[v.recomendacion]||v.recomendacion}</span>
+        <div class="hall-verdict-summary">${v.resumen}</div>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── Follow-up bar ────────────────────────────────────────────────────────────
+const PROV_ICON = { anthropic: '🟣', openai: '🟢', google: '🔵', xai: '⚫', moonshot: '🌙' };
+
+function showFollowUpBar() {
+  const area = document.getElementById('followUpArea');
+  if (!area) return;
+  area.style.display = '';
+  const hasIntegrator = state.integratorEnabled && document.getElementById('intProvSel')?.value;
+  const intCfg = hasIntegrator ? getIntegratorConfig() : null;
+
+  // Build chips for each model in lastResults
+  const modelChips = state.lastResults.map((r, i) => {
+    const icon = PROV_ICON[r.provider] || '🤖';
+    const label = (r.modelId || r.provider || '').split('-').slice(0,2).join('-');
+    return `<label class="followup-chip checked" id="fuchip-${i}" onclick="toggleFollowUpChip(this)">
+      <input type="checkbox" checked data-idx="${i}" data-type="model">
+      ${icon} ${label}
+    </label>`;
+  }).join('');
+
+  const intChip = intCfg ? `<label class="followup-chip integrator-chip checked" id="fuchip-int" onclick="toggleFollowUpChip(this)">
+    <input type="checkbox" checked data-type="integrator">
+    ⚡ Integrator
+  </label>` : '';
+
+  area.innerHTML = `<div class="followup-bar">
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="followup-label">↩ Follow-up — Send to:</span>
+        <div class="followup-targets" id="followUpTargets">
+          ${modelChips}${intChip}
+        </div>
+        <button class="followup-all-btn" onclick="selectAllFollowUpChips()">all</button>
+      </div>
+      <textarea id="followUpInput" rows="2" placeholder="Ask a follow-up question… (Enter to send, Shift+Enter for new line)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitFollowUp();}"></textarea>
+    </div>
+    <button class="followup-submit" id="followUpSubmitBtn" onclick="submitFollowUp()">Send ↵</button>
+  </div>`;
+  setTimeout(() => document.getElementById('followUpInput')?.focus(), 50);
+}
+
+function toggleFollowUpChip(label) {
+  const cb = label.querySelector('input[type=checkbox]');
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  label.classList.toggle('checked', cb.checked);
+}
+
+function selectAllFollowUpChips() {
+  document.querySelectorAll('#followUpTargets .followup-chip').forEach(chip => {
+    const cb = chip.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = true;
+    chip.classList.add('checked');
+  });
+}
+
+function submitFollowUp() {
+  const input = document.getElementById('followUpInput');
+  const q = input?.value?.trim();
+  if (!q) return;
+  const btn = document.getElementById('followUpSubmitBtn');
+  if (btn) btn.disabled = true;
+
+  // Read selected targets
+  const selectedModelIdxs = [];
+  let integratorSelected = false;
+  document.querySelectorAll('#followUpTargets .followup-chip input[type=checkbox]:checked').forEach(cb => {
+    if (cb.dataset.type === 'integrator') integratorSelected = true;
+    else if (cb.dataset.type === 'model') selectedModelIdxs.push(+cb.dataset.idx);
+  });
+
+  document.getElementById('followUpArea').style.display = 'none';
+  document.getElementById('questionInput').value = q;
+
+  // Integrator-only
+  if (integratorSelected && selectedModelIdxs.length === 0) {
+    runFollowUpIntegratorOnly(q);
+    return;
+  }
+
+  // Some models selected — temporarily override enabled flags
+  const prevEnabled = state.models.map(m => m.enabled);
+  if (selectedModelIdxs.length > 0) {
+    // Map lastResults indexes back to state.models by modelId
+    const selectedModelIds = new Set(selectedModelIdxs.map(i => state.lastResults[i]?.modelId).filter(Boolean));
+    state.models.forEach(m => { m.enabled = selectedModelIds.has(m.modelId); });
+  }
+
+  // Override integrator in body: pass it only if selected
+  runResearch(integratorSelected).finally(() => {
+    // Restore enabled flags
+    state.models.forEach((m, i) => { m.enabled = prevEnabled[i]; });
+  });
+}
+
+async function runFollowUpIntegratorOnly(q) {
+  if (!state.lastResults.length) { toast('No model results to follow up on.', 'error'); return; }
+  const intCfg = getIntegratorConfig();
+  if (!intCfg.modelId) { toast('No integrator configured.', 'error'); return; }
+
+  // Push the new question into conversationHistory
+  state.conversationHistory.push({ role: 'user', content: q });
+
+  // Prepare integrator area
+  const intArea = document.getElementById('integratorResultArea');
+  if (intArea) { intArea.innerHTML = ''; const card = buildIntegratorCard('pending'); intArea.appendChild(card); updateIntegratorCard('loading', null); }
+  _streamBuf['__integrator'] = '';
+
+  try {
+    const maxTokensInt = parseInt(document.getElementById('maxTokensInt')?.value) || 4096;
+    const body = {
+      question: q,
+      results: state.lastResults,
+      integrator: intCfg,
+      maxTokensIntegrator: maxTokensInt,
+      attachments: state.attachments,
+      conversationHistory: state.conversationHistory,
+      sessionId: state.lastSessionId,
+    };
+    const response = await fetch('/api/integrate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buffer += decoder.decode(value, { stream: true }); const parts = buffer.split('\n\n'); buffer = parts.pop();
+      for (const part of parts) {
+        const lines = part.split('\n'); let event = 'message', data = '';
+        for (const line of lines) {
+          if (line.startsWith('event: ')) event = line.slice(7).trim();
+          if (line.startsWith('data: ')) data = line.slice(6).trim();
+        }
+        if (!data || event === 'ping') continue;
+        const parsed = JSON.parse(data);
+        if (event === 'integrator:chunk') {
+          _streamBuf['__integrator'] = (_streamBuf['__integrator'] || '') + parsed.chunk;
+          const intBody = document.getElementById('intBody');
+          if (intBody) intBody.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(_streamBuf['__integrator']))}</div>`;
+        } else if (event === 'integrator:done') {
+          _lastIntegratorText = parsed.text;
+          _streamBuf['__integrator'] = '';
+          updateIntegratorCard('done', parsed);
+          // Update conversationHistory with integrator response
+          state.conversationHistory.push({ role: 'assistant', content: _lastIntegratorText });
+          showFollowUpBar();
+        } else if (event === 'integrator:error') {
+          updateIntegratorCard('error', parsed);
+          toast('Integrator error: ' + parsed.error, 'error');
+        }
+      }
+    }
+  } catch (err) {
+    updateIntegratorCard('error', { error: err.message });
+    toast('Follow-up error: ' + err.message, 'error');
+    // Pop the user turn we added if it failed
+    if (state.conversationHistory.at(-1)?.role === 'user') state.conversationHistory.pop();
+  }
 }
 
 // Debate panel (improvement #7)
@@ -2156,6 +2606,10 @@ fetch('/api/hallucination-config')
 const _consensusScores = {}; // modelId → 0-100
 // Cache of last model:done data for re-scoring after consensus
 const _resultData = {};      // modelId → { selfScore, text }
+// Cache of LLM hallucination analysis results
+const _llmAnalysisCache = {}; // modelId → analysis JSON | null
+// Hallucination Detection toggle — off by default
+let _hallucinationDetectionEnabled = false;
 
 function analyzeResponseScore(text) {
   if (!text) return { confidence: 50, hallucClass: 'med' };
@@ -2253,10 +2707,112 @@ function updateScoreRow(modelId, selfScore, text) {
       `</div>`;
   })() : '';
 
+  // LLM analysis section
+  const llmAnalysis = _llmAnalysisCache[modelId];
+  let llmHtml = '';
+  if (llmAnalysis === undefined) {
+    // Not yet triggered — show loading placeholder
+    llmHtml = `<div class="score-llm-row"><span class="score-llm-loading">⏳ Análisis profundo...</span></div>`;
+  } else if (llmAnalysis === null) {
+    // Triggered but failed or skipped
+    llmHtml = '';
+  } else {
+    // Rich analysis available
+    llmHtml = buildLLMAnalysisHtml(modelId, llmAnalysis);
+  }
+
   const existing = card.querySelector('.score-row'); if (existing) existing.remove();
   const scoreRow = document.createElement('div'); scoreRow.className = 'score-row';
-  scoreRow.innerHTML = `<div class="score-row-main">${mainRow}</div>${bdRow}`;
+  scoreRow.innerHTML = `<div class="score-row-main">${mainRow}</div>${bdRow}${llmHtml}`;
   card.insertBefore(scoreRow, foot);
+}
+
+// Build the HTML for the LLM hallucination analysis section
+function buildLLMAnalysisHtml(modelId, a) {
+  if (!a || a.total_risk_score === undefined) return '';
+  const riskColors = { bajo: 'bajo', medio: 'medio', alto: 'alto', crítico: 'critico' };
+  const riskLabels = { bajo: 'Riesgo Bajo', medio: 'Riesgo Medio', alto: 'Riesgo Alto', crítico: 'Riesgo Crítico' };
+  const cls = riskColors[a.risk_level] || 'medio';
+  const label = riskLabels[a.risk_level] || a.risk_level;
+  const bk = a.breakdown || {};
+  const mod = a.modulators || {};
+
+  // Detail items
+  const detailItems = [
+    bk.unattributed_entities?.count > 0   ? `<span class="score-llm-detail-item" title="Entidades no atribuidas"><span class="score-llm-count" style="color:var(--danger)">${bk.unattributed_entities.count}</span> entidades sin fuente</span>` : '',
+    bk.universalist_claims?.count > 0     ? `<span class="score-llm-detail-item" title="Afirmaciones universalistas"><span class="score-llm-count" style="color:var(--warn)">${bk.universalist_claims.count}</span> afirm. universales</span>` : '',
+    bk.internal_contradictions?.count > 0 ? `<span class="score-llm-detail-item" title="Contradicciones internas"><span class="score-llm-count" style="color:var(--danger)">${bk.internal_contradictions.count}</span> contradiccion${bk.internal_contradictions.count !== 1 ? 'es' : ''}</span>` : '',
+    bk.suspicious_specificity?.count > 0  ? `<span class="score-llm-detail-item" title="Especificidad sospechosa"><span class="score-llm-count" style="color:var(--warn)">${bk.suspicious_specificity.count}</span> cifras sospechosas</span>` : '',
+    mod.explicit_disclaimers_count > 0    ? `<span class="score-llm-detail-item" title="Disclaimers explícitos (riesgo reducido)" style="color:var(--success)">✓ ${mod.explicit_disclaimers_count} disclaimer${mod.explicit_disclaimers_count !== 1 ? 's' : ''}</span>` : '',
+    mod.hedge_on_facts_count > 0          ? `<span class="score-llm-detail-item" title="Hedges sobre hechos (riesgo aumentado)" style="color:var(--warn)">⚠ ${mod.hedge_on_facts_count} hedge${mod.hedge_on_facts_count !== 1 ? 's' : ''} en hechos</span>` : '',
+  ].filter(Boolean).join('');
+
+  const safeId = modelId.replace(/[^a-z0-9]/gi, '-');
+  const scoreHtml = `<span class="score-badge halluc-${cls}" title="Score: ${a.total_risk_score}pts">${label}</span>`;
+  const detailHtml = detailItems ? `<div class="score-llm-detail" id="llm-detail-${safeId}" style="display:none">${detailItems}</div>` : '';
+  const toggleBtn  = detailItems ? `<button class="score-llm-toggle" onclick="toggleLLMDetail('${safeId}',this)">▾ detalle</button>` : '';
+
+  return `<div class="score-llm-row">` +
+    `<span style="color:var(--text-muted)">LLM:</span>${scoreHtml}` +
+    (a.explanation ? `<span class="score-llm-explanation">${a.explanation}</span>` : '') +
+    toggleBtn +
+    `</div>` + detailHtml;
+}
+
+function toggleLLMDetail(safeId, btn) {
+  const el = document.getElementById(`llm-detail-${safeId}`);
+  if (!el) return;
+  const shown = el.style.display !== 'none';
+  el.style.display = shown ? 'none' : 'flex';
+  btn.textContent = shown ? '▾ detalle' : '▴ ocultar';
+}
+
+// Triggers async LLM hallucination analysis for a model response
+async function triggerLLMHallucinationAnalysis(modelId, text) {
+  // Respect the toggle — if off, mark as null (no spinner, no analysis)
+  if (!_hallucinationDetectionEnabled) { _llmAnalysisCache[modelId] = null; return; }
+  if (!text || text.trim().length < 30) { _llmAnalysisCache[modelId] = null; return; }
+  // undefined → spinner visible
+  _llmAnalysisCache[modelId] = undefined;
+  try {
+    const r = await fetch('/api/analyze-hallucination', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!r.ok) { _llmAnalysisCache[modelId] = null; }
+    else {
+      const analysis = await r.json();
+      _llmAnalysisCache[modelId] = analysis;
+      const saved = _resultData[modelId];
+      if (saved) updateScoreRow(modelId, saved.selfScore, saved.text);
+    }
+  } catch {
+    _llmAnalysisCache[modelId] = null;
+    const saved = _resultData[modelId];
+    if (saved) updateScoreRow(modelId, saved.selfScore, saved.text);
+  }
+}
+
+// Toggle hallucination detection on/off
+function toggleHallucinationDetection() {
+  _hallucinationDetectionEnabled = !_hallucinationDetectionEnabled;
+  const btn  = document.getElementById('hallucToggleBtn');
+  const icon = document.getElementById('hallucToggleIcon');
+  const lbl  = document.getElementById('hallucToggleLabel');
+  if (_hallucinationDetectionEnabled) {
+    btn.style.background     = 'rgba(248,81,73,.12)';
+    btn.style.borderColor    = 'rgba(248,81,73,.5)';
+    btn.style.color          = '#f85149';
+    icon.style.color         = '#f85149';
+    lbl.textContent          = 'Halluc. Detection ON';
+  } else {
+    btn.style.background     = 'transparent';
+    btn.style.borderColor    = 'var(--border)';
+    btn.style.color          = 'var(--text-muted)';
+    icon.style.color         = '';
+    lbl.textContent          = 'Halluc. Detection';
+  }
 }
 
 // Auth
@@ -2267,6 +2823,8 @@ function onLoginSuccess(user) {
   document.getElementById('authOverlay').classList.add('hidden');
   document.getElementById('userBar').classList.remove('hidden');
   document.getElementById('userName').textContent = user.username;
+  const ini = document.getElementById('userInitial');
+  if (ini) ini.textContent = (user.username || '?')[0].toUpperCase();
   updateUserSpend(user.total_cost_usd || 0);
   updateQuotaUI(user);
   // Pre-load projects cache silently
@@ -2389,6 +2947,39 @@ async function submitRegister(e) { e.preventDefault(); const username = document
   const data = await r.json(); if (!r.ok) { document.getElementById('registerError').textContent = data.error; return; } onLoginSuccess(data.user); }
 async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); state.currentUser = null;
   document.getElementById('userBar').classList.add('hidden'); document.getElementById('authOverlay').classList.remove('hidden'); }
+
+// ── User menu dropdown ────────────────────────────────────────────────────────
+function toggleUserMenu(e) { if (e) e.stopPropagation(); document.getElementById('userDropdown').classList.toggle('open'); }
+function closeUserMenu() { const d = document.getElementById('userDropdown'); if (d) d.classList.remove('open'); }
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('userBar');
+  if (wrap && !wrap.contains(e.target)) closeUserMenu();
+});
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function setTheme(theme) {
+  const root = document.documentElement;
+  if (theme === 'auto') {
+    root.removeAttribute('data-theme');
+    localStorage.removeItem('theme');
+  } else {
+    root.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
+  _updateThemeBtns(theme);
+}
+function _updateThemeBtns(theme) {
+  ['auto','dark','light'].forEach(t => {
+    const el = document.getElementById('theme' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el) el.classList.toggle('active', t === theme);
+  });
+}
+// Apply saved theme ASAP
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-theme', saved);
+  _updateThemeBtns(saved || 'auto');
+})();
 
 // History
 function openHistory() { document.getElementById('historyOverlay').classList.remove('hidden'); loadHistory(); }
