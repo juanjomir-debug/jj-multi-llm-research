@@ -127,8 +127,10 @@
     .model-toggles-row .mt-item .mt-dot { width: 8px; height: 8px; border-radius: 50%; }
 
     .inline-models-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    /* iPad (768–1100px): 2 columns */
     @media (max-width: 1100px) { .inline-models-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .inline-models-grid { grid-template-columns: 1fr; } }
+    /* Mobile phones (≤768px): 1 column */
+    @media (max-width: 768px) { .inline-models-grid { grid-template-columns: 1fr; } }
 
     .inline-model-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s, opacity .15s; min-width: 0; }
     .imc-result-area { display: flex; flex-direction: column; }
@@ -380,6 +382,8 @@
 
     @media (max-width: 900px) {
       .main { overflow: visible; } body { overflow-y: auto; } .results-grid { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 768px) {
       .inline-models-grid { grid-template-columns: 1fr; }
     }
     @media (min-width: 901px) { .layout { height: calc(100vh - 78px); } .main { height: 100%; overflow-y: auto; } .mobile-toggle-btn { display: none; } }
