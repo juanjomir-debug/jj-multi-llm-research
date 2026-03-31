@@ -656,7 +656,13 @@
     <form class="auth-form" id="registerForm" style="display:none" onsubmit="submitRegister(event)">
       <input type="text" id="regUsername" placeholder="Username" required autocomplete="username" />
       <input type="email" id="regEmail" placeholder="Email" required autocomplete="email" />
-      <input type="password" id="regPassword" placeholder="Password (min. 6 characters)" required autocomplete="new-password" />
+      <input type="password" id="regPassword" placeholder="Password (min. 8 characters)" required autocomplete="new-password" />
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input type="text" id="regCountry" placeholder="Country" autocomplete="country-name" />
+        <input type="text" id="regCity" placeholder="City" autocomplete="address-level2" />
+      </div>
+      <input type="date" id="regBirthdate" placeholder="Date of birth" title="Date of birth" />
+      <input type="text" id="regOccupation" placeholder="Occupation (e.g. Engineer, Student, Researcher…)" />
       <div class="auth-error" id="registerError"></div>
       <button type="submit" class="auth-submit">Create account</button>
     </form>
@@ -697,8 +703,8 @@
       </div>
       <div class="udd-sep"></div>
       <button class="udd-btn" onclick="openBilling(); closeUserMenu()">&#128179; Plan &amp; Billing</button>
-      <button class="udd-btn" onclick="openProjects(); closeUserMenu()">&#128193; Projects</button>
-      <button class="udd-btn" onclick="openHistory(); closeUserMenu()">History</button>
+      <button class="udd-btn" id="menuProjectsBtn" onclick="openProjects(); closeUserMenu()">&#128193; Projects</button>
+      <button class="udd-btn" id="menuHistoryBtn" onclick="openHistory(); closeUserMenu()">History</button>
       <div class="udd-sep"></div>
       <button class="udd-btn danger" onclick="logout()">Sign out</button>
     </div>
@@ -779,6 +785,7 @@
         <button class="stop-btn" id="stopBtn" onclick="stopResearch()">&#9632; Stop</button>
         <div class="total-cost-badge"><span>Est. cost:</span><span class="tval" id="totalCostVal">$0.0000</span></div>
         <span class="enabled-count" id="enabledCountLabel">0 active models</span>
+        <span id="dailyQueryBadge" style="display:none;font-size:.72rem;padding:2px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)"></span>
         <button class="export-btn" id="exportBtn" onclick="exportResearch()" style="display:none">Export</button>
       </div>
     </div>
@@ -955,6 +962,14 @@
     <div id="billingPortalRow" class="hidden" style="margin-top:8px;text-align:center">
       <button class="user-btn" onclick="openBillingPortal()" style="font-size:.82rem">&#9881; Manage subscription</button>
     </div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+      <label style="font-size:.82rem;font-weight:600">Have a promo code?</label>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <input type="text" id="promoCodeInput" placeholder="RELI-XXXXXX" style="flex:1;padding:6px 10px;font-size:.85rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);text-transform:uppercase" maxlength="20">
+        <button class="user-btn" onclick="redeemPromo()" style="font-size:.82rem;white-space:nowrap">Redeem</button>
+      </div>
+      <div id="promoMessage" style="font-size:.72rem;margin-top:4px"></div>
+    </div>
   </div>
 </div>
 
@@ -996,15 +1011,8 @@ const PROVIDERS = {
       { id: 'gpt-5.3',     label: 'GPT-5.3' },
       { id: 'gpt-5',       label: 'GPT-5' },
       { id: 'gpt-5-mini',  label: 'GPT-5 Mini' },
-      // GPT-4.1
-      { id: 'gpt-4.1',      label: 'GPT-4.1' },
-      { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
-      { id: 'gpt-4.1-nano', label: 'GPT-4.1 Nano' },
-      // Thinking (o-series latest 2)
-      { id: 'o4-mini', label: 'o4-mini (Thinking)' },
-      { id: 'o3',      label: 'o3 (Thinking)' },
     ],
-    defaultModel: 'gpt-4.1-mini',
+    defaultModel: 'gpt-5-mini',
   },
   google: {
     label: 'Gemini', icon: '&#10024;', color: 'var(--gemini)', dotColor: '#4285f4',
@@ -1013,12 +1021,8 @@ const PROVIDERS = {
       { id: 'models/gemini-3.1-pro-preview',        label: 'Gemini 3.1 Pro' },
       { id: 'models/gemini-3-flash-preview',         label: 'Gemini 3 Flash' },
       { id: 'models/gemini-3.1-flash-lite-preview',  label: 'Gemini 3.1 Flash Lite' },
-      // Gemini 2.5
-      { id: 'gemini-2.5-pro',               label: 'Gemini 2.5 Pro' },
-      { id: 'gemini-2.5-flash',             label: 'Gemini 2.5 Flash' },
-      { id: 'gemini-2.0-flash-thinking-exp', label: 'Gemini 2.0 Flash Thinking' },
     ],
-    defaultModel: 'gemini-2.5-flash',
+    defaultModel: 'models/gemini-3-flash-preview',
   },
   xai: {
     label: 'Grok', icon: '&#120143;', color: 'var(--grok)', dotColor: '#a78bfa',
@@ -1055,20 +1059,12 @@ const PRICING = {
   'gpt-5':                    { i:  5,   o: 20  },
   'gpt-5-mini':               { i:  0.15,o:  0.6},
   // GPT-4.1
-  'gpt-4.1':                  { i:  2,   o:  8  },
-  'gpt-4.1-mini':             { i:  0.4, o:  1.6},
-  'gpt-4.1-nano':             { i:  0.1, o:  0.4},
   // OpenAI thinking (o-series)
-  'o4-mini':                  { i:  1.1, o:  4.4},
-  'o3':                       { i: 10,   o: 40  },
   // Gemini 3.x preview
   'models/gemini-3.1-pro-preview':       { i: 1.25, o: 5.0 },
   'models/gemini-3-flash-preview':       { i: 0.10, o: 0.4 },
   'models/gemini-3.1-flash-lite-preview':{ i: 0.075,o: 0.3 },
   // Gemini 2.5
-  'gemini-2.5-pro':                { i: 1.25, o: 10.0},
-  'gemini-2.5-flash':              { i: 0.15, o:  0.6},
-  'gemini-2.0-flash-thinking-exp': { i: 0.10, o:  0.4},
   // Grok 4.20
   'grok-4.20-0309-reasoning':     { i: 2,   o: 6 },
   'grok-4.20-0309-non-reasoning': { i: 2,   o: 6 },
@@ -1084,7 +1080,7 @@ function costClass(v){return v<.02?'cheap':v<.10?'medium':'pricey';}
 const _copyBuf = {};
 const AMPLITUDE_TOKENS = { concise: 512, normal: 2048, detailed: 4096, exhaustive: 8192 };
 const WEB_SEARCH_PROVIDERS = new Set(['google', 'xai']);
-const GEMINI_SEARCH_SUPPORTED = new Set(['models/gemini-3.1-pro-preview','gemini-2.5-pro','gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-pro','gemini-1.5-flash']);
+const GEMINI_SEARCH_SUPPORTED = new Set(['models/gemini-3.1-pro-preview','models/gemini-3-flash-preview','models/gemini-3.1-flash-lite-preview']);
 
 // Templates (improvement #9)
 const TEMPLATES = {
@@ -1109,6 +1105,136 @@ const state = {
 let _lastIntegratorText = null;
 let _abortController = null;
 
+// ── Free plan model whitelist ───────────────────────────────────────────────
+const FREE_MODELS = new Set([
+  'claude-haiku-4-5-20251001',
+  'models/gemini-3.1-flash-lite-preview',
+  'gpt-5-mini',
+  'grok-4-1-fast-non-reasoning',
+  'grok-4-1-fast-reasoning',
+]);
+
+// ── Plan limits enforcement ─────────────────────────────────────────────────
+function applyPlanLimits() {
+  const user = state.currentUser;
+  if (!user || !user.limits) return;
+  const limits = user.limits;
+  const isFree = (user.plan === 'free');
+
+  // 1. Force free-plan models
+  if (isFree) {
+    state.models.forEach((m, idx) => {
+      const prov = PROVIDERS[m.provider];
+      // Find first allowed model for this provider
+      const allowed = prov.models.find(opt => FREE_MODELS.has(opt.id));
+      if (allowed) {
+        m.modelId = allowed.id;
+        m.enabled = true;
+      } else {
+        m.enabled = false;
+      }
+    });
+  }
+
+  // 2b. Disable attach files for free
+  const attachBtn = document.querySelector('.attach-btn');
+  if (attachBtn) {
+    if (isFree) {
+      attachBtn.disabled = true;
+      attachBtn.title = 'Upgrade to attach files';
+      attachBtn.style.opacity = '0.4';
+      attachBtn.innerHTML = '📎 Attach Files 🔒';
+    } else {
+      attachBtn.disabled = false;
+      attachBtn.title = '';
+      attachBtn.style.opacity = '';
+      attachBtn.innerHTML = '📎 Attach Files';
+    }
+  }
+
+  // 2. Amplitude selectors: lock individual options not allowed by plan
+  const allowedAmplitudes = new Set(limits.amplitudes || ['concise','normal','detailed','exhaustive']);
+  // Map numeric token values (maxTokensInt) to amplitude names
+  const tokToAmp = { '512':'concise', '2048':'normal', '4096':'detailed', '8192':'exhaustive', '16384':'exhaustive' };
+  function applyAmplitudeLock(sel) {
+    if (!sel) return;
+    sel.disabled = false;
+    let lastAllowedVal = null;
+    Array.from(sel.options).forEach(opt => {
+      const ampName = allowedAmplitudes.has(opt.value) ? opt.value : (tokToAmp[opt.value] || opt.value);
+      const allowed = allowedAmplitudes.has(ampName);
+      opt.disabled = !allowed;
+      opt.text = opt.text.replace(' 🔒', '') + (allowed ? '' : ' 🔒');
+      if (allowed) lastAllowedVal = opt.value;
+    });
+    // Snap to last allowed option if current is locked
+    const curAmp = tokToAmp[sel.value] || sel.value;
+    if (!allowedAmplitudes.has(curAmp) && lastAllowedVal !== null) sel.value = lastAllowedVal;
+  }
+  applyAmplitudeLock(document.getElementById('responseAmplitude'));
+  applyAmplitudeLock(document.getElementById('maxTokensInt'));
+
+  // 3. Debate: enable or disable based on plan
+  const debateToggle = document.getElementById('debateToggle');
+  const debateBtn = document.getElementById('debateBtn');
+  const debateLbl = document.getElementById('debateLabel');
+  if (!limits.debate) {
+    state.debateEnabled = false;
+    if (debateToggle) { debateToggle.classList.remove('on'); debateToggle.disabled = true; debateToggle.title = 'Upgrade to unlock Debate'; }
+    if (debateBtn) { debateBtn.disabled = true; debateBtn.title = 'Upgrade to Pro to unlock Debate'; debateBtn.style.opacity = '0.4'; debateBtn.innerHTML = debateBtn.innerHTML.replace(' 🔒','') + ' 🔒'; }
+    if (debateLbl) { debateLbl.innerHTML = debateLbl.innerHTML.replace(/<span[^>]*>🔒.*?<\/span>/g, ''); if (isFree) debateLbl.innerHTML += ' <span style="font-size:.65rem;color:var(--danger)">🔒 PRO</span>'; }
+  } else {
+    if (debateToggle) { debateToggle.disabled = false; debateToggle.title = ''; }
+    if (debateBtn) { debateBtn.disabled = false; debateBtn.title = ''; debateBtn.style.opacity = ''; debateBtn.innerHTML = debateBtn.innerHTML.replace(' 🔒',''); }
+    if (debateLbl) { debateLbl.innerHTML = debateLbl.innerHTML.replace(/<span[^>]*>🔒.*?<\/span>/g, ''); }
+  }
+
+  // 4. Hallucination: enable or disable based on plan
+  const hallBtn = document.getElementById('hallCheckBtn') || document.getElementById('hallucAuditBtn');
+  if (hallBtn) {
+    if (!limits.hallucination) {
+      hallBtn.disabled = true;
+      hallBtn.title = 'Upgrade to Pro to unlock Hallucination Detection';
+      hallBtn.style.opacity = '0.4';
+      if (!hallBtn.innerHTML.includes('🔒')) hallBtn.innerHTML += ' 🔒';
+    } else {
+      hallBtn.disabled = false;
+      hallBtn.title = '';
+      hallBtn.style.opacity = '';
+      hallBtn.innerHTML = hallBtn.innerHTML.replace(' 🔒','');
+    }
+  }
+
+  // 5b. Mark Projects & History buttons in menu with lock for free
+  const menuProj = document.getElementById('menuProjectsBtn');
+  const menuHist = document.getElementById('menuHistoryBtn');
+  if (menuProj) menuProj.innerHTML = isFree ? '📁 Projects 🔒' : '📁 Projects';
+  if (menuHist) menuHist.innerHTML = isFree ? 'History 🔒' : 'History';
+
+  // 5. Show daily query counter
+  updateDailyQueryUI();
+
+  // 6. Re-render model cards, planner and integrator dropdowns with restrictions
+  renderModelCards();
+  updatePlanModels();
+  onIntProviderChange();
+}
+
+function updateDailyQueryUI() {
+  const user = state.currentUser;
+  if (!user || !user.limits) return;
+  const el = document.getElementById('dailyQueryBadge');
+  if (!el) return;
+  const max = user.limits.dailyQueries || 999;
+  const used = user.daily_queries || 0;
+  if (max < 100) {
+    el.textContent = `${used}/${max} queries today`;
+    el.style.display = '';
+    el.style.color = used >= max ? 'var(--danger)' : 'var(--text-muted)';
+  } else {
+    el.style.display = 'none';
+  }
+}
 
 // ── Research Planning ───────────────────────────────────────────────────────
 let _lastPlan = null;
@@ -1117,13 +1243,22 @@ function togglePlanningSection() {
   document.getElementById('planningSection').classList.toggle('collapsed');
 }
 
+function getAllowedModels(provKey) {
+  const isFree = state.currentUser?.plan === 'free';
+  const all = PROVIDERS[provKey].models;
+  // Return all models but mark locked ones; server enforces the restriction
+  return all.map(m => ({ ...m, locked: isFree && !FREE_MODELS.has(m.id) }));
+}
+
 function updatePlanModels() {
   const prov = document.getElementById('planProvider').value;
   const sel = document.getElementById('planModel');
-  sel.innerHTML = PROVIDERS[prov].models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
-  // Default planner model: GPT-4.1 Mini for openai, otherwise provider default
-  if (prov === 'openai') sel.value = 'gpt-4.1-mini';
-  else sel.value = PROVIDERS[prov].defaultModel;
+  const models = getAllowedModels(prov);
+  sel.innerHTML = models.map(m => `<option value="${m.id}" ${m.locked ? 'disabled' : ''}>${m.label}${m.locked ? ' 🔒' : ''}</option>`).join('');
+  // Select first unlocked model
+  const firstUnlocked = models.find(m => !m.locked);
+  if (prov === 'openai') sel.value = models.find(m => m.id === 'gpt-5-mini' && !m.locked)?.id || firstUnlocked?.id;
+  else sel.value = models.find(m => m.id === PROVIDERS[prov].defaultModel && !m.locked)?.id || firstUnlocked?.id;
 }
 
 
@@ -1453,7 +1588,11 @@ function renderModelCards() {
   state.models.forEach((m, idx) => {
     const prov = PROVIDERS[m.provider]; const card = document.createElement('div');
     card.className = 'inline-model-card' + (m.enabled ? ' active' : ' disabled'); card.id = `card-${m.provider}`;
-    const modelOptions = prov.models.map(opt => `<option value="${opt.id}" ${opt.id === m.modelId ? 'selected' : ''}>${opt.label}</option>`).join('');
+    const isFree = state.currentUser?.plan === 'free';
+    const modelOptions = prov.models.map(opt => {
+      const locked = isFree && !FREE_MODELS.has(opt.id);
+      return `<option value="${opt.id}" ${opt.id === m.modelId ? 'selected' : ''} ${locked ? 'disabled' : ''}>${opt.label}${locked ? ' 🔒' : ''}</option>`;
+    }).join('');
     const googleUnsupported = m.provider === 'google' && !GEMINI_SEARCH_SUPPORTED.has(m.modelId);
     card.innerHTML = `
       <div class="inline-model-card-header">
@@ -1529,7 +1668,9 @@ function toggleModel(idx) { state.models[idx].enabled = !state.models[idx].enabl
   updateEnabledBadge(); updateEstimate(); updateRunBtn();
 }
 
-function onModelChange(idx, newId) { const m = state.models[idx]; m.modelId = newId;
+function onModelChange(idx, newId) { const m = state.models[idx];
+  if (state.currentUser?.plan === 'free' && !FREE_MODELS.has(newId)) { toast('Upgrade to use this model', 'error'); return; }
+  m.modelId = newId;
   if (m.provider === 'google') {
     const supported = GEMINI_SEARCH_SUPPORTED.has(newId); const btn = document.getElementById(`wsToggle-${m.provider}`);
     if (btn) { btn.disabled = !supported; btn.style.opacity = supported ? '' : '0.4'; btn.style.cursor = supported ? '' : 'not-allowed'; }
@@ -1580,9 +1721,15 @@ function populateIntegratorDropdowns() {
   const intMod = document.getElementById('intModel');
   if (intMod) intMod.value = 'claude-haiku-4-5-20251001';
 }
-function onIntProviderChange() { const provKey = document.getElementById('intProvider').value; const prov = PROVIDERS[provKey];
-  const sel = document.getElementById('intModel'); sel.innerHTML = prov.models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
-  sel.value = prov.defaultModel; updateEstimate();
+function onIntProviderChange() {
+  const provKey = document.getElementById('intProvider').value;
+  const prov = PROVIDERS[provKey];
+  const models = getAllowedModels(provKey);
+  const sel = document.getElementById('intModel');
+  sel.innerHTML = models.map(m => `<option value="${m.id}" ${m.locked ? 'disabled' : ''}>${m.label}${m.locked ? ' 🔒' : ''}</option>`).join('');
+  const firstUnlocked = models.find(m => !m.locked);
+  sel.value = models.find(m => m.id === prov.defaultModel && !m.locked)?.id || firstUnlocked?.id;
+  updateEstimate();
 }
 function getIntegratorConfig() { return { provider: document.getElementById('intProvider').value, modelId: document.getElementById('intModel').value, customInstructions: document.getElementById('intInstructions').value }; }
 function toggleAdv() { const body = document.getElementById('advBody'); const arr = document.getElementById('advArrow'); const open = body.classList.toggle('open'); arr.textContent = open ? '\u25B2' : '\u25BC'; }
@@ -1629,9 +1776,21 @@ function applyTemplate(templateId) {
 // withIntegrator: optional bool to include integrator in this call (used by follow-up)
 async function runResearch(withIntegrator = false) {
   if (state.isRunning) return;
+  // Daily query limit check (client-side)
+  if (state.currentUser?.limits?.dailyQueries) {
+    const used = state.currentUser.daily_queries || 0;
+    const max = state.currentUser.limits.dailyQueries;
+    if (max < 100 && used >= max) {
+      toast(`Daily limit of ${max} queries reached. Upgrade your plan for more.`, 'error');
+      openBilling();
+      return;
+    }
+  }
   const question = document.getElementById('questionInput').value.trim(); if (!question) return;
   const enabledModels = state.models.filter(m => m.enabled);
   if (enabledModels.length === 0) { toast('Enable at least one model.', 'error'); return; }
+  // Increment client-side daily counter
+  if (state.currentUser) { state.currentUser.daily_queries = (state.currentUser.daily_queries || 0) + 1; updateDailyQueryUI(); }
   state.isRunning = true; _lastIntegratorText = null; state.lastResults = [];
   Object.keys(_consensusScores).forEach(k => delete _consensusScores[k]);
   Object.keys(_resultData).forEach(k => delete _resultData[k]);
@@ -2787,8 +2946,11 @@ function onLoginSuccess(user) {
   if (ini) ini.textContent = (user.username || '?')[0].toUpperCase();
   updateUserSpend(user.total_cost_usd || 0);
   updateQuotaUI(user);
-  // Pre-load projects cache silently
-  fetch('/api/projects').then(r => r.json()).then(({ projects }) => { _projects = projects; updateAtpSelect(); }).catch(() => {});
+  applyPlanLimits();
+  // Pre-load projects cache silently (only if plan allows)
+  if (user.limits && user.limits.projects) {
+    fetch('/api/projects').then(r => r.json()).then(({ projects }) => { _projects = projects; updateAtpSelect(); }).catch(() => {});
+  }
   // Check for billing redirect
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('billing') === 'success') { toast('🎉 Subscription activated!', 'success'); history.replaceState({}, '', '/'); }
@@ -2847,25 +3009,26 @@ function renderBillingPlans() {
   const grid = document.getElementById('billingPlansGrid');
   const currentPlan = state.currentUser?.plan || 'free';
   const plansMeta = {
-    free:     { popular: false, features: ['2 models simultaneous', '$3/month API budget', '7 days history', 'No web search'] },
-    starter:  { popular: false, features: ['4 models simultaneous', '$25/month API budget', '30 days history', 'Web search', 'Projects'] },
-    pro:      { popular: true,  features: ['Unlimited models', '$100/month API budget', '90 days history', 'Web search', 'Projects', 'Priority'] },
-    business: { popular: false, features: ['Unlimited models', '$500/month API budget', '365 days history', 'Web search', 'Projects', 'Priority support'] },
+    free:       { popular: false, features: ['Previous-gen models only', '3 queries/day', 'Concise answers only', 'Basic synthesis', 'No history / projects', 'No hallucination / debate'] },
+    starter:    { popular: false, features: ['Fast models', 'Normal length answers', 'Daily query limit', 'History', 'Projects'] },
+    pro:        { popular: true,  features: ['All models', 'Detailed & exhaustive answers', 'Research planning', 'Hallucination analysis', 'Model Debate Mode', 'Web Search', 'Confidence scoring'] },
+    enterprise: { popular: false, features: ['5 team shared accounts', 'High Security Mode', 'BYO credentials'] },
   };
   const plans = _billingPlans || [
-    { id:'free', name:'Free', price_eur:0, monthly_budget:3 },
-    { id:'starter', name:'Starter', price_eur:9.99, monthly_budget:25 },
-    { id:'pro', name:'Pro', price_eur:29.99, monthly_budget:100 },
-    { id:'business', name:'Business', price_eur:99, monthly_budget:500 },
+    { id:'free',       name:'Free',       price_eur:0  },
+    { id:'starter',    name:'Starter',    price_eur:10 },
+    { id:'pro',        name:'Pro',        price_eur:25 },
+    { id:'enterprise', name:'Enterprise', price_eur:90 },
   ];
-  grid.innerHTML = plans.map(p => {
-    const meta = plansMeta[p.id] || { popular: false, features: [`$${p.monthly_budget}/mo budget`] };
+  // Filter out pro_demo from display
+  const visiblePlans = plans.filter(p => p.id !== 'pro_demo');
+  grid.innerHTML = visiblePlans.map(p => {
+    const meta = plansMeta[p.id] || { popular: false, features: [] };
     const isCurrent = p.id === currentPlan;
     return `<div class="plan-card ${isCurrent ? 'current' : ''} ${meta.popular ? 'popular' : ''}">
       ${meta.popular ? '<span class="plan-badge">POPULAR</span>' : ''}
       <h3>${p.name}</h3>
-      <div class="plan-price"><sup>€</sup>${p.price_eur > 0 ? p.price_eur.toFixed(2) : '0'}<span>/mo</span></div>
-      <div class="plan-budget">Up to $${p.monthly_budget} API/month</div>
+      <div class="plan-price"><sup>$</sup>${p.price_eur > 0 ? p.price_eur.toFixed(0) : '0'}<span>/mo</span></div>
       <ul class="plan-features">${meta.features.map(f => `<li>${f}</li>`).join('')}</ul>
       ${isCurrent
         ? `<button class="plan-btn current" disabled>Current plan</button>`
@@ -2886,6 +3049,26 @@ async function startCheckout(planId) {
   } catch (err) { toast('Payment error: ' + err.message, 'error'); }
 }
 
+async function redeemPromo() {
+  const code = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+  const msg = document.getElementById('promoMessage');
+  if (!code) { msg.textContent = 'Enter a promo code'; msg.style.color = 'var(--danger)'; return; }
+  msg.textContent = 'Redeeming...'; msg.style.color = 'var(--text-muted)';
+  try {
+    const r = await fetch('/api/promo/redeem', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+    const d = await r.json();
+    if (r.ok) {
+      msg.textContent = d.message; msg.style.color = 'var(--success)';
+      toast('🎉 ' + d.message, 'success');
+      // Refresh user state
+      const me = await fetch('/api/auth/me'); if (me.ok) { const { user } = await me.json(); onLoginSuccess(user); }
+      closeBilling();
+    } else {
+      msg.textContent = d.error; msg.style.color = 'var(--danger)';
+    }
+  } catch (err) { msg.textContent = 'Error: ' + err.message; msg.style.color = 'var(--danger)'; }
+}
+
 async function openBillingPortal() {
   try {
     const r = await fetch('/api/billing/portal', { method: 'POST' });
@@ -2901,10 +3084,24 @@ async function submitLogin(e) { e.preventDefault(); const email = document.getEl
   document.getElementById('loginError').textContent = '';
   const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
   const data = await r.json(); if (!r.ok) { document.getElementById('loginError').textContent = data.error; return; } onLoginSuccess(data.user); }
-async function submitRegister(e) { e.preventDefault(); const username = document.getElementById('regUsername').value, email = document.getElementById('regEmail').value, password = document.getElementById('regPassword').value;
+async function submitRegister(e) {
+  e.preventDefault();
+  const username   = document.getElementById('regUsername').value;
+  const email      = document.getElementById('regEmail').value;
+  const password   = document.getElementById('regPassword').value;
+  const country    = document.getElementById('regCountry').value;
+  const city       = document.getElementById('regCity').value;
+  const birthdate  = document.getElementById('regBirthdate').value;
+  const occupation = document.getElementById('regOccupation').value;
   document.getElementById('registerError').textContent = '';
-  const r = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, email, password }) });
-  const data = await r.json(); if (!r.ok) { document.getElementById('registerError').textContent = data.error; return; } onLoginSuccess(data.user); }
+  const r = await fetch('/api/auth/register', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password, country, city, birthdate, occupation })
+  });
+  const data = await r.json();
+  if (!r.ok) { document.getElementById('registerError').textContent = data.error; return; }
+  onLoginSuccess(data.user);
+}
 async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); state.currentUser = null;
   document.getElementById('userBar').classList.add('hidden'); document.getElementById('authOverlay').classList.remove('hidden'); }
 
@@ -2942,7 +3139,10 @@ function _updateThemeBtns(theme) {
 })();
 
 // History
-function openHistory() { document.getElementById('historyOverlay').classList.remove('hidden'); loadHistory(); }
+function openHistory() {
+  if (state.currentUser?.plan === 'free') { toast('Upgrade to access History 🔒', 'error'); return; }
+  document.getElementById('historyOverlay').classList.remove('hidden'); loadHistory();
+}
 function closeHistory(e) { if (!e || e.target === document.getElementById('historyOverlay')) document.getElementById('historyOverlay').classList.add('hidden'); }
 
 const _historySessions = new Map();
@@ -3104,7 +3304,9 @@ async function deleteSession(sessionId, btn) { if (!confirm('Delete this session
 
 // File attachments
 const MAX_FILES = 5, MAX_SIZE = 10 * 1024 * 1024;
-function handleFileSelect(event) { const files = Array.from(event.target.files); event.target.value = '';
+function handleFileSelect(event) {
+  if (state.currentUser?.plan === 'free') { toast('Upgrade to attach files', 'error'); event.target.value = ''; return; }
+  const files = Array.from(event.target.files); event.target.value = '';
   for (const file of files) { if (state.attachments.length >= MAX_FILES) { toast(`Maximum ${MAX_FILES} files.`, 'error'); break; }
     if (file.size > MAX_SIZE) { toast(`"${file.name}" exceeds 10 MB.`, 'error'); continue; }
     if (state.attachments.some(a => a.name === file.name && a.size === file.size)) continue;
@@ -3127,6 +3329,7 @@ let _projModalAttachments = []; // pending attachments in edit modal
 // ── Projects panel ──────────────────────────────────────────────────────────
 
 function openProjects() {
+  if (state.currentUser?.plan === 'free') { toast('Upgrade to access Projects 🔒', 'error'); return; }
   document.getElementById('projectsOverlay').classList.remove('hidden');
   loadProjects();
 }

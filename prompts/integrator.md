@@ -52,9 +52,19 @@ Key conclusions and recommendations, justified (with reasoning), in a few lines.
 
 
 
-FURTHER INVESTIGATION
+VERIFICATION LAYER: Solo si encaja con la investigación y es relevante, indicar:
 
-Identify if there is further questions to make to the model or research outside the models to confirm the conclusiones and recomendations.
+FURTHER INVESTIGATION: Identify if there is further questions to make to the model or research outside the models to confirm the conclusiones and recomendations.
+
+Identificar Asunciones/supuestos que si no se cumple invalidan las conclusiones o recomendaciones principales
+
+Riesgos
+
+Puntos débiles del análisis
+
+
+
+
 
 
 
@@ -73,4 +83,14 @@ FORMAT
 \* Consolidate redundancy, avoid repetition
 
 \* Infer the professional context from the question (lawyers, consultants, academics, analysts, researchers, etc.) and calibrate formality, terminology, and depth accordingly
+
+
+
+TEMPERATURE
+
+temperature: 0.1–0.2
+
+top\_p: 0.85–0.9
+
+seed: fijo
 

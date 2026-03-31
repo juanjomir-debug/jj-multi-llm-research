@@ -87,11 +87,21 @@ app.use(session({
 
 // ── Plan definitions (mirror of DB) ──────────────────────────────────────────
 const PLANS = {
-  free:     { name: 'Free',     price: 0,     budget: 9999, maxModels: 99, webSearch: true,  projects: true,  historyDays: 365 },
-  starter:  { name: 'Starter',  price: 9.99,  budget: 25,  maxModels: 4,  webSearch: true,  projects: true,  historyDays: 30  },
-  pro:      { name: 'Pro',      price: 29.99, budget: 100, maxModels: 99, webSearch: true,  projects: true,  historyDays: 90  },
-  business: { name: 'Business', price: 99.00, budget: 500, maxModels: 99, webSearch: true,  projects: true,  historyDays: 365 },
+  free:       { name: 'Free',       price: 0,     budget: 3,    maxModels: 4,  webSearch: false, projects: false, historyDays: 0,   dailyQueries: 3,   hallucination: false, debate: false, amplitudes: ['concise'],                                   synthesis: 'basic' },
+  pro_demo:   { name: 'Pro Demo',   price: 0,     budget: 3,    maxModels: 99, webSearch: true,  projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
+  starter:    { name: 'Starter',    price: 10.00, budget: 2.5,  maxModels: 4,  webSearch: false, projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: false, debate: false, amplitudes: ['concise','normal'],                           synthesis: 'basic' },
+  pro:        { name: 'Pro',        price: 25.00, budget: 10,   maxModels: 99, webSearch: true,  projects: true,  historyDays: 365, dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
+  enterprise: { name: 'Enterprise', price: 90.00, budget: 999,  maxModels: 99, webSearch: true,  projects: true,  historyDays: 365, dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
 };
+
+// Models allowed for free plan (only previous-gen / lightweight models)
+const FREE_MODELS = new Set([
+  'claude-haiku-4-5-20251001',
+  'models/gemini-3.1-flash-lite-preview',
+  'gpt-5-mini',
+  'grok-4-1-fast-non-reasoning',
+  'grok-4-1-fast-reasoning',
+]);
 
 // ── Quota middleware ──────────────────────────────────────────────────────────
 function currentPeriodStart() {
@@ -120,18 +130,38 @@ function resetMonthlyIfNeeded(user) {
   }
 }
 
+function resetDailyIfNeeded(user) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (user.daily_queries_date !== today) {
+    db.prepare('UPDATE users SET daily_queries = 0, daily_queries_date = ? WHERE id = ?').run(today, user.id);
+    user.daily_queries = 0;
+    user.daily_queries_date = today;
+  }
+}
+
 function checkQuota(req, res, next) {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
-  const user = db.prepare('SELECT id, plan, monthly_cost_usd, billing_period_start, paused FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT id, plan, monthly_cost_usd, billing_period_start, paused, daily_queries, daily_queries_date FROM users WHERE id = ?').get(req.session.userId);
   if (!user) return res.status(401).json({ error: 'User not found' });
   resetMonthlyIfNeeded(user);
+  resetDailyIfNeeded(user);
   if (user.paused) {
     const plan = PLANS[user.plan] || PLANS.free;
     return res.status(402).json({ error: 'quota_exceeded', message: `Monthly API budget of $${plan.budget} reached. Upgrade your plan or wait for next billing cycle.`, plan: user.plan });
   }
+  // Daily query limit
+  const plan = PLANS[user.plan] || PLANS.free;
+  if (plan.dailyQueries && user.daily_queries >= plan.dailyQueries) {
+    return res.status(429).json({ error: 'daily_limit', message: `Daily query limit of ${plan.dailyQueries} reached. Upgrade your plan for unlimited queries.`, plan: user.plan });
+  }
   req.userId = user.id;
   req.userPlan = user.plan;
   next();
+}
+
+function incrementDailyQueries(userId) {
+  if (!userId) return;
+  db.prepare('UPDATE users SET daily_queries = daily_queries + 1 WHERE id = ?').run(userId);
 }
 
 function addMonthlyCost(userId, costUsd) {
@@ -606,16 +636,22 @@ function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
-  const username = sanitizeStr(req.body.username, 50);
-  const email    = sanitizeStr(req.body.email, 200).toLowerCase();
-  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const username   = sanitizeStr(req.body.username, 50);
+  const email      = sanitizeStr(req.body.email, 200).toLowerCase();
+  const password   = typeof req.body.password === 'string' ? req.body.password : '';
+  const country    = sanitizeStr(req.body.country    || '', 100);
+  const city       = sanitizeStr(req.body.city       || '', 100);
+  const birthdate  = sanitizeStr(req.body.birthdate  || '', 20);
+  const occupation = sanitizeStr(req.body.occupation || '', 100);
   if (!username || !email || !password) return res.status(400).json({ error: 'Faltan campos obligatorios' });
   if (!validEmail(email)) return res.status(400).json({ error: 'Email inválido' });
   if (password.length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
   if (username.length < 3) return res.status(400).json({ error: 'El nombre de usuario debe tener al menos 3 caracteres' });
   try {
     const hash = await bcrypt.hash(password, 10);
-    const result = db.prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)').run(username.trim(), email.trim().toLowerCase(), hash);
+    const result = db.prepare(
+      'INSERT INTO users (username, email, password_hash, country, city, birthdate, occupation) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(username.trim(), email.trim().toLowerCase(), hash, country||null, city||null, birthdate||null, occupation||null);
     const user = db.prepare('SELECT id, username, email, total_cost_usd, plan, monthly_cost_usd, paused FROM users WHERE id = ?').get(result.lastInsertRowid);
     req.session.userId = user.id;
     const planInfo = PLANS[user.plan] || PLANS.free;
@@ -649,11 +685,39 @@ app.post('/api/auth/logout', (req, res) => { req.session.destroy(() => res.json(
 
 app.get('/api/auth/me', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
-  const user = db.prepare('SELECT id, username, email, total_cost_usd, plan, monthly_cost_usd, billing_period_start, paused FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT id, username, email, total_cost_usd, plan, monthly_cost_usd, billing_period_start, paused, daily_queries, daily_queries_date FROM users WHERE id = ?').get(req.session.userId);
   if (!user) return res.status(401).json({ error: 'User not found' });
   resetMonthlyIfNeeded(user);
+  resetDailyIfNeeded(user);
   const planInfo = PLANS[user.plan] || PLANS.free;
-  res.json({ user: { ...user, planName: planInfo.name, budget: planInfo.budget, paused: !!user.paused } });
+  res.json({ user: { ...user, planName: planInfo.name, budget: planInfo.budget, paused: !!user.paused, daily_queries: user.daily_queries || 0, limits: planInfo } });
+});
+
+// ─── Promo codes ─────────────────────────────────────────────────────────────
+app.post('/api/promo/redeem', (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const code = sanitizeStr(req.body.code, 50).toUpperCase().trim();
+  if (!code) return res.status(400).json({ error: 'No code provided' });
+
+  const promo = db.prepare('SELECT * FROM promo_codes WHERE code = ?').get(code);
+  if (!promo) return res.status(404).json({ error: 'Invalid promo code' });
+  if (promo.times_used >= promo.max_uses) return res.status(410).json({ error: 'This promo code has already been used' });
+  if (promo.expires_at && new Date(promo.expires_at) < new Date()) return res.status(410).json({ error: 'This promo code has expired' });
+
+  // Check if user already redeemed a promo
+  const user = db.prepare('SELECT plan, promo_code FROM users WHERE id = ?').get(req.session.userId);
+  if (user.promo_code) return res.status(409).json({ error: 'You have already redeemed a promo code' });
+  if (user.plan !== 'free') return res.status(409).json({ error: 'Promo codes are only for Free plan users' });
+
+  // Activate promo
+  db.prepare('UPDATE users SET plan = ?, promo_code = ?, monthly_cost_usd = 0, paused = 0 WHERE id = ?').run(promo.plan, code, req.session.userId);
+  db.prepare('UPDATE promo_codes SET times_used = times_used + 1 WHERE code = ?').run(code);
+  db.prepare('INSERT INTO billing_events (user_id, type, amount_usd, description) VALUES (?,?,?,?)').run(
+    req.session.userId, 'promo_redeemed', 0, `Promo code ${code} → ${promo.plan} ($${promo.budget_usd} budget)`
+  );
+
+  const newPlan = PLANS[promo.plan] || PLANS.pro_demo;
+  res.json({ ok: true, plan: promo.plan, planName: newPlan.name, budget: promo.budget_usd, message: `Pro Demo activated! You have $${promo.budget_usd} API budget.` });
 });
 
 // ─── Research Planning ────────────────────────────────────────────────────────
@@ -783,6 +847,9 @@ app.post('/api/plan-research', async (req, res) => {
 // ─── History ──────────────────────────────────────────────────────────────────
 app.get('/api/history', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const histUser = db.prepare('SELECT plan FROM users WHERE id = ?').get(req.session.userId);
+  const histPlan = PLANS[(histUser?.plan) || 'free'] || PLANS.free;
+  if (histPlan.historyDays === 0) return res.json({ rows: [], total: 0, limit: 0, offset: 0, locked: true });
   const limit  = Math.min(parseInt(req.query.limit)  || 100, 500);
   const offset = parseInt(req.query.offset) || 0;
   const rows  = db.prepare(`SELECT id, session_id, created_at, provider, model_id, model_label,
@@ -945,6 +1012,9 @@ app.post('/api/analyze-hallucination', async (req, res) => {
 // ─── Standalone hallucination check (multi-model, web-search verified) ────────
 app.post('/api/hallucination-check', async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const hUser = db.prepare('SELECT plan FROM users WHERE id = ?').get(req.session.userId);
+  const hPlan = PLANS[(hUser?.plan) || 'free'] || PLANS.free;
+  if (!hPlan.hallucination) return res.status(403).json({ error: 'feature_locked', message: 'Hallucination detection is not available on the Free plan. Upgrade to unlock.' });
   const { question, results } = req.body;
   if (!question || !Array.isArray(results) || results.length === 0)
     return res.status(400).json({ error: 'question and results[] required' });
@@ -1070,6 +1140,10 @@ app.post('/api/integrate', async (req, res) => {
 
 // ─── Standalone debate endpoint ──────────────────────────────────────────────
 app.post('/api/debate-run', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const dUser = db.prepare('SELECT plan FROM users WHERE id = ?').get(req.session.userId);
+  const dPlan = PLANS[(dUser?.plan) || 'free'] || PLANS.free;
+  if (!dPlan.debate) return res.status(403).json({ error: 'feature_locked', message: 'Debate is not available on the Free plan. Upgrade to unlock.' });
   const { question, results = [], debateRounds = 1 } = req.body;
   if (results.length < 2) return res.status(400).json({ error: 'Need at least 2 results for debate' });
 
@@ -1183,6 +1257,23 @@ app.post('/api/research', async (req, res) => {
   const userId = req.session.userId || null;
   const sessionId = crypto.randomUUID();
 
+  // ── Plan enforcement ──
+  const userRow = userId ? db.prepare('SELECT plan, daily_queries, daily_queries_date FROM users WHERE id = ?').get(userId) : null;
+  const userPlan = PLANS[(userRow?.plan) || 'free'] || PLANS.free;
+  const userPlanId = (userRow?.plan) || 'free';
+
+  // Daily query limit check
+  if (userRow) {
+    resetDailyIfNeeded(userRow);
+    if (userPlan.dailyQueries && userRow.daily_queries >= userPlan.dailyQueries) {
+      return res.status(429).json({ error: 'daily_limit', message: `Daily limit of ${userPlan.dailyQueries} queries reached.` });
+    }
+    incrementDailyQueries(userId);
+  }
+
+  // Amplitude restriction for free plan
+  const effectiveAmplitude = (userPlanId === 'free') ? 'concise' : amplitude;
+
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
   const send = (event, data) => { if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
   const ping = setInterval(() => send('ping', {}), 15_000);
@@ -1191,9 +1282,14 @@ app.post('/api/research', async (req, res) => {
   let processedAttachments = [];
   try { processedAttachments = await processAttachments(attachments); } catch { processedAttachments = []; }
 
-  const enabledModels = models.filter(m => m.enabled);
+  let enabledModels = models.filter(m => m.enabled);
+
+  // Free plan: filter to allowed models only
+  if (userPlanId === 'free') {
+    enabledModels = enabledModels.filter(m => FREE_MODELS.has(m.modelId));
+  }
   const results = [];
-  const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[amplitude] || '';
+  const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[effectiveAmplitude] || '';
 
   // ── Run all models in parallel with streaming (improvement #1) ──
   await Promise.allSettled(
@@ -1471,6 +1567,9 @@ function computeConsensus(results) {
 
 app.get('/api/projects', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const projUser = db.prepare('SELECT plan FROM users WHERE id = ?').get(req.session.userId);
+  const projPlan = PLANS[(projUser?.plan) || 'free'] || PLANS.free;
+  if (!projPlan.projects) return res.json({ projects: [], locked: true });
   try {
     const projects = db.prepare(`
       SELECT p.*,

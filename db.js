@@ -113,10 +113,35 @@ db.exec(`
   );
 
   INSERT OR IGNORE INTO plans VALUES
-    ('free',     'Free',     0,      3,    2,  0, 0,  7,  NULL),
-    ('starter',  'Starter',  9.99,   25,   4,  1, 1,  30, NULL),
-    ('pro',      'Pro',      29.99,  100,  99, 1, 1,  90, NULL),
-    ('business', 'Business', 99.00,  500,  99, 1, 1, 365, NULL);
+    ('free',      'Free',      0,      3,    2,  0, 0,  0,   NULL),
+    ('pro_demo',  'Pro Demo',  0,      3,    99, 1, 1,  30,  NULL),
+    ('starter',   'Starter',   9.99,   25,   4,  1, 1,  30,  NULL),
+    ('pro',       'Pro',       29.99,  100,  99, 1, 1,  90,  NULL),
+    ('business',  'Business',  99.00,  500,  99, 1, 1, 365,  NULL);
+
+  -- Promo codes
+  CREATE TABLE IF NOT EXISTS promo_codes (
+    code           TEXT PRIMARY KEY,
+    plan           TEXT NOT NULL DEFAULT 'pro_demo',  -- plan to grant
+    budget_usd     REAL NOT NULL DEFAULT 3,           -- API budget for this promo
+    max_uses       INTEGER NOT NULL DEFAULT 1,
+    times_used     INTEGER NOT NULL DEFAULT 0,
+    expires_at     TEXT,                              -- ISO date or NULL
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  -- Seed promo codes (Pro Demo, $3 budget, 1 use each)
+  INSERT OR IGNORE INTO promo_codes (code, plan, budget_usd, max_uses) VALUES
+    ('RELI-Q2KYMQ','pro_demo',3,1),('RELI-Y94QR2','pro_demo',3,1),
+    ('RELI-JZPY3S','pro_demo',3,1),('RELI-EZEHSL','pro_demo',3,1),
+    ('RELI-MJY8ZJ','pro_demo',3,1),('RELI-DZ9RGW','pro_demo',3,1),
+    ('RELI-ZF8RME','pro_demo',3,1),('RELI-6HMB4W','pro_demo',3,1),
+    ('RELI-JXY9WP','pro_demo',3,1),('RELI-L72KCU','pro_demo',3,1),
+    ('RELI-TFQNPP','pro_demo',3,1),('RELI-W2REGH','pro_demo',3,1),
+    ('RELI-LN4MXL','pro_demo',3,1),('RELI-BUKX74','pro_demo',3,1),
+    ('RELI-DYHWJW','pro_demo',3,1),('RELI-A6KF74','pro_demo',3,1),
+    ('RELI-CPX79Z','pro_demo',3,1),('RELI-PUW29Z','pro_demo',3,1),
+    ('RELI-2WAMAW','pro_demo',3,1),('RELI-BZT6NC','pro_demo',3,1);
 
   -- Billing events log
   CREATE TABLE IF NOT EXISTS billing_events (
@@ -141,6 +166,13 @@ const userBillingCols = [
   `ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT`,
   `ALTER TABLE users ADD COLUMN plan_expires_at TEXT`,
   `ALTER TABLE users ADD COLUMN paused INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN daily_queries INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN daily_queries_date TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN promo_code TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN country TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN city TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN birthdate TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN occupation TEXT DEFAULT NULL`,
 ];
 for (const sql of userBillingCols) {
   try {
