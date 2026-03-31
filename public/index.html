@@ -121,16 +121,24 @@
     .inline-section .inline-arrow { font-size: .8rem; color: var(--text-muted); transition: transform .2s; }
     .inline-section.collapsed .inline-arrow { transform: rotate(-90deg); }
 
-    .model-toggles-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
-    .model-toggles-row .mt-item { display: flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); transition: all .15s; cursor: pointer; }
+    .model-toggles-row { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; margin-bottom: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .model-toggles-row .mt-item { display: flex; align-items: center; gap: 5px; font-size: .82rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); transition: all .15s; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .model-toggles-row .mt-item.active { border-color: var(--accent); background: var(--accent-dim); }
     .model-toggles-row .mt-item .mt-dot { width: 8px; height: 8px; border-radius: 50%; }
+    @media (max-width: 767px) {
+      .model-toggles-row { gap: 5px; }
+      .model-toggles-row .mt-item { font-size: .7rem; padding: 3px 7px; gap: 4px; }
+      .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; }
+      .model-toggle { width: 26px !important; height: 14px !important; border-radius: 7px !important; }
+      .model-toggle::after { width: 9px !important; height: 9px !important; top: 2px !important; left: 2px !important; }
+      .model-toggle.on::after { transform: translateX(12px) !important; }
+    }
 
-    .inline-models-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .inline-models-grid { display: grid; grid-template-columns: repeat(var(--model-cols, 4), 1fr); gap: 12px; }
     /* iPad (768–1100px): 2 columns */
     @media (max-width: 1100px) { .inline-models-grid { grid-template-columns: repeat(2, 1fr); } }
-    /* Mobile phones (≤768px): 1 column */
-    @media (max-width: 767px) { .inline-models-grid { grid-template-columns: 1fr; } }
+    /* Mobile phones (≤767px): 1 column */
+    @media (max-width: 767px) { .inline-models-grid { grid-template-columns: 1fr !important; } }
 
     .inline-model-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s, opacity .15s; min-width: 0; }
     .imc-result-area { display: flex; flex-direction: column; }
@@ -249,8 +257,7 @@
     .total-cost-badge .tval.cheap { color: var(--success); } .total-cost-badge .tval.medium { color: var(--warn); } .total-cost-badge .tval.pricey { color: var(--danger); }
     .enabled-count { font-size: .78rem; color: var(--text-muted); margin-left: auto; }
 
-    .attach-zone { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-height: 28px; }
-    .attach-btn { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 2px solid var(--accent); color: var(--accent); border-radius: var(--radius); padding: 7px 16px; font-size: .85rem; font-weight: 600; transition: all .15s; flex-shrink: 0; cursor: pointer; }
+.attach-btn { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 2px solid var(--accent); color: var(--accent); border-radius: var(--radius); padding: 7px 16px; font-size: .85rem; font-weight: 600; transition: all .15s; flex-shrink: 0; cursor: pointer; }
     .attach-btn:hover { background: var(--accent); color: #fff; }
     .attach-chip { display: flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 8px 3px 10px; font-size: .75rem; color: var(--text-muted); max-width: 180px; }
     .attach-chip .chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -265,16 +272,13 @@
     .result-model-name { font-size: .82rem; font-weight: 600; flex: 1; }
     .result-meta { font-size: .72rem; color: var(--text-muted); display: flex; gap: 10px; }
     .result-meta span { display: flex; align-items: center; gap: 3px; }
-    .result-body { padding: 12px; font-size: .85rem; line-height: 1.6; overflow-y: auto; height: var(--result-h, 1000px); min-height: 100px; }
+    .result-body { padding: 12px; font-size: .85rem; line-height: 1.6; overflow-y: auto; min-height: 200px; max-height: 70vh; }
     .result-height-bar { display: none; align-items: center; gap: 10px; padding: 6px 0 2px; }
     .result-height-bar.visible { display: flex; }
     .rh-label { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
     .rh-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--pct,40%), var(--border) var(--pct,40%), var(--border) 100%); outline: none; cursor: pointer; }
     .rh-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(207,125,78,.5); cursor: grab; }
     .rh-slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: none; cursor: grab; }
-    .rh-presets { display: flex; gap: 4px; }
-    .rh-preset { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 5px; font-size: .7rem; padding: 2px 7px; transition: all .12s; }
-    .rh-preset:hover, .rh-preset.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
     .rh-val { font-size: .7rem; color: var(--text-muted); font-family: monospace; min-width: 38px; text-align: right; }
     .result-body .loading-row { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: .83rem; }
     .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
@@ -718,7 +722,7 @@
           <label>Planner model:</label>
           <select id="planProvider" onchange="updatePlanModels()">
             <option value="anthropic">Claude</option>
-            <option value="openai">OpenAI</option>
+            <option value="openai" selected>OpenAI</option>
             <option value="google">Gemini</option>
             <option value="xai">Grok</option>
           </select>
@@ -750,11 +754,6 @@
       </div>
       <textarea id="questionInput" placeholder="What do you want to research? Write your question here..."
         oninput="updateEstimate(); updateRunBtn()"></textarea>
-      <div class="attach-zone" id="attachZone">
-        <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none" onchange="handleFileSelect(event)">
-        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button">&#128206; Attach Files</button>
-        <div id="attachChips" style="display:contents"></div>
-      </div>
       <div class="conv-bar" id="convBar" style="display:none">
         <span class="conv-turns" id="convTurns">0 context turns</span>
         <button class="conv-clear-btn" onclick="clearConversation()">New conversation</button>
@@ -762,6 +761,9 @@
         <div class="proj-tags-row" id="sessionProjTags"></div>
       </div>
       <div class="query-footer">
+        <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none" onchange="handleFileSelect(event)">
+        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button">&#128206; Attach Files</button>
+        <div id="attachChips" style="display:contents"></div>
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">Amplitude:</label>
           <select class="amplitude-select" id="responseAmplitude" onchange="updateEstimate()">
@@ -795,17 +797,6 @@
       </div>
       <div class="inline-section-body">
         <div class="model-toggles-row" id="modelTogglesRow"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:6px">
-            <label style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">Height:</label>
-            <div class="rh-presets">
-              <button class="rh-preset" onclick="applyResultHeight(180)">XS</button>
-              <button class="rh-preset" onclick="applyResultHeight(380)">M</button>
-              <button class="rh-preset" onclick="applyResultHeight(620)">L</button>
-              <button class="rh-preset active" onclick="applyResultHeight(1000)">XL</button>
-            </div>
-          </div>
-        </div>
         <!-- Model cards + inline results grid -->
         <div class="inline-models-grid" id="modelCards"></div>
       </div>
@@ -863,10 +854,10 @@
     <div id="integratorRow">
       <div id="integratorResultArea"></div>
     </div>
-    <!-- Reliability Index + Consensus side by side (below integrator) -->
-    <div id="bottomAnalysisRow" style="display:flex;gap:12px;align-items:flex-start;margin-top:12px">
-      <div id="reliabilityIndexArea" style="flex:1;min-width:0"></div>
-      <div id="consensusPanelArea" style="width:220px;flex-shrink:0"></div>
+    <!-- Reliability Index (below integrator) -->
+    <div id="bottomAnalysisRow" style="margin-top:12px">
+      <div id="reliabilityIndexArea"></div>
+      <div id="consensusPanelArea" style="display:none"></div>
     </div>
 
     <!-- Results section -->
@@ -1112,57 +1103,12 @@ const TEMPLATES = {
 const state = {
   models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({ provider, modelId: cfg.defaultModel, enabled: true, customInstructions: '', webSearch: false, temperature: null })),
   attachments: [], conversationHistory: [], integratorEnabled: true, isRunning: false, currentUser: null,
-  debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [], resultBodyHeight: 1000,
+  debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [],
 };
 
 let _lastIntegratorText = null;
 let _abortController = null;
 
-// ── Altura regulable de resultados ──────────────────────────────────────────
-// padding-top + padding-bottom de .result-body (12px + 12px = 24px, border-box)
-const RESULT_BODY_PAD_V = 24;
-let _resizeObserver = null;
-
-function applyResultHeight(px) {
-  px = Math.max(100, Math.min(1200, px));
-  document.documentElement.style.setProperty('--result-h', px + 'px');
-  document.querySelectorAll('.result-body').forEach(el => { el.style.height = px + 'px'; });
-  state.resultBodyHeight = px;
-  const presets = { 180: 'XS', 380: 'M', 620: 'L', 1000: 'XL' };
-  document.querySelectorAll('.rh-preset').forEach(btn => {
-    btn.classList.toggle('active', presets[px] === btn.textContent);
-  });
-}
-
-// Sync all .result-body heights when user drags any one of them
-function _watchResultBody(el) {
-  if (!_resizeObserver || el._rbWatched) return;
-  el._rbWatched = true;
-  _resizeObserver.observe(el);
-}
-function initResultBodySync() {
-  if (!window.ResizeObserver) return;
-  _resizeObserver = new ResizeObserver(entries => {
-    for (const entry of entries) {
-      // contentRect es el content-box; sumamos padding vertical para obtener la altura border-box
-      const newH = Math.round(entry.contentRect.height) + RESULT_BODY_PAD_V;
-      if (Math.abs(newH - state.resultBodyHeight) > 4) {
-        applyResultHeight(newH);
-        break;
-      }
-    }
-  });
-  document.querySelectorAll('.result-body').forEach(_watchResultBody);
-  // Watch future .result-body additions
-  new MutationObserver(muts => {
-    muts.forEach(m => m.addedNodes.forEach(n => {
-      if (n.nodeType !== 1) return;
-      if (n.classList?.contains('result-body')) _watchResultBody(n);
-      n.querySelectorAll?.('.result-body').forEach(_watchResultBody);
-    }));
-  }).observe(document.body, { childList: true, subtree: true });
-}
-document.addEventListener('DOMContentLoaded', initResultBodySync);
 
 // ── Research Planning ───────────────────────────────────────────────────────
 let _lastPlan = null;
@@ -1175,7 +1121,9 @@ function updatePlanModels() {
   const prov = document.getElementById('planProvider').value;
   const sel = document.getElementById('planModel');
   sel.innerHTML = PROVIDERS[prov].models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
-  sel.value = PROVIDERS[prov].defaultModel;
+  // Default planner model: GPT-4.1 Mini for openai, otherwise provider default
+  if (prov === 'openai') sel.value = 'gpt-4.1-mini';
+  else sel.value = PROVIDERS[prov].defaultModel;
 }
 
 
@@ -1566,7 +1514,7 @@ function prepareInlineResultArea(provider, modelId) {
   area.id = `rcard-${safeId}`;   // enables updateScoreRow / applyDebateVoteBadges
   area.innerHTML =
     `<div style="border-top:1px solid var(--border)"></div>` +
-    `<div class="result-body" id="rbody-${safeId}" style="height:${state.resultBodyHeight}px">` +
+    `<div class="result-body" id="rbody-${safeId}">` +
       `<div class="loading-row"><div class="spinner"></div> Waiting...</div></div>` +
     `<div style="display:flex;align-items:center;gap:10px;padding:4px 12px;font-size:.72rem;color:var(--text-muted);flex-wrap:wrap;border-top:1px solid var(--border)" id="rmeta-${safeId}"></div>` +
     `<div class="result-footer" id="rfoot-${safeId}" data-provider="${provider}" data-modelid="${modelId}"></div>`;
@@ -1619,14 +1567,19 @@ function toggleInstrArea(key) { const btn = document.getElementById(`instrToggle
 function updateEnabledBadge() { const n = state.models.filter(m => m.enabled).length;
   document.getElementById('enabledBadge').textContent = `${n} model${n !== 1 ? 's' : ''}`;
   document.getElementById('enabledCountLabel').textContent = `${n} active model${n !== 1 ? 's' : ''}`;
-  // Adapt grid columns to number of enabled models
+  // Adapt grid columns to number of enabled models (CSS var so media queries can override)
   const grid = document.getElementById('modelCards');
   if (grid) {
     const cols = n <= 0 ? 1 : Math.min(n, 4);
-    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    grid.style.setProperty('--model-cols', cols);
   }
 }
-function populateIntegratorDropdowns() { onIntProviderChange(); }
+function populateIntegratorDropdowns() {
+  onIntProviderChange();
+  // Default integrator: Claude Haiku 4.5
+  const intMod = document.getElementById('intModel');
+  if (intMod) intMod.value = 'claude-haiku-4-5-20251001';
+}
 function onIntProviderChange() { const provKey = document.getElementById('intProvider').value; const prov = PROVIDERS[provKey];
   const sel = document.getElementById('intModel'); sel.innerHTML = prov.models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
   sel.value = prov.defaultModel; updateEstimate();
@@ -1814,7 +1767,7 @@ function buildResultCard(m, status) {
       <span class="result-model-name">${prov.icon} ${prov.label} -- ${modelLabel}</span>
       <div class="result-meta" id="rmeta-${m.modelId.replace(/[^a-z0-9]/gi, '-')}"></div>
     </div>
-    <div class="result-body" id="rbody-${m.modelId.replace(/[^a-z0-9]/gi, '-')}" style="${state.resultBodyHeight ? 'height:' + state.resultBodyHeight + 'px' : ''}">
+    <div class="result-body" id="rbody-${m.modelId.replace(/[^a-z0-9]/gi, '-')}">
       <div class="loading-row"><div class="spinner"></div> Waiting...</div>
     </div>
     <div class="result-footer" id="rfoot-${m.modelId.replace(/[^a-z0-9]/gi, '-')}" data-provider="${m.provider}" data-modelid="${m.modelId}"></div>`;
