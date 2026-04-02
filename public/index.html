@@ -1121,15 +1121,17 @@ function applyPlanLimits() {
   const limits = user.limits;
   const isFree = (user.plan === 'free');
 
-  // 1. Force free-plan models
+  // 1. Force free-plan models + cap to maxModels
+  const maxModels = limits.maxModels || 99;
   if (isFree) {
-    state.models.forEach((m, idx) => {
+    let enabledCount = 0;
+    state.models.forEach((m) => {
       const prov = PROVIDERS[m.provider];
-      // Find first allowed model for this provider
       const allowed = prov.models.find(opt => FREE_MODELS.has(opt.id));
       if (allowed) {
         m.modelId = allowed.id;
-        m.enabled = true;
+        m.enabled = enabledCount < maxModels; // only first N enabled
+        if (m.enabled) enabledCount++;
       } else {
         m.enabled = false;
       }
@@ -1660,7 +1662,14 @@ function prepareInlineResultArea(provider, modelId) {
   card.appendChild(area);
 }
 
-function toggleModel(idx) { state.models[idx].enabled = !state.models[idx].enabled; const m = state.models[idx];
+function toggleModel(idx) {
+  const maxModels = state.currentUser?.limits?.maxModels || 99;
+  const m = state.models[idx];
+  // If trying to enable and already at limit, block
+  if (!m.enabled && state.models.filter(x => x.enabled).length >= maxModels) {
+    toast(`Free plan: max ${maxModels} models. Upgrade for more.`, 'error'); return;
+  }
+  state.models[idx].enabled = !state.models[idx].enabled;
   document.getElementById(`card-${m.provider}`).className = 'inline-model-card' + (m.enabled ? ' active' : ' disabled');
   document.getElementById(`toggle-${m.provider}`).className = 'model-toggle' + (m.enabled ? ' on' : '');
   const mt = document.getElementById(`mt-${m.provider}`);
@@ -3009,7 +3018,7 @@ function renderBillingPlans() {
   const grid = document.getElementById('billingPlansGrid');
   const currentPlan = state.currentUser?.plan || 'free';
   const plansMeta = {
-    free:       { popular: false, features: ['Previous-gen models only', '3 queries/day', 'Concise answers only', 'Basic synthesis', 'No history / projects', 'No hallucination / debate'] },
+    free:       { popular: false, features: ['2 models simultaneously', 'Previous-gen models only', '3 queries/day', 'Concise answers only', 'Basic synthesis', 'No history / projects', 'No hallucination / debate'] },
     starter:    { popular: false, features: ['Fast models', 'Normal length answers', 'Daily query limit', 'History', 'Projects'] },
     pro:        { popular: true,  features: ['All models', 'Detailed & exhaustive answers', 'Research planning', 'Hallucination analysis', 'Model Debate Mode', 'Web Search', 'Confidence scoring'] },
     enterprise: { popular: false, features: ['5 team shared accounts', 'High Security Mode', 'BYO credentials'] },

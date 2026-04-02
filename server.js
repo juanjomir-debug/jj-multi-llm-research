@@ -87,7 +87,7 @@ app.use(session({
 
 // ── Plan definitions (mirror of DB) ──────────────────────────────────────────
 const PLANS = {
-  free:       { name: 'Free',       price: 0,     budget: 3,    maxModels: 4,  webSearch: false, projects: false, historyDays: 0,   dailyQueries: 3,   hallucination: false, debate: false, amplitudes: ['concise'],                                   synthesis: 'basic' },
+  free:       { name: 'Free',       price: 0,     budget: 3,    maxModels: 2,  webSearch: false, projects: false, historyDays: 0,   dailyQueries: 3,   hallucination: false, debate: false, amplitudes: ['concise'],                                   synthesis: 'basic' },
   pro_demo:   { name: 'Pro Demo',   price: 0,     budget: 3,    maxModels: 99, webSearch: true,  projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
   starter:    { name: 'Starter',    price: 10.00, budget: 2.5,  maxModels: 4,  webSearch: false, projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: false, debate: false, amplitudes: ['concise','normal'],                           synthesis: 'basic' },
   pro:        { name: 'Pro',        price: 25.00, budget: 10,   maxModels: 99, webSearch: true,  projects: true,  historyDays: 365, dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
