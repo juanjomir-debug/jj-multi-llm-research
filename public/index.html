@@ -409,6 +409,8 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+    .skeleton-block { padding: 8px 0; }
+    .skeleton-block .skeleton-line { display: block; }
     .skeleton-line { height: 12px; border-radius: 6px; margin-bottom: 8px; }
     .skeleton-line.w-3\/4 { width: 75%; }
     .skeleton-line.w-1\/2 { width: 50%; }
@@ -1209,14 +1211,14 @@
 
 <!-- Cookie banner (F6 GDPR) -->
 <div id="appCookieBanner" style="display:none" role="complementary" aria-label="Cookie consent">
-  <span>🍪 We use essential session cookies only — no tracking, no ads. <a href="mailto:info@reliableai.net">Privacy info</a></span>
+  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> We use essential session cookies only — no tracking, no ads. <a href="mailto:info@reliableai.net">Privacy info</a></span>
   <button class="ck-app-btn ck-app-accept" onclick="setAppCookieConsent('accepted')">Accept</button>
   <button class="ck-app-btn ck-app-decline" onclick="setAppCookieConsent('declined')">Decline</button>
 </div>
 
 <!-- Email verification banner -->
 <div id="verifyBanner" style="display:none;background:#7c4a03;border-bottom:1px solid #a0620a;padding:9px 20px;font-size:.82rem;color:#ffd8a8;display:none;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center">
-  <span>📧 Please verify your email to unlock all features. Check your inbox.</span>
+  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> Please verify your email to unlock all features. Check your inbox.</span>
   <button onclick="resendVerification(this)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 12px;border-radius:5px;cursor:pointer;font-size:.78rem">Resend email</button>
   <button onclick="document.getElementById('verifyBanner').style.display='none'" style="background:none;border:none;color:#ffd8a8;cursor:pointer;font-size:14px;opacity:.7">✕</button>
 </div>
@@ -1256,10 +1258,10 @@
         </div>
       </div>
       <div class="udd-sep"></div>
-      <button class="udd-btn" onclick="openBilling(); closeUserMenu()">&#128179; Plan &amp; Billing</button>
-      <button class="udd-btn" id="menuProjectsBtn" onclick="openProjects(); closeUserMenu()">&#128193; Projects</button>
+      <button class="udd-btn" onclick="openBilling(); closeUserMenu()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Plan &amp; Billing</button>
+      <button class="udd-btn" id="menuProjectsBtn" onclick="openProjects(); closeUserMenu()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg> Projects</button>
       <button class="udd-btn" id="menuHistoryBtn" onclick="openHistory(); closeUserMenu()">History</button>
-      <button class="udd-btn" id="adminDashBtn" style="display:none;color:var(--accent)" onclick="location.href='/admin'">&#128272; Admin Dashboard</button>
+      <button class="udd-btn" id="adminDashBtn" style="display:none;color:var(--accent)" onclick="location.href='/admin'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Admin Dashboard</button>
       <div class="udd-sep"></div>
       <button class="udd-btn danger" onclick="logout()">Sign out</button>
     </div>
@@ -1278,32 +1280,37 @@
         <div class="proj-tags-row" id="sessionProjTags"></div>
       </div>
       <div class="action-row">
-        <button class="mob-sidebar-btn" onclick="toggleLeftSidebar()">&#9776;</button>
+        <button class="mob-sidebar-btn" onclick="toggleLeftSidebar()" title="History">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        </button>
         <button class="act-btn" onclick="clearConversation()">New conversation</button>
-        <button class="act-btn" id="addToProjBtn" onclick="openAddToProject()">&#128193; Add to project</button>
-        <button class="act-btn act-btn-refine" onclick="openRefinePanel()">&#9881; Refine Prompt &amp; Configure Research</button>
+        <button class="act-btn" id="addToProjBtn" onclick="openAddToProject()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg> Add to project</button>
+        <button class="act-btn act-btn-refine" onclick="openRefinePanel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Refine Prompt &amp; Configure Research</button>
         <div class="action-row-spacer"></div>
         <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none" onchange="handleFileSelect(event)">
-        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button">&#128206; Attach</button>
+        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Attach</button>
         <div id="attachChips" style="display:contents"></div>
-        <button class="run-btn" id="runBtn" onclick="runResearch()" disabled><span id="runBtnIcon">&#9654;</span> <span id="runBtnLabel">Research Selected</span></button>
-        <button class="run-btn" id="runIntegrateBtn" onclick="runResearch(true)" disabled style="background:var(--accent2,#6550d4);border-color:var(--accent2,#6550d4);white-space:nowrap">&#9654; Research &amp; Integrate</button>
-        <button class="stop-btn" id="stopBtn" onclick="stopResearch()">&#9632; Stop</button>
+        <button class="run-btn" id="runBtn" onclick="runResearch()" disabled><span id="runBtnIcon"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:middle"><polygon points="5 3 19 12 5 21 5 3"/></svg></span> <span id="runBtnLabel">Research Selected</span></button>
+        <button class="run-btn" id="runIntegrateBtn" onclick="runResearch(true)" disabled style="background:var(--accent2,#6550d4);border-color:var(--accent2,#6550d4);white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="flex-shrink:0"><polygon points="5 3 19 12 5 21 5 3"/></svg> Research &amp; Integrate</button>
+        <button class="run-btn" id="integrateBtn" onclick="runIntegration()" style="background:var(--accent);color:#000;white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg> Integrate</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopResearch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Stop</button>
         <div class="total-cost-badge"><span>Est:</span><span class="tval" id="totalCostVal">$0.0000</span></div>
         <span id="dailyQueryBadge" style="display:none;font-size:.72rem;padding:2px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)"></span>
-        <button class="export-btn" id="exportBtn" onclick="exportResearch()" style="display:none">Export</button>
-        <button class="mob-sidebar-btn mob-cfg-btn" style="display:none" onclick="toggleRightSidebar()">Config &#9881;</button>
+        <button class="export-btn" id="exportBtn" onclick="exportResearch()" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
+        <button class="mob-sidebar-btn mob-cfg-btn" onclick="toggleRightSidebar()" title="Settings">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
     </div>
 
     <!-- Cascade order panel -->
     <div id="cascadeOrderPanel" style="display:none;padding:12px 16px;background:var(--surface2);border-bottom:1px solid #6550d4;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-        <span style="font-weight:600;font-size:.87rem;color:#a78bfa">&#9654;&#9654; Cascade Analysis Order</span>
+        <span style="font-weight:600;font-size:.87rem;color:#a78bfa;display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg> Cascade Analysis Order</span>
         <span style="font-size:.75rem;color:var(--text-muted);flex:1">Each model receives the previous analyses as context</span>
         <button class="run-btn" id="runCascadeBtn" onclick="runResearch()" disabled
           style="padding:6px 18px;font-size:.82rem;background:#6550d4;border-color:#6550d4;white-space:nowrap">
-          &#9654;&#9654; Run Cascade
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg> Run Cascade
         </button>
       </div>
       <div id="cascadeOrderList" style="display:flex;flex-direction:column;gap:6px;"></div>
@@ -1314,7 +1321,7 @@
 
     <!-- Result tabs -->
     <div class="result-tabs-bar" id="resultTabsBar" style="display:none">
-      <button class="result-tab active" data-tab="integration" onclick="switchResultTab('integration')">&#127775; Integration</button>
+      <button class="result-tab active" data-tab="integration" onclick="switchResultTab('integration')">Integration</button>
     </div>
 
     <!-- Answers area -->
@@ -1358,7 +1365,7 @@
     <!-- Answer Length -->
     <div class="config-block">
       <div class="config-block-label">Answer Length</div>
-      <select class="amplitude-select" id="responseAmplitude" onchange="updateEstimate()" style="width:100%;font-size:.82rem;padding:5px 7px;margin-top:4px">
+      <select class="amplitude-select" id="responseAmplitude" onchange="syncAmplitudeToInt(); updateEstimate()" style="width:100%;font-size:.82rem;padding:5px 7px;margin-top:4px">
         <option value="superconcise" selected>Brief (~1 paragraph)</option>
         <option value="concise">Concise (~½ page)</option>
         <option value="normal">Standard (~1-2 pages)</option>
@@ -1400,7 +1407,7 @@
     <!-- Cascade Mode -->
     <div class="config-block">
       <div class="config-block-row">
-        <span class="config-block-label" style="flex:1">&#9654;&#9654; Cascade Mode</span>
+        <span class="config-block-label" style="flex:1;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg> Cascade Mode</span>
         <button class="rsb-toggle-btn" id="cascadeBtnMain" onclick="toggleCascade()">OFF</button>
       </div>
       <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Each model receives previous responses as context</div>
@@ -1458,12 +1465,11 @@
           </select>
           <div class="cost-chip"><span>Est:</span><span class="cost-val" id="intCostVal">$0.0000</span></div>
         </div>
-        <button class="instr-toggle" id="intInstrToggle" onclick="toggleInstrArea('int')" style="margin-top:6px"><span class="arrow">&#9654;</span> Custom instructions</button>
+        <button class="instr-toggle" id="intInstrToggle" onclick="toggleInstrArea('int')" style="margin-top:6px"><span class="arrow"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span> Custom instructions</button>
         <div class="instr-area" id="intInstrArea">
           <textarea id="intInstructions" rows="2" placeholder="Additional instructions for the integrator..." oninput="updateEstimate()" style="width:100%"></textarea>
         </div>
         <button class="model-toggle" id="debateToggle" onclick="toggleDebate()" style="display:none"></button>
-        <button class="int-action-btn primary" id="integrateBtn" onclick="runIntegration()" style="margin-top:8px;width:100%">Integrate</button>
       </div>
     </div>
 
@@ -1504,11 +1510,11 @@
       </div>
       <!-- Nav items -->
       <div class="lsb-nav-item" onclick="clearConversation()">
-        <span class="lsb-nav-icon">&#9998;</span>
+        <span class="lsb-nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
         <span>New chat</span>
       </div>
       <div class="lsb-nav-item" onclick="toggleLsbSearch()">
-        <span class="lsb-nav-icon">&#128269;</span>
+        <span class="lsb-nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
         <span>Search chats</span>
       </div>
       <div class="lsb-search-row" id="lsbSearchRow" style="display:none">
@@ -1524,7 +1530,7 @@
       <div class="history-body" id="historyBody"><div class="history-empty"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-3/4"></div><div class="skeleton skeleton-line w-1/2"></div></div></div>
     </div>
     <div class="lsb-panel" id="lsbPanelProjects" style="display:none">
-      <div class="projects-body" id="projectsBody"><div class="proj-empty">Loading...</div></div>
+      <div class="projects-body" id="projectsBody"><div class="proj-empty skeleton-block"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-3/4"></div><div class="skeleton skeleton-line w-1/2"></div></div></div>
     </div>
   </aside>
 
@@ -1533,7 +1539,7 @@
     <div id="bottomConfidence" style="flex:1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.76rem;color:var(--text-muted)">
       <span id="bottomConfidenceLabel">Confidence data</span>
     </div>
-    <button class="int-action-btn secondary" id="hallucAuditBtn" onclick="runHallucinationAudit()" style="flex-shrink:0">&#128270; Hallucination Check</button>
+    <button class="int-action-btn secondary" id="hallucAuditBtn" onclick="runHallucinationAudit()" style="flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Hallucination Check</button>
   </div>
 
 </div><!-- /app-layout -->
@@ -1544,7 +1550,7 @@
 <div class="projects-overlay hidden" id="projectsOverlay" onclick="closeProjects(event)">
   <div class="projects-panel" onclick="event.stopPropagation()">
     <div class="projects-header">
-      <h2>&#128193; Projects</h2>
+      <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg> Projects</h2>
       <button class="projects-new-btn" onclick="openProjectModal(null)">&#43; New project</button>
       <button class="user-btn" onclick="closeProjects()" style="margin-left:8px">Close</button>
     </div>
@@ -1570,7 +1576,7 @@
     <div class="field">
       <label>Attached files <span style="color:var(--text-muted);font-weight:400">(reference documents for this project)</span></label>
       <input type="file" id="projFileInput" multiple accept=".pdf,image/*,.txt,.md" style="display:none" onchange="handleProjFileUpload(event)" />
-      <button class="attach-btn" onclick="document.getElementById('projFileInput').click()" style="margin-bottom:6px" type="button">&#128206; Attach file</button>
+      <button class="attach-btn" onclick="document.getElementById('projFileInput').click()" style="margin-bottom:6px" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Attach file</button>
       <div class="proj-attach-list" id="projAttachList"></div>
     </div>
     <div class="proj-modal-actions">
@@ -1583,7 +1589,7 @@
 <!-- Add-to-project modal -->
 <div class="atp-modal-overlay hidden" id="atpModalOverlay">
   <div class="atp-modal">
-    <h3>&#128193; Add conversation to project</h3>
+    <h3><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg> Add conversation to project</h3>
     <select class="atp-select" id="atpSelect">
       <option value="">— Select a project —</option>
     </select>
@@ -1603,7 +1609,7 @@
 <div class="billing-overlay hidden" id="billingOverlay" onclick="if(event.target===this)closeBilling()">
   <div class="billing-modal" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <h2>&#128179; Plans &amp; Billing</h2>
+      <h2><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Plans &amp; Billing</h2>
       <button class="user-btn" onclick="closeBilling()">Close</button>
     </div>
     <p class="sub-line">Your API consumption is tracked monthly. Upgrade to increase your budget.</p>
@@ -1622,7 +1628,7 @@
       <div class="loading-row" style="grid-column:1/-1"><div class="spinner"></div> Loading plans...</div>
     </div>
     <div id="billingPortalRow" class="hidden" style="margin-top:8px;text-align:center">
-      <button class="user-btn" onclick="openBillingPortal()" style="font-size:.82rem">&#9881; Manage subscription</button>
+      <button class="user-btn" onclick="openBillingPortal()" style="font-size:.82rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Manage subscription</button>
     </div>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
       <label style="font-size:.82rem;font-weight:600">Have a promo code?</label>
@@ -1639,7 +1645,7 @@
 <div class="planning-modal-overlay hidden" id="planningModalOverlay" onclick="closePlanningModal(event)">
   <div class="planning-modal" onclick="event.stopPropagation()">
     <div class="planning-modal-header">
-      <h3>&#9881; Refine Prompt &amp; Configure Research</h3>
+      <h3><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Refine Prompt &amp; Configure Research</h3>
       <button class="planning-modal-close" onclick="closePlanningModal()">&#10005; Close</button>
     </div>
     <div class="planning-modal-body">
@@ -1657,7 +1663,7 @@
           <select id="planModel"></select>
           <input type="hidden" id="planAmplitude" value="concise">
           <button class="plan-btn" id="planBtn" onclick="runPlanResearch()">
-            <span id="planBtnIcon">&#9881;</span> <span id="planBtnLabel">Plan Research</span>
+            <span id="planBtnIcon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span> <span id="planBtnLabel">Plan Research</span>
           </button>
         </div>
         <div class="planning-result" id="planningResult" style="display:none">
@@ -1819,8 +1825,27 @@ const _copyBuf = {};
 const AMPLITUDE_TOKENS     = { superconcise: 170,  concise: 512,  normal: 2048, detailed: 4096, exhaustive: 8192 };
 // Actual API ceiling: high enough to finish a brief response cleanly, not cut mid-sentence
 const AMPLITUDE_MAX_TOKENS = { superconcise: 600,  concise: 1200, normal: 2048, detailed: 4096, exhaustive: 8192 };
-const WEB_SEARCH_PROVIDERS = new Set(['google', 'xai']);
+const WEB_SEARCH_PROVIDERS = new Set(['anthropic', 'openai', 'google', 'xai']);
 const ALWAYS_SEARCH_PROVIDERS = new Set([]); // reserved for providers that always search
+
+// Claude: base model → search variant (and reverse)
+const CLAUDE_SEARCH_AUTO = {
+  'claude-opus-4-6':           'claude-opus-4-6-search',
+  'claude-sonnet-4-6':         'claude-sonnet-4-6-search',
+  'claude-opus-4-5':           'claude-sonnet-4-6-search',
+  'claude-sonnet-4-5':         'claude-sonnet-4-6-search',
+  'claude-haiku-4-5-20251001': 'claude-sonnet-4-6-search',
+};
+const CLAUDE_SEARCH_BASE = {
+  'claude-opus-4-6-search':   'claude-opus-4-6',
+  'claude-sonnet-4-6-search': 'claude-sonnet-4-6',
+};
+
+// Claude: base ↔ thinking variant
+const THINKING_VARIANTS = {
+  'claude-opus-4-6':         'claude-opus-4-6-thinking',
+  'claude-opus-4-6-thinking': 'claude-opus-4-6',
+};
 const GEMINI_SEARCH_SUPPORTED = new Set(['models/gemini-3.1-pro-preview','models/gemini-3-flash-preview','models/gemini-3.1-flash-lite-preview']);
 
 // Templates (improvement #9)
@@ -1888,12 +1913,12 @@ function applyPlanLimits() {
       attachBtn.disabled = true;
       attachBtn.title = 'Upgrade to attach files';
       attachBtn.style.opacity = '0.4';
-      attachBtn.innerHTML = '📎 Attach Files 🔒';
+      attachBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Attach Files <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>';
     } else {
       attachBtn.disabled = false;
       attachBtn.title = '';
       attachBtn.style.opacity = '';
-      attachBtn.innerHTML = '📎 Attach Files';
+      attachBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Attach Files';
     }
   }
 
@@ -1953,7 +1978,9 @@ function applyPlanLimits() {
   // 5b. Mark Projects & History buttons in menu with lock for free
   const menuProj = document.getElementById('menuProjectsBtn');
   const menuHist = document.getElementById('menuHistoryBtn');
-  if (menuProj) menuProj.innerHTML = isFree ? '📁 Projects 🔒' : '📁 Projects';
+  const folderSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>';
+  const lockSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:3px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+  if (menuProj) menuProj.innerHTML = isFree ? `${folderSvg} Projects ${lockSvg}` : `${folderSvg} Projects`;
   if (menuHist) menuHist.innerHTML = isFree ? 'History 🔒' : 'History';
 
   // 5. Show daily query counter
@@ -2420,7 +2447,7 @@ function renderModelCards() {
           <span class="temp-title">Temperature</span>
           <div class="temp-row">
           <span class="temp-label" title="Baja temperatura = más fiable y preciso">Reliability</span>
-          <span class="temp-label-icon" title="Baja temperatura = más fiable y preciso">🎯</span>
+          <span class="temp-label-icon" title="Baja temperatura = más fiable y preciso"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
           <input type="range" class="temp-slider" id="tempSlider-${m.provider}" min="0" max="1.5" step="0.05"
             value="${m.temperature ?? 0.7}"
             oninput="onTempSlide('${m.provider}', ${idx}, +this.value)">
@@ -2436,9 +2463,16 @@ function renderModelCards() {
           <button class="websearch-toggle ${m.webSearch && !googleUnsupported ? 'on' : ''}" id="wsToggle-${m.provider}"
             onclick="toggleWebSearch(${idx})" ${googleUnsupported ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}></button>
           <span class="websearch-label">Web Search</span>
-          <span class="websearch-note">${googleUnsupported ? 'Use Flash or 2.5 Pro' : m.provider === 'google' ? 'Google Search' : 'xAI Web Search'}</span>
+          <span class="websearch-note">${googleUnsupported ? 'Use Flash or 2.5 Pro' : m.provider === 'google' ? 'Google Search' : m.provider === 'xai' ? 'xAI Web Search' : 'Switches to Search model'}</span>
         </div>` : ''}
-        <button class="instr-toggle${m.customInstructions ? ' open' : ''}" id="instrToggle-${m.provider}" onclick="toggleInstrArea('${m.provider}')"><span class="arrow">&#9654;</span> Custom instructions</button>
+        ${m.provider === 'anthropic' ? `
+        <div class="websearch-row" id="thinkRow-${m.provider}" style="${!(m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking') ? 'display:none' : ''}">
+          <button class="websearch-toggle ${m.modelId === 'claude-opus-4-6-thinking' ? 'on' : ''}" id="thinkToggle-${m.provider}"
+            onclick="toggleThinking(${idx})"></button>
+          <span class="websearch-label">⚡ Thinking</span>
+          <span class="websearch-note">Extended reasoning (Opus 4.6)</span>
+        </div>` : ''}
+        <button class="instr-toggle${m.customInstructions ? ' open' : ''}" id="instrToggle-${m.provider}" onclick="toggleInstrArea('${m.provider}')"><span class="arrow"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span> Custom instructions</button>
         <div class="instr-area${m.customInstructions ? ' open' : ''}" id="instrArea-${m.provider}">
           <textarea id="instr-${m.provider}" rows="3" placeholder="System instructions for ${prov.label}..." oninput="onInstrChange(${idx}, this.value)">${m.customInstructions}</textarea>
           <span class="instr-hint">Optional. Define role, context or constraints.</span>
@@ -2525,6 +2559,20 @@ function onModelChange(idx, newId) { const m = state.models[idx];
     if (note) note.textContent = supported ? 'Google Search' : 'Usa Flash o 2.5 Pro';
     if (!supported && m.webSearch) { m.webSearch = false; if (btn) btn.className = 'websearch-toggle'; }
   }
+  if (m.provider === 'anthropic') {
+    // Sync web search toggle state with model variant
+    const isSearchModel = CLAUDE_SEARCH_BASE[newId] !== undefined;
+    m.webSearch = isSearchModel;
+    const wsBtn = document.getElementById(`wsToggle-${m.provider}`);
+    if (wsBtn) wsBtn.className = `websearch-toggle ${isSearchModel ? 'on' : ''}`;
+    // Show/hide thinking row
+    const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
+    const isThinkingEligible = newId === 'claude-opus-4-6' || newId === 'claude-opus-4-6-thinking';
+    if (thinkRow) thinkRow.style.display = isThinkingEligible ? '' : 'none';
+    // Sync thinking toggle
+    const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
+    if (thinkBtn) thinkBtn.className = `websearch-toggle ${newId === 'claude-opus-4-6-thinking' ? 'on' : ''}`;
+  }
   updateEstimate();
 }
 
@@ -2545,8 +2593,67 @@ function onTempReset(provider, idx) {
   const rst = document.getElementById(`tempReset-${provider}`);
   if (rst) rst.style.visibility = 'hidden';
 }
-function toggleWebSearch(idx) { state.models[idx].webSearch = !state.models[idx].webSearch; const m = state.models[idx];
-  const btn = document.getElementById(`wsToggle-${m.provider}`); if (btn) btn.className = `websearch-toggle ${m.webSearch ? 'on' : ''}`;
+function toggleWebSearch(idx) {
+  const m = state.models[idx];
+  m.webSearch = !m.webSearch;
+  const btn = document.getElementById(`wsToggle-${m.provider}`);
+  if (btn) btn.className = `websearch-toggle ${m.webSearch ? 'on' : ''}`;
+
+  // Claude: auto-switch to/from search variant
+  if (m.provider === 'anthropic') {
+    const sel = document.getElementById(`sel-${m.provider}`);
+    if (m.webSearch) {
+      const searchVariant = CLAUDE_SEARCH_AUTO[m.modelId] || 'claude-sonnet-4-6-search';
+      m.modelId = searchVariant;
+      // Disable thinking when search is on
+      m._thinkingPreSearch = m.modelId;
+      const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
+      if (thinkRow) thinkRow.style.display = 'none';
+    } else {
+      const baseModel = CLAUDE_SEARCH_BASE[m.modelId] || m._searchPreBase || 'claude-sonnet-4-6';
+      m.modelId = baseModel;
+      // Restore thinking row visibility if applicable
+      const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
+      if (thinkRow) thinkRow.style.display = (m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking') ? '' : 'none';
+    }
+    if (sel) sel.value = m.modelId;
+    updateEstimate();
+    return;
+  }
+
+  // OpenAI: auto-switch to/from gpt-5.2 (search)
+  if (m.provider === 'openai') {
+    const sel = document.getElementById(`sel-${m.provider}`);
+    if (m.webSearch) {
+      m._searchPreBase = m.modelId;
+      m.modelId = 'gpt-5.2';
+    } else {
+      m.modelId = m._searchPreBase || 'gpt-5-mini';
+    }
+    if (sel) sel.value = m.modelId;
+    updateEstimate();
+  }
+}
+
+function toggleThinking(idx) {
+  const m = state.models[idx];
+  const isThinking = m.modelId === 'claude-opus-4-6-thinking';
+  m.modelId = isThinking ? 'claude-opus-4-6' : 'claude-opus-4-6-thinking';
+  const sel = document.getElementById(`sel-${m.provider}`);
+  if (sel) sel.value = m.modelId;
+  const btn = document.getElementById(`thinkToggle-${m.provider}`);
+  if (btn) btn.className = `websearch-toggle ${m.modelId === 'claude-opus-4-6-thinking' ? 'on' : ''}`;
+  updateEstimate();
+}
+
+function syncAmplitudeToInt() {
+  const amp = document.getElementById('responseAmplitude')?.value;
+  if (!amp) return;
+  const ampToTokens = { superconcise: 170, concise: 512, normal: 2048, detailed: 4096, exhaustive: 8192 };
+  const tokens = ampToTokens[amp];
+  if (!tokens) return;
+  const intSel = document.getElementById('maxTokensInt');
+  if (intSel) intSel.value = String(tokens);
 }
 function toggleInstrArea(key) { const btn = document.getElementById(`instrToggle-${key}`) || document.getElementById('intInstrToggle');
   const area = document.getElementById(`instrArea-${key}`) || document.getElementById('intInstrArea');
@@ -2828,10 +2935,10 @@ function updateResultCard(modelId, status, data) {
     // Footer: copy + vote + retry
     foot.innerHTML = `
       <button class="retry-btn" onclick="retryModelFromCard('${data.provider}')" title="Re-research this model">&#x21bb; Re-research</button>
-      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','up',this)" title="Good response">👍</button>
-      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','down',this)" title="Bad response">👎</button>
+      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','up',this)" title="Good response"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg></button>
+      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','down',this)" title="Bad response"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg></button>
       <button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copy</button>
-      <button class="export-btn" onclick="exportToWord('${safeId}','${data.modelId}',this)" title="Export to Word (.docx)">&#128196; Word</button>`;
+      <button class="export-btn" onclick="exportToWord('${safeId}','${data.modelId}',this)" title="Export to Word (.docx)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Word</button>`;
   } else if (status === 'error') {
     if (data.provider) setTabStatus(data.provider, 'error');
     body.innerHTML = `<div class="result-error">&#9888; ${data.error}</div>
@@ -3041,7 +3148,7 @@ function buildIntegratorCard(status) {
       <span style="font-size:.75rem;color:var(--text-muted)">${prov?.icon || ''} ${prov?.label || ''} — ${modLabel}</span>
       <div id="intScoreBadges" style="display:flex;gap:6px;align-items:center;margin-left:8px"></div>
       <div id="intMeta" style="font-size:.75rem;color:var(--text-muted);margin-left:auto"></div>
-      <button id="intStopBtn" onclick="stopIntegration()" title="Stop synthesis" style="display:none;margin-left:8px;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:2px 9px;font-size:.75rem;cursor:pointer;transition:all .15s">&#9632; Stop</button>
+      <button id="intStopBtn" onclick="stopIntegration()" title="Stop synthesis" style="display:none;margin-left:8px;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:2px 9px;font-size:.75rem;cursor:pointer;transition:all .15s;display:none;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Stop</button>
     </div>
     <div class="integrator-result-body" id="intBody"><div class="loading-row"><div class="spinner"></div> Waiting for results...</div></div>
     <div class="integrator-result-footer" id="intFoot"></div>`;
@@ -3180,7 +3287,7 @@ function updateIntegratorCard(status, data) {
     meta.innerHTML = `<span class="duration-badge ${durationClass(data.durationMs || 0)}">${dur}</span> ${data.inputTokens}&#8593; ${data.outputTokens}&#8595; &nbsp;${fmtCost(data.cost)}`;
     _copyBuf['integrator'] = data.text;
     foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copy synthesis</button>
-      <button class="export-btn" onclick="exportToWord('integrator','Synthesis',this)" title="Export synthesis to Word (.docx)">&#128196; Word</button>`;
+      <button class="export-btn" onclick="exportToWord('integrator','Synthesis',this)" title="Export synthesis to Word (.docx)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Word</button>`;
     renderReliabilityIndex();
   } else if (status === 'error') {
     if (stopBtn) stopBtn.style.display = 'none';
@@ -3236,7 +3343,7 @@ async function runHallucinationAudit() {
 function renderHallucinationLoading() {
   const area = document.getElementById('hallucinationArea'); if (!area) return;
   area.innerHTML = `<div class="hallucination-panel">
-    <div class="hallucination-header"><h4>🔍 Hallucination Audit</h4><span style="font-size:.72rem;color:var(--text-muted)">Verifying with web search…</span></div>
+    <div class="hallucination-header"><h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Hallucination Audit</h4><span style="font-size:.72rem;color:var(--text-muted)">Verifying with web search…</span></div>
     <div class="hall-loading"><div class="spinner"></div> Auditing responses and searching the web for suspicious claims…</div>
   </div>`;
 }
@@ -3244,7 +3351,7 @@ function renderHallucinationLoading() {
 function renderHallucinationEmpty() {
   const area = document.getElementById('hallucinationArea'); if (!area) return;
   area.innerHTML = `<div class="hallucination-panel">
-    <div class="hallucination-header"><h4>🔍 Hallucination Audit</h4></div>
+    <div class="hallucination-header"><h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Hallucination Audit</h4></div>
     <div class="hall-empty">
       <span style="flex:1;font-size:.8rem;color:var(--text-muted)">Verify facts with web search across all model responses.</span>
       <button class="hall-run-btn" onclick="runHallucinationAudit()">Run Audit</button>
@@ -3255,7 +3362,7 @@ function renderHallucinationEmpty() {
 function renderHallucinationError(err) {
   const area = document.getElementById('hallucinationArea'); if (!area) return;
   area.innerHTML = `<div class="hallucination-panel">
-    <div class="hallucination-header"><h4>🔍 Hallucination Audit</h4></div>
+    <div class="hallucination-header"><h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Hallucination Audit</h4></div>
     <div class="hall-loading" style="color:var(--danger)">⚠ Audit failed: ${err}</div>
     <div class="hall-empty"><button class="hall-run-btn" onclick="runHallucinationAudit()">Retry</button></div>
   </div>`;
@@ -3297,7 +3404,7 @@ function renderHallucinationReport(report, cost) {
 
   area.innerHTML = `<div class="hallucination-panel">
     <div class="hallucination-header" onclick="this.nextElementSibling.classList.toggle('collapsed')" style="cursor:pointer">
-      <h4>🔍 Hallucination Audit</h4>
+      <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Hallucination Audit</h4>
       <span class="hallucination-header hall-global-badge hall-badge-${globalLevel}">${globalLevel}</span>
       <span style="font-size:.72rem;color:var(--text-muted);margin-left:6px">${v.mas_fiable ? `Most reliable: ${v.mas_fiable}` : ''}</span>
       ${costStr ? `<span class="cost-chip" style="margin-left:8px">${costStr}</span>` : ''}
@@ -3315,19 +3422,19 @@ function renderHallucinationReport(report, cost) {
 }
 
 // ── Follow-up bar ────────────────────────────────────────────────────────────
-const PROV_ICON = { anthropic: '🟣', openai: '🟢', google: '🔵', xai: '⚫', moonshot: '🌙' };
+const _dot = (c) => `<svg width="10" height="10" viewBox="0 0 10 10" style="vertical-align:middle;margin-right:2px"><circle cx="5" cy="5" r="4.5" fill="${c}"/></svg>`;
+const PROV_ICON = { anthropic: _dot('#d97757'), openai: _dot('#10a37f'), google: _dot('#4285f4'), xai: _dot('#9ca3af'), moonshot: _dot('#06b6d4') };
 
 function showFollowUpBar() {
   const area = document.getElementById('followUpArea');
   if (!area) return;
   showIntegrationPanel();
   area.style.display = '';
-  const hasIntegrator = state.integratorEnabled && document.getElementById('intProvSel')?.value;
-  const intCfg = hasIntegrator ? getIntegratorConfig() : null;
+  const intCfg = getIntegratorConfig();
 
   // Build chips for each model in lastResults
   const modelChips = state.lastResults.map((r, i) => {
-    const icon = PROV_ICON[r.provider] || '🤖';
+    const icon = PROV_ICON[r.provider] || _dot('#6b7280');
     const label = (r.modelId || r.provider || '').split('-').slice(0,2).join('-');
     return `<label class="followup-chip checked" id="fuchip-${i}" onclick="toggleFollowUpChip(this)">
       <input type="checkbox" checked data-idx="${i}" data-type="model">
@@ -3337,7 +3444,7 @@ function showFollowUpBar() {
 
   const intChip = intCfg ? `<label class="followup-chip integrator-chip checked" id="fuchip-int" onclick="toggleFollowUpChip(this)">
     <input type="checkbox" checked data-type="integrator">
-    ⚡ Integrator
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:middle"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Integrator
   </label>` : '';
 
   area.innerHTML = `<div class="followup-bar">
@@ -4398,7 +4505,7 @@ async function recoverSession(sid) {
   updateConvIndicator();
   toast('Session restored', 'success');
 }
-async function loadHistory() { const body = document.getElementById('historyBody'); body.innerHTML = '<div class="history-empty">Loading...</div>';
+async function loadHistory() { const body = document.getElementById('historyBody'); body.innerHTML = '<div class="history-empty skeleton-block"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-3/4"></div><div class="skeleton skeleton-line w-1/2"></div></div>';
   try { const r = await fetch('/api/history?limit=200'); if (!r.ok) { body.innerHTML = '<div class="history-empty">Error loading history</div>'; return; }
     const { rows, total } = await r.json(); renderHistory(rows, total);
   } catch { body.innerHTML = '<div class="history-empty">Connection error</div>'; } }
@@ -4488,7 +4595,7 @@ function closeProjects(e) {
 
 async function loadProjects() {
   const body = document.getElementById('projectsBody');
-  body.innerHTML = '<div class="proj-empty">Loading...</div>';
+  body.innerHTML = '<div class="proj-empty skeleton-block"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-3/4"></div><div class="skeleton skeleton-line w-1/2"></div></div>';
   try {
     const r = await fetch('/api/projects');
     if (!r.ok) { body.innerHTML = '<div class="proj-empty">Error loading projects</div>'; return; }
@@ -4516,7 +4623,7 @@ function renderProjectsPanel(projects) {
         <span class="project-card-name">${escHtml(p.name)}</span>
         <span class="project-card-meta">${p.session_count} conversation${p.session_count !== 1 ? 's' : ''} &middot; ${p.attachment_count} file${p.attachment_count !== 1 ? 's' : ''}</span>
         <div class="project-card-actions" onclick="event.stopPropagation()">
-          <button class="proj-action-btn" onclick="openProjectModal(${p.id})">&#9998; Edit</button>
+          <button class="proj-action-btn" onclick="openProjectModal(${p.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit</button>
           <button class="proj-action-btn danger" onclick="deleteProject(${p.id})">&#128465;</button>
         </div>
       </div>
@@ -4549,13 +4656,13 @@ function renderProjectCardBody(projId, project, rows, attachments) {
 
   // Instructions preview
   if (project.instructions?.trim()) {
-    html += `<div class="proj-instructions-preview">&#128221; ${escHtml(project.instructions.slice(0, 200))}${project.instructions.length > 200 ? '...' : ''}</div>`;
+    html += `<div class="proj-instructions-preview"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;opacity:.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>${escHtml(project.instructions.slice(0, 200))}${project.instructions.length > 200 ? '...' : ''}</div>`;
   }
 
   // Attachments
   if (attachments.length) {
     html += `<div class="proj-attachments-row">`;
-    attachments.forEach(a => { html += `<div class="proj-attach-chip">&#128206; ${escHtml(a.name)}</div>`; });
+    attachments.forEach(a => { html += `<div class="proj-attach-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${escHtml(a.name)}</div>`; });
     html += `</div>`;
   }
 
@@ -4670,7 +4777,7 @@ function renderProjAttachList(attachments, fromServer) {
   attachments.forEach(a => {
     const item = document.createElement('div');
     item.className = 'proj-attach-item';
-    item.innerHTML = `<span>&#128206; ${escHtml(a.name)}</span><span style="margin-left:auto;font-size:.7rem;color:var(--text-muted)">${a.size ? (a.size/1024).toFixed(1)+'KB' : ''}</span>
+    item.innerHTML = `<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${escHtml(a.name)}</span><span style="margin-left:auto;font-size:.7rem;color:var(--text-muted)">${a.size ? (a.size/1024).toFixed(1)+'KB' : ''}</span>
       <button class="proj-attach-del" onclick="${fromServer ? `deleteProjAttachment(${_projModalId},${a.id},this)` : `removePendingAttach(${a._idx},this)`}" title="Remove">&#10005;</button>`;
     list.appendChild(item);
   });
@@ -4678,7 +4785,7 @@ function renderProjAttachList(attachments, fromServer) {
     const item = document.createElement('div');
     item.className = 'proj-attach-item';
     item.style.borderLeft = '2px solid var(--success)';
-    item.innerHTML = `<span>&#128206; ${escHtml(a.name)} <span style="color:var(--success);font-size:.68rem">(new)</span></span>
+    item.innerHTML = `<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${escHtml(a.name)} <span style="color:var(--success);font-size:.68rem">(new)</span></span>
       <button class="proj-attach-del" onclick="removePendingAttach(${i},this)" title="Remove">&#10005;</button>`;
     list.appendChild(item);
   });
@@ -4715,7 +4822,7 @@ function handleProjFileUpload(event) {
       item.className = 'proj-attach-item';
       item.style.borderLeft = '2px solid var(--success)';
       const idx = _projModalAttachments.length - 1;
-      item.innerHTML = `<span>&#128206; ${escHtml(file.name)} <span style="color:var(--success);font-size:.68rem">(new)</span></span>
+      item.innerHTML = `<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${escHtml(file.name)} <span style="color:var(--success);font-size:.68rem">(new)</span></span>
         <span style="margin-left:auto;font-size:.7rem;color:var(--text-muted)">${(file.size/1024).toFixed(1)}KB</span>
         <button class="proj-attach-del" onclick="removePendingAttach(${idx},this)" title="Remove">&#10005;</button>`;
       list.appendChild(item);
@@ -4831,7 +4938,7 @@ async function updateSessionProjTags() {
     const r = await fetch(`/api/projects/session/${state.lastSessionId}`);
     const { projects } = await r.json();
     tagsRow.innerHTML = projects.map(p =>
-      `<span class="proj-tag" style="color:${p.color};border-color:${p.color};background:${p.color}18">&#128193; ${escHtml(p.name)}</span>`
+      `<span class="proj-tag" style="color:${p.color};border-color:${p.color};background:${p.color}18"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>${escHtml(p.name)}</span>`
     ).join('');
   } catch { tagsRow.innerHTML = ''; }
 }
