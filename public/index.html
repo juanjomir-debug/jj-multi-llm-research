@@ -1396,7 +1396,7 @@
         <span class="config-block-label" style="flex:1">⚡ Reasoning</span>
         <button class="rsb-toggle-btn" id="globalReasoningBtn" onclick="toggleGlobalReasoning()">OFF</button>
       </div>
-      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Claude Opus 4.6 &amp; GPT o-series</div>
+      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Claude Opus · GPT o4 · Grok Reasoning · QwQ</div>
     </div>
 
     <!-- Web Search -->
@@ -5267,34 +5267,46 @@ function setModelLevel(level) {
   updateEstimate();
 }
 
+// Reasoning model map: base → reasoning variant (and reverse)
+const REASONING_ON = {
+  anthropic: 'claude-opus-4-6-thinking',
+  openai:    'o4-mini',
+  xai:       null, // determined dynamically from current model
+  qwen:      'qwq-32b',
+};
+
 function toggleGlobalReasoning() {
   const btn = document.getElementById('globalReasoningBtn');
   const isOn = btn.classList.toggle('on');
   btn.textContent = isOn ? 'ON' : 'OFF';
   state.models.forEach((m, idx) => {
+    const sel = document.getElementById(`sel-${m.provider}`);
     if (m.provider === 'anthropic') {
-      // Claude: toggle Opus thinking
-      if (isOn) {
-        m._preReasoningModel = m.modelId;
-        m.modelId = 'claude-opus-4-6-thinking';
-      } else {
-        m.modelId = m._preReasoningModel || 'claude-sonnet-4-6';
-      }
-      const sel = document.getElementById(`sel-${m.provider}`);
+      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'claude-opus-4-6-thinking'; }
+      else { m.modelId = m._preReasoningModel || 'claude-sonnet-4-6'; }
       if (sel) sel.value = m.modelId;
       const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
       if (thinkBtn) thinkBtn.className = `websearch-toggle ${isOn ? 'on' : ''}`;
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
       if (thinkRow) thinkRow.style.display = (isOn || m.modelId === 'claude-opus-4-6') ? '' : 'none';
     } else if (m.provider === 'openai') {
-      // OpenAI: toggle o4-mini (reasoning)
-      if (isOn) {
+      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'o4-mini'; }
+      else { m.modelId = m._preReasoningModel || 'gpt-5-mini'; }
+      if (sel) sel.value = m.modelId;
+    } else if (m.provider === 'xai') {
+      // Switch between reasoning / non-reasoning variant of same tier
+      const isReasoning = m.modelId.includes('-reasoning') && !m.modelId.includes('-non-reasoning');
+      if (isOn && !isReasoning) {
         m._preReasoningModel = m.modelId;
-        m.modelId = 'o4-mini';
-      } else {
-        m.modelId = m._preReasoningModel || 'gpt-5-mini';
+        // Map non-reasoning → reasoning variant
+        m.modelId = m.modelId.replace('-non-reasoning', '-reasoning');
+      } else if (!isOn && isReasoning) {
+        m.modelId = m._preReasoningModel || m.modelId.replace('-reasoning', '-non-reasoning');
       }
-      const sel = document.getElementById(`sel-${m.provider}`);
+      if (sel) sel.value = m.modelId;
+    } else if (m.provider === 'qwen') {
+      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'qwq-32b'; }
+      else { m.modelId = m._preReasoningModel || 'qwen-plus'; }
       if (sel) sel.value = m.modelId;
     }
   });
