@@ -1,6 +1,7 @@
 {
-  "concise":   "Respuesta MUY CONCISA. Máximo 2-3 párrafos. Sin listas largas.",
-  "normal":    "",
-  "detailed":  "Proporciona una respuesta detallada y bien estructurada con ejemplos.",
-  "exhaustive": "Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad."
+  "superconcise": "Respuesta ULTRACORTA. Máximo 1 párrafo o 3 bullets. Ve al grano sin contexto ni introducción.",
+  "concise":      "Respuesta MUY CONCISA. Máximo 2-3 párrafos. Sin listas largas.",
+  "normal":       "",
+  "detailed":     "Proporciona una respuesta detallada y bien estructurada con ejemplos.",
+  "exhaustive":   "Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad."
 }

@@ -1,0 +1,30 @@
+{
+  "appId": "net.reliableai.app",
+  "appName": "ReliableAI",
+  "webDir": "public",
+  "server": {
+    "url": "https://reliableai.net",
+    "cleartext": false,
+    "allowNavigation": [
+      "reliableai.net",
+      "*.stripe.com",
+      "checkout.stripe.com",
+      "billing.stripe.com",
+      "js.stripe.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1c1c1c",
+      "showSpinner": false,
+      "androidSplashResourceName": "splash"
+    }
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "allowsLinkPreview": false,
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": true
+  }
+}

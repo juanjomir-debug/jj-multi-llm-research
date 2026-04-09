@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 20px; }
+  canvas { border-radius: 22%; }
+  button { background: #cf7d4e; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1024" height="1024"></canvas>
+<button onclick="download()">Download icon-1024.png</button>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const S = 1024;
+
+// ── Background ────────────────────────────────────────
+const bgGrad = ctx.createLinearGradient(0, 0, S, S);
+bgGrad.addColorStop(0, '#1e1e1e');
+bgGrad.addColorStop(1, '#161616');
+ctx.fillStyle = bgGrad;
+roundRect(ctx, 0, 0, S, S, 180);
+ctx.fill();
+
+// ── Subtle radial glow (brand orange) ─────────────────
+const glow = ctx.createRadialGradient(S/2, S*0.42, 0, S/2, S*0.42, S*0.55);
+glow.addColorStop(0, 'rgba(207,125,78,0.13)');
+glow.addColorStop(1, 'rgba(207,125,78,0)');
+ctx.fillStyle = glow;
+roundRect(ctx, 0, 0, S, S, 180);
+ctx.fill();
+
+// ── Node positions (5 nodes: 4 models + 1 center) ─────
+const cx = S / 2, cy = S / 2 - 20;
+const R = 210;   // orbit radius
+const nodeR = 42; // node circle radius
+const centerR = 58;
+
+const angles = [-90, -90 + 72, -90 + 144, -90 + 216].map(a => a * Math.PI / 180);
+const nodes = angles.map(a => ({ x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) }));
+
+// ── Connection lines (model → center) ─────────────────
+const modelColors = ['#a78bfa', '#10a37f', '#4285f4', '#cc785c'];
+
+nodes.forEach((n, i) => {
+  const lineGrad = ctx.createLinearGradient(n.x, n.y, cx, cy);
+  lineGrad.addColorStop(0, modelColors[i] + 'aa');
+  lineGrad.addColorStop(1, '#cf7d4ecc');
+  ctx.beginPath();
+  ctx.moveTo(n.x, n.y);
+  ctx.lineTo(cx, cy);
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 5;
+  ctx.stroke();
+});
+
+// ── Cross-connections (faint) ──────────────────────────
+for (let i = 0; i < nodes.length; i++) {
+  for (let j = i + 1; j < nodes.length; j++) {
+    ctx.beginPath();
+    ctx.moveTo(nodes[i].x, nodes[i].y);
+    ctx.lineTo(nodes[j].x, nodes[j].y);
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+// ── Outer nodes (model dots) ───────────────────────────
+nodes.forEach((n, i) => {
+  // Outer glow
+  const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, nodeR * 2.2);
+  g.addColorStop(0, modelColors[i] + '55');
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(n.x, n.y, nodeR * 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Circle bg
+  ctx.beginPath();
+  ctx.arc(n.x, n.y, nodeR, 0, Math.PI * 2);
+  ctx.fillStyle = '#252525';
+  ctx.fill();
+  ctx.strokeStyle = modelColors[i];
+  ctx.lineWidth = 3.5;
+  ctx.stroke();
+
+  // Model letter
+  ctx.fillStyle = modelColors[i];
+  ctx.font = `700 ${nodeR * 0.95}px -apple-system, Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const labels = ['G', 'A', 'G', 'C'];  // Grok, AI(OpenAI), Gemini, Claude
+  const letters = ['X', 'G', 'G', 'C']; // grok/xAI, GPT, Gemini, Claude
+  const icons = ['✦', 'G', '◆', 'C'];
+  ctx.fillText(icons[i], n.x, n.y + 1);
+});
+
+// ── Center node (synthesis / ReliableAI core) ─────────
+// Center glow
+const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, centerR * 2.8);
+cg.addColorStop(0, 'rgba(207,125,78,0.45)');
+cg.addColorStop(1, 'transparent');
+ctx.fillStyle = cg;
+ctx.beginPath();
+ctx.arc(cx, cy, centerR * 2.8, 0, Math.PI * 2);
+ctx.fill();
+
+// Center circle
+const ccGrad = ctx.createRadialGradient(cx - centerR * 0.2, cy - centerR * 0.2, 0, cx, cy, centerR);
+ccGrad.addColorStop(0, '#e8945c');
+ccGrad.addColorStop(1, '#b5612c');
+ctx.beginPath();
+ctx.arc(cx, cy, centerR, 0, Math.PI * 2);
+ctx.fillStyle = ccGrad;
+ctx.fill();
+
+// Center "R"
+ctx.fillStyle = '#fff';
+ctx.font = `800 ${centerR * 1.15}px -apple-system, Inter, sans-serif`;
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillText('R', cx, cy + 2);
+
+// ── Wordmark "ReliableAI" ──────────────────────────────
+const textY = S * 0.80;
+
+// Background pill for text
+ctx.beginPath();
+roundRect(ctx, S * 0.15, textY - 38, S * 0.70, 76, 38);
+ctx.fillStyle = 'rgba(255,255,255,0.04)';
+ctx.fill();
+ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+// "Reliable"
+ctx.fillStyle = '#ececec';
+ctx.font = `700 72px -apple-system, Inter, sans-serif`;
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillText('Reliable', cx - 52, textY);
+
+// "AI" in orange
+ctx.fillStyle = '#cf7d4e';
+ctx.font = `800 72px -apple-system, Inter, sans-serif`;
+// measure "Reliable" to position "AI"
+const reliableW = ctx.measureText('Reliable').width;
+ctx.textAlign = 'left';
+// position AI right after Reliable
+const startX = cx - reliableW / 2 - 52;
+ctx.fillText('Reliable', startX, textY);  // redraw (needed for left align)
+// Recalculate
+ctx.textAlign = 'center';
+ctx.fillStyle = '#ececec';
+ctx.font = `700 72px -apple-system, Inter, sans-serif`;
+
+// Simpler: draw full string, color the AI part separately
+ctx.clearRect(S * 0.15, textY - 40, S * 0.70, 80);
+
+// Redraw pill
+ctx.beginPath();
+roundRect(ctx, S * 0.15, textY - 38, S * 0.70, 76, 38);
+ctx.fillStyle = 'rgba(255,255,255,0.04)';
+ctx.fill();
+ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+ctx.font = `700 68px -apple-system, Inter, sans-serif`;
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+
+// Measure to split
+const reliableText = 'Reliable';
+const aiText = 'AI';
+const rW = ctx.measureText(reliableText).width;
+const aiW = ctx.measureText(aiText).width;
+const gap = 4;
+const totalW = rW + gap + aiW;
+const startXX = cx - totalW / 2;
+
+ctx.textAlign = 'left';
+ctx.fillStyle = '#ececec';
+ctx.fillText(reliableText, startXX, textY);
+ctx.fillStyle = '#cf7d4e';
+ctx.fillText(aiText, startXX + rW + gap, textY);
+
+// ── Tagline ────────────────────────────────────────────
+ctx.fillStyle = 'rgba(255,255,255,0.28)';
+ctx.font = `400 28px -apple-system, Inter, sans-serif`;
+ctx.textAlign = 'center';
+ctx.fillText('Multi-Model Intelligence', cx, S * 0.91);
+
+// ── Helper ─────────────────────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function download() {
+  const a = document.createElement('a');
+  a.download = 'icon-1024.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+</script>
+</body>
+</html>

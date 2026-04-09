@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>body{margin:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;}canvas{max-width:400px;max-height:400px;}button{background:#cf7d4e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:1rem;cursor:pointer;}</style>
+</head>
+<body>
+<canvas id="c" width="2732" height="2732"></canvas>
+<button onclick="download()">Download splash-2732x2732.png</button>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const S = 2732, cx = S/2, cy = S/2;
+
+// Background
+ctx.fillStyle = '#1c1c1c';
+ctx.fillRect(0, 0, S, S);
+
+// Subtle radial glow
+const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.4);
+glow.addColorStop(0, 'rgba(207,125,78,0.10)');
+glow.addColorStop(1, 'rgba(207,125,78,0)');
+ctx.fillStyle = glow;
+ctx.fillRect(0, 0, S, S);
+
+// Center logo circle
+const logoR = 220;
+const logoGrad = ctx.createRadialGradient(cx - logoR*0.2, cy - logoR*0.2, 0, cx, cy, logoR);
+logoGrad.addColorStop(0, '#e8945c');
+logoGrad.addColorStop(1, '#b5612c');
+ctx.beginPath();
+ctx.arc(cx, cy - 120, logoR, 0, Math.PI*2);
+ctx.fillStyle = logoGrad;
+ctx.fill();
+
+// "R" letter
+ctx.fillStyle = '#fff';
+ctx.font = `800 ${logoR * 1.1}px -apple-system, Inter, sans-serif`;
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillText('R', cx, cy - 118);
+
+// Wordmark
+ctx.font = `700 160px -apple-system, Inter, sans-serif`;
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+const rW = ctx.measureText('Reliable').width;
+const aiW = ctx.measureText('AI').width;
+const totalW = rW + 8 + aiW;
+const startX = cx - totalW / 2;
+ctx.textAlign = 'left';
+ctx.fillStyle = '#ececec';
+ctx.fillText('Reliable', startX, cy + 200);
+ctx.fillStyle = '#cf7d4e';
+ctx.fillText('AI', startX + rW + 8, cy + 200);
+
+// Tagline
+ctx.fillStyle = 'rgba(255,255,255,0.35)';
+ctx.font = `400 72px -apple-system, Inter, sans-serif`;
+ctx.textAlign = 'center';
+ctx.fillText('Multi-Model AI Intelligence', cx, cy + 320);
+
+function download() {
+  const a = document.createElement('a');
+  a.download = 'splash-2732x2732.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+
+// Auto-save
+window.onload = function() {
+  const dataUrl = c.toDataURL('image/png');
+  fetch('http://localhost:9878/save-splash', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ data: dataUrl })
+  }).catch(() => {});
+};
+</script>
+</body>
+</html>

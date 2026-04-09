@@ -16,14 +16,20 @@
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.8.0",
     "connect-sqlite3": "^0.9.16",
+    "docx": "^9.6.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^8.3.1",
     "express-session": "^1.19.0",
     "helmet": "^8.1.0",
+    "nodemailer": "^8.0.4",
     "openai": "^4.85.1",
     "pdf-parse": "^1.1.1",
     "stripe": "^20.4.1"
   },
-  "_buildId": "1774453606403"
+  "_buildId": "1774453606403",
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/assets": "^3.0.5"
+  }
 }

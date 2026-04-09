@@ -42,7 +42,9 @@ const connectSQLite3= require('connect-sqlite3');
 const rateLimit     = require('express-rate-limit');
 const helmet        = require('helmet');
 const Stripe        = require('stripe');
+const nodemailer    = require('nodemailer');
 const db            = require('./db');
+const { requireAdmin } = require('./admin-middleware');
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const SQLiteStore = connectSQLite3(session);
@@ -68,9 +70,22 @@ app.use('/api', apiLimiter);
 app.use(express.json({ limit: '25mb' }));
 
 // ── Health check — ANTES de session para responder siempre ────────────────────
-app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+app.get('/health', (req, res) => {
+  try {
+    const dbCheck = db.prepare('SELECT 1 as ok').get();
+    const mem = process.memoryUsage();
+    res.json({
+      ok: true, ts: Date.now(),
+      db: dbCheck?.ok === 1 ? 'ok' : 'error',
+      uptime: Math.round(process.uptime()),
+      mem_mb: Math.round(mem.rss / 1024 / 1024),
+    });
+  } catch (e) { res.status(503).json({ ok: false, error: e.message }); }
+});
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing.html')));
+app.get('/demo', (req, res) => res.sendFile(path.join(__dirname, 'public', 'demo.html')));
+app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'public', 'security.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
@@ -87,11 +102,11 @@ app.use(session({
 
 // ── Plan definitions (mirror of DB) ──────────────────────────────────────────
 const PLANS = {
-  free:       { name: 'Free',       price: 0,     budget: 3,    maxModels: 2,  webSearch: false, projects: false, historyDays: 0,   dailyQueries: 3,   hallucination: false, debate: false, amplitudes: ['concise'],                                   synthesis: 'basic' },
-  pro_demo:   { name: 'Pro Demo',   price: 0,     budget: 3,    maxModels: 99, webSearch: true,  projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
-  starter:    { name: 'Starter',    price: 10.00, budget: 2.5,  maxModels: 4,  webSearch: false, projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: false, debate: false, amplitudes: ['concise','normal'],                           synthesis: 'basic' },
-  pro:        { name: 'Pro',        price: 25.00, budget: 10,   maxModels: 99, webSearch: true,  projects: true,  historyDays: 365, dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
-  enterprise: { name: 'Enterprise', price: 90.00, budget: 999,  maxModels: 99, webSearch: true,  projects: true,  historyDays: 365, dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['concise','normal','detailed','exhaustive'], synthesis: 'full'  },
+  free:       { name: 'Explorer',      price: 0,     budget: 3,   maxModels: 4,  webSearch: false, projects: false, historyDays: 0,   dailyQueries: 3,   hallucination: false, debate: false, amplitudes: ['superconcise','concise'],                                              synthesis: 'basic' },
+  pro_demo:   { name: 'Pro Demo',      price: 0,     budget: 3,   maxModels: 99, webSearch: true,  projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['superconcise','concise','normal','detailed','exhaustive'], synthesis: 'full'  },
+  starter:    { name: 'Professional',  price: 29.00, budget: 15,  maxModels: 4,  webSearch: false, projects: true,  historyDays: 30,  dailyQueries: 999, hallucination: false, debate: false, amplitudes: ['superconcise','concise','normal'],                              synthesis: 'basic' },
+  pro:        { name: 'Expert',        price: 59.00, budget: 40,  maxModels: 99, webSearch: true,  projects: true,  historyDays: 365, dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['superconcise','concise','normal','detailed','exhaustive'], synthesis: 'full'  },
+  enterprise: { name: 'Team',          price: 49.00, budget: 200, maxModels: 99, webSearch: true,  projects: true,  historyDays: 365, dailyQueries: 999, hallucination: true,  debate: true,  amplitudes: ['superconcise','concise','normal','detailed','exhaustive'], synthesis: 'full'  },
 };
 
 // Models allowed for free plan (only previous-gen / lightweight models)
@@ -221,6 +236,24 @@ const PRICING = {
   'moonshot-v1-128k': { input: 8.00, output: 8.00 },
   'moonshot-v1-32k':  { input: 2.40, output: 2.40 },
   'moonshot-v1-8k':   { input: 0.80, output: 0.80 },
+  // Perplexity Sonar
+  'sonar':                { input: 1.00, output: 1.00 },
+  'sonar-pro':            { input: 3.00, output: 15.00 },
+  'sonar-reasoning':      { input: 1.00, output: 5.00 },
+  'sonar-reasoning-pro':  { input: 2.00, output: 8.00 },
+  // Qwen (Alibaba DashScope)
+  'qwen-plus':            { input: 0.40, output: 1.20 },
+  'qwen-turbo':           { input: 0.05, output: 0.15 },
+  'qwen-max':             { input: 1.60, output: 6.40 },
+  'qwq-32b':              { input: 0.60, output: 2.40 },
+  // Zhipu AI (GLM)
+  'glm-5.1':       { input: 0.50, output: 2.00 },
+  'glm-5-turbo':   { input: 0.10, output: 0.40 },
+  'glm-5':         { input: 0.30, output: 1.20 },
+  'glm-4.7':       { input: 0.25, output: 1.00 },
+  'glm-4.6':       { input: 0.20, output: 0.80 },
+  'glm-4.5':       { input: 0.15, output: 0.60 },
+  'glm-4.5-air':   { input: 0.05, output: 0.20 },
 };
 
 function calcCost(modelId, inputTok, outputTok) {
@@ -574,15 +607,91 @@ async function callKimi(modelId, systemPrompt, userMessage, maxTokens, attachmen
   return { text: r.choices[0].message.content, inputTokens: r.usage.prompt_tokens, outputTokens: r.usage.completion_tokens };
 }
 
+// Perplexity Sonar — OpenAI-compatible API
+async function callPerplexityStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk) {
+  if (!process.env.PERPLEXITY_API_KEY) throw new Error('PERPLEXITY_API_KEY not configured');
+  const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' });
+  const messages = [];
+  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+  messages.push(...history);
+  messages.push({ role: 'user', content: userMessage });
+  const opts = {
+    model: modelId, messages, max_tokens: maxTokens, stream: true,
+    ...(temperature != null ? { temperature } : {}),
+  };
+  let text = '', inputTokens = 0, outputTokens = 0;
+  const stream = await client.chat.completions.create(opts);
+  for await (const chunk of stream) {
+    const delta = chunk.choices?.[0]?.delta?.content;
+    if (delta) { text += delta; if (onChunk) onChunk(delta); }
+    if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens || 0; outputTokens = chunk.usage.completion_tokens || 0; }
+  }
+  return { text, inputTokens, outputTokens };
+}
+
+// Qwen (Alibaba DashScope) — OpenAI-compatible API
+async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk) {
+  if (!process.env.QWEN_API_KEY) throw new Error('QWEN_API_KEY not configured');
+  const client = new OpenAI({ apiKey: process.env.QWEN_API_KEY, baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' });
+  const messages = [];
+  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+  messages.push(...history);
+  messages.push({ role: 'user', content: userMessage });
+  const isReasoning = modelId === 'qwq-32b';
+  const opts = {
+    model: modelId, messages, stream: true,
+    stream_options: { include_usage: true },
+    ...(isReasoning ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens }),
+    ...(!isReasoning && temperature != null ? { temperature } : {}),
+  };
+  let text = '', inputTokens = 0, outputTokens = 0;
+  const stream = await client.chat.completions.create(opts);
+  for await (const chunk of stream) {
+    const delta = chunk.choices?.[0]?.delta?.content;
+    if (delta) { text += delta; if (onChunk) onChunk(delta); }
+    if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens || 0; outputTokens = chunk.usage.completion_tokens || 0; }
+  }
+  if (!text) throw new Error(`Respuesta vacía de ${modelId}.`);
+  return { text, inputTokens, outputTokens };
+}
+
+// Zhipu AI (GLM) — OpenAI-compatible API
+async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk) {
+  if (!process.env.ZHIPU_API_KEY) throw new Error('ZHIPU_API_KEY not configured');
+  const client = new OpenAI({ apiKey: process.env.ZHIPU_API_KEY, baseURL: 'https://open.bigmodel.cn/api/paas/v4' });
+  const messages = [];
+  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+  messages.push(...history);
+  messages.push({ role: 'user', content: userMessage });
+  const opts = {
+    model: modelId, messages, stream: true,
+    stream_options: { include_usage: true },
+    max_tokens: maxTokens,
+    ...(temperature != null ? { temperature } : {}),
+  };
+  let text = '', inputTokens = 0, outputTokens = 0;
+  const stream = await client.chat.completions.create(opts);
+  for await (const chunk of stream) {
+    const delta = chunk.choices?.[0]?.delta?.content;
+    if (delta) { text += delta; if (onChunk) onChunk(delta); }
+    if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens || 0; outputTokens = chunk.usage.completion_tokens || 0; }
+  }
+  if (!text) throw new Error(`Respuesta vacía de ${modelId}.`);
+  return { text, inputTokens, outputTokens };
+}
+
 // Streaming dispatcher (improvement #1)
 // temperature = null → use API default; pass as last arg to preserve backward compat
 async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk, temperature = null) {
   switch (provider) {
-    case 'anthropic': return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
-    case 'openai':    return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
-    case 'google':    return callGemini(modelId, systemPrompt, userMessage, attachments, webSearch, history, temperature, onChunk);
-    case 'xai':       return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, onChunk);
-    case 'moonshot':  return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature);
+    case 'anthropic':  return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
+    case 'openai':     return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
+    case 'google':     return callGemini(modelId, systemPrompt, userMessage, attachments, webSearch, history, temperature, onChunk);
+    case 'xai':        return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, onChunk);
+    case 'moonshot':   return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature);
+    case 'perplexity': return callPerplexityStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
+    case 'qwen':       return callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
+    case 'zhipu':      return callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
     default: throw new Error(`Unknown provider: ${provider}`);
   }
 }
@@ -634,6 +743,121 @@ async function withRetry(fn, maxAttempts = 3, label = '') {
 function sanitizeStr(s, max = 500) { return typeof s === 'string' ? s.trim().slice(0, max) : ''; }
 function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
+// ─── Email verification ───────────────────────────────────────────────────────
+function createMailTransport() {
+  const host = process.env.SMTP_HOST;
+  if (!host) return null;
+  const tlsOpts = { rejectUnauthorized: false };
+  if (process.env.SMTP_CIPHERS) tlsOpts.ciphers = process.env.SMTP_CIPHERS;
+  return nodemailer.createTransport({
+    host,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    tls: tlsOpts,
+  });
+}
+
+async function sendVerificationEmail(email, username, token) {
+  const transport = createMailTransport();
+  if (!transport) {
+    console.warn('[email] SMTP not configured — skipping verification email');
+    return false;
+  }
+  const appUrl = process.env.APP_URL || 'https://reliableai.net';
+  const link = `${appUrl}/verify-email?token=${token}`;
+  const from = process.env.SMTP_FROM || `"ReliableAI" <${process.env.SMTP_USER}>`;
+  await transport.sendMail({
+    from,
+    to: email,
+    subject: 'Verify your ReliableAI email',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#1c1c1c;color:#ececec;border-radius:12px;padding:32px">
+        <h2 style="color:#cf7d4e;margin-bottom:8px">Welcome to ReliableAI, ${username}!</h2>
+        <p style="color:#9e9e9e;margin-bottom:24px">Please verify your email to activate your account.</p>
+        <a href="${link}" style="display:inline-block;background:#cf7d4e;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700">Verify my email</a>
+        <p style="color:#666;font-size:12px;margin-top:24px">Or copy this link: ${link}</p>
+        <p style="color:#666;font-size:12px">This link expires in 24 hours.</p>
+      </div>`,
+    text: `Welcome to ReliableAI! Verify your email: ${link}`,
+  });
+  return true;
+}
+
+// Verification endpoint — GET /verify-email?token=xxx
+app.get('/verify-email', (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.redirect('/?verified=invalid');
+  const user = db.prepare('SELECT id, verification_sent_at FROM users WHERE verification_token = ?').get(token);
+  if (!user) return res.redirect('/?verified=invalid');
+  // Check 24h expiry
+  const sentAt = user.verification_sent_at ? new Date(user.verification_sent_at) : null;
+  if (sentAt && Date.now() - sentAt.getTime() > 86400000) return res.redirect('/?verified=expired');
+  db.prepare('UPDATE users SET email_verified = 1, verification_token = NULL WHERE id = ?').run(user.id);
+  res.redirect('/analyze?verified=1');
+});
+
+// Resend verification email
+app.post('/api/auth/resend-verification', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const user = db.prepare('SELECT id, email, username, email_verified, verification_sent_at FROM users WHERE id = ?').get(req.session.userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.email_verified) return res.json({ ok: true, already: true });
+  // Rate-limit: max 1 email per 2 minutes
+  if (user.verification_sent_at) {
+    const diff = Date.now() - new Date(user.verification_sent_at).getTime();
+    if (diff < 120000) return res.status(429).json({ error: 'Please wait 2 minutes before resending.' });
+  }
+  const token = crypto.randomBytes(32).toString('hex');
+  db.prepare('UPDATE users SET verification_token = ?, verification_sent_at = ? WHERE id = ?')
+    .run(token, new Date().toISOString(), user.id);
+  await sendVerificationEmail(user.email, user.username, token);
+  res.json({ ok: true });
+});
+
+// ─── Password reset ───────────────────────────────────────────────────────────
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const email = sanitizeStr(req.body.email || '', 200).toLowerCase();
+  if (!validEmail(email)) return res.status(400).json({ error: 'Email inválido' });
+  // Always return ok to avoid user enumeration
+  const user = db.prepare('SELECT id, username FROM users WHERE email = ?').get(email);
+  if (user) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 3600_000).toISOString(); // 1 hour
+    db.prepare('UPDATE users SET verification_token = ?, verification_sent_at = ? WHERE id = ?')
+      .run(token, expires, user.id);
+    const appUrl = process.env.APP_URL || 'https://reliableai.net';
+    const resetLink = `${appUrl}/analyze?reset_token=${token}`;
+    const transport = createMailTransport();
+    if (transport) {
+      transport.sendMail({
+        from: process.env.SMTP_FROM || '"ReliableAI" <info@reliableai.net>',
+        to: email,
+        subject: 'Reset your ReliableAI password',
+        html: `<p>Hi ${user.username},</p><p>Click the link below to reset your password (valid 1 hour):</p><p><a href="${resetLink}">${resetLink}</a></p><p>If you didn't request this, ignore this email.</p>`,
+        text: `Reset your password: ${resetLink}\n\nValid for 1 hour. If you didn't request this, ignore this email.`,
+      }).catch(e => console.warn('[email] reset password send error:', e.message));
+    }
+  }
+  res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const token = sanitizeStr(req.body.token || '', 200);
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  if (!token || password.length < 8)
+    return res.status(400).json({ error: 'Token y contraseña (mín. 8 chars) requeridos' });
+  const user = db.prepare('SELECT id, verification_sent_at FROM users WHERE verification_token = ?').get(token);
+  if (!user) return res.status(400).json({ error: 'Token inválido o expirado' });
+  const expires = user.verification_sent_at ? new Date(user.verification_sent_at) : null;
+  if (!expires || Date.now() > expires.getTime())
+    return res.status(400).json({ error: 'Token expirado — solicita uno nuevo' });
+  const hash = await bcrypt.hash(password, 12);
+  db.prepare('UPDATE users SET password_hash = ?, verification_token = NULL, verification_sent_at = NULL WHERE id = ?')
+    .run(hash, user.id);
+  res.json({ ok: true, message: 'Password updated — you can now log in.' });
+});
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
   const username   = sanitizeStr(req.body.username, 50);
@@ -648,14 +872,18 @@ app.post('/api/auth/register', async (req, res) => {
   if (password.length < 8) return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
   if (username.length < 3) return res.status(400).json({ error: 'El nombre de usuario debe tener al menos 3 caracteres' });
   try {
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 12);
+    const token = crypto.randomBytes(32).toString('hex');
+    const now   = new Date().toISOString();
     const result = db.prepare(
-      'INSERT INTO users (username, email, password_hash, country, city, birthdate, occupation) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(username.trim(), email.trim().toLowerCase(), hash, country||null, city||null, birthdate||null, occupation||null);
-    const user = db.prepare('SELECT id, username, email, total_cost_usd, plan, monthly_cost_usd, paused FROM users WHERE id = ?').get(result.lastInsertRowid);
+      'INSERT INTO users (username, email, password_hash, country, city, birthdate, occupation, verification_token, verification_sent_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(username.trim(), email.trim().toLowerCase(), hash, country||null, city||null, birthdate||null, occupation||null, token, now);
+    const user = db.prepare('SELECT id, username, email, total_cost_usd, plan, monthly_cost_usd, paused, role, email_verified FROM users WHERE id = ?').get(result.lastInsertRowid);
     req.session.userId = user.id;
     const planInfo = PLANS[user.plan] || PLANS.free;
-    res.json({ user: { ...user, planName: planInfo.name, budget: planInfo.budget } });
+    // Send verification email (non-blocking)
+    sendVerificationEmail(user.email, user.username, token).catch(e => console.warn('[email]', e.message));
+    res.json({ user: { ...user, planName: planInfo.name, budget: planInfo.budget, email_verified: 0 } });
   } catch (err) {
     if (err.message.includes('UNIQUE')) {
       const field = err.message.includes('username') ? 'nombre de usuario' : 'email';
@@ -677,7 +905,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (err) return res.status(500).json({ error: 'Session error' });
     req.session.userId = user.id;
     const planInfo = PLANS[user.plan] || PLANS.free;
-    res.json({ user: { id: user.id, username: user.username, email: user.email, total_cost_usd: user.total_cost_usd, plan: user.plan, planName: planInfo.name, monthly_cost_usd: user.monthly_cost_usd || 0, budget: planInfo.budget, paused: !!user.paused } });
+    res.json({ user: { id: user.id, username: user.username, email: user.email, total_cost_usd: user.total_cost_usd, plan: user.plan, planName: planInfo.name, monthly_cost_usd: user.monthly_cost_usd || 0, budget: planInfo.budget, paused: !!user.paused, role: user.role || 'user', email_verified: !!user.email_verified } });
   });
 });
 
@@ -685,12 +913,13 @@ app.post('/api/auth/logout', (req, res) => { req.session.destroy(() => res.json(
 
 app.get('/api/auth/me', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
-  const user = db.prepare('SELECT id, username, email, total_cost_usd, plan, monthly_cost_usd, billing_period_start, paused, daily_queries, daily_queries_date FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT id, username, email, total_cost_usd, plan, monthly_cost_usd, billing_period_start, paused, daily_queries, daily_queries_date, role, email_verified FROM users WHERE id = ?').get(req.session.userId);
   if (!user) return res.status(401).json({ error: 'User not found' });
   resetMonthlyIfNeeded(user);
   resetDailyIfNeeded(user);
   const planInfo = PLANS[user.plan] || PLANS.free;
-  res.json({ user: { ...user, planName: planInfo.name, budget: planInfo.budget, paused: !!user.paused, daily_queries: user.daily_queries || 0, limits: planInfo } });
+  const impersonating = req.session.originalAdminId ? { active: true } : null;
+  res.json({ user: { ...user, planName: planInfo.name, budget: planInfo.budget, paused: !!user.paused, daily_queries: user.daily_queries || 0, limits: planInfo, role: user.role || 'user', email_verified: !!user.email_verified }, impersonating });
 });
 
 // ─── Promo codes ─────────────────────────────────────────────────────────────
@@ -724,21 +953,25 @@ app.post('/api/promo/redeem', (req, res) => {
 // Helper: return the first provider+model that has a configured API key
 function resolveConfiguredProvider(requestedProvider, requestedModelId) {
   const KEY_MAP = {
-    anthropic: 'ANTHROPIC_API_KEY',
-    openai:    'OPENAI_API_KEY',
-    google:    'GOOGLE_API_KEY',
-    xai:       'XAI_API_KEY',
-    moonshot:  'MOONSHOT_API_KEY',
+    anthropic:  'ANTHROPIC_API_KEY',
+    openai:     'OPENAI_API_KEY',
+    google:     'GOOGLE_API_KEY',
+    xai:        'XAI_API_KEY',
+    moonshot:   'MOONSHOT_API_KEY',
+    qwen:       'QWEN_API_KEY',
+    zhipu:      'ZHIPU_API_KEY',
   };
   const DEFAULT_MODELS = {
-    anthropic: 'claude-sonnet-4-6',
-    openai:    'gpt-4o-mini',
-    google:    'gemini-2.0-flash',
-    xai:       'grok-3-mini',
-    moonshot:  'moonshot-v1-8k',
+    anthropic:  'claude-sonnet-4-6',
+    openai:     'gpt-4o-mini',
+    google:     'gemini-2.0-flash',
+    xai:        'grok-3-mini',
+    moonshot:   'moonshot-v1-8k',
+    qwen:       'qwen-plus',
+    zhipu:      'glm-5.1',
   };
   // Try requested provider first, then fall back in order
-  const order = [requestedProvider, 'anthropic', 'openai', 'google', 'xai', 'moonshot'].filter(Boolean);
+  const order = [requestedProvider, 'anthropic', 'openai', 'google', 'xai', 'moonshot', 'qwen', 'zhipu'].filter(Boolean);
   for (const prov of order) {
     if (process.env[KEY_MAP[prov]]) {
       const modelId = (prov === requestedProvider && requestedModelId) ? requestedModelId : DEFAULT_MODELS[prov];
@@ -776,7 +1009,7 @@ app.post('/api/plan-research', async (req, res) => {
     try { processedAttachments = await processAttachments(attachments); } catch {}
 
     // El planning siempre necesita al menos 2048 tokens para generar el JSON completo
-    const ampTokens = Math.max(2048, { concise: 1024, normal: 2048, detailed: 4096, exhaustive: 8192 }[amplitude] || 2048);
+    const ampTokens = Math.max(2048, { superconcise: 512, concise: 1024, normal: 2048, detailed: 4096, exhaustive: 8192 }[amplitude] || 2048);
 
     // Inyectar roles base de model_strengths.json como contexto para el planner
     let strengthsBlock = '';
@@ -931,6 +1164,109 @@ app.get('/api/votes/stats', (req, res) => {
 app.get('/analyze', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/analyze/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
+// ─── Admin dashboard ──────────────────────────────────────────────────────────
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/admin/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+const adminRouter = require('./admin-routes')(db, PLANS, PRICING, stripe);
+app.use('/api/admin', requireAdmin, adminRouter);
+
+// ─── SEO: sitemap.xml ─────────────────────────────────────────────────────────
+app.get('/sitemap.xml', (req, res) => {
+  const base = 'https://reliableai.net';
+  const now = new Date().toISOString().slice(0, 10);
+  const urls = [
+    { loc: '/',        priority: '1.0', changefreq: 'weekly'  },
+    { loc: '/analyze', priority: '0.9', changefreq: 'weekly'  },
+  ];
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(u => `  <url>
+    <loc>${base}${u.loc}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+  res.setHeader('Content-Type', 'application/xml');
+  res.send(xml);
+});
+
+// ─── SEO: robots.txt ─────────────────────────────────────────────────────────
+app.get('/robots.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(`User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /api/auth/
+Disallow: /api/admin/
+
+# AI crawlers (GEO)
+User-agent: GPTBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://reliableai.net/sitemap.xml
+`);
+});
+
+// ─── GEO: llms.txt (Generative Engine Optimization) ─────────────────────────
+app.get('/llms.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(`# ReliableAI — Multi-Model AI Research Platform
+> URL: https://reliableai.net
+> Contact: hello@reliableai.net
+
+## What is ReliableAI?
+ReliableAI is a professional AI research tool that runs any question simultaneously through multiple leading AI models (Claude, GPT, Gemini, Grok, Perplexity, Qwen) and compares their answers. It detects contradictions, measures consensus, flags hallucinations, and synthesizes a reliable final answer.
+
+## Core Problem Solved
+Single AI models have blind spots, biases, and hallucinate confidently. When making high-stakes decisions (legal research, due diligence, medical questions, strategic planning), trusting one model is a liability. ReliableAI provides cross-model verification to deliver defensible answers.
+
+## Key Features
+- Parallel analysis: All selected models answer simultaneously via streaming
+- Cascade analysis: Models answer sequentially, each building on previous responses
+- Contradiction detection: Automatic flagging of disagreements between models
+- Confidence scoring: Per-model agreement score and self-evaluation
+- Model Debate: Models critique each other's responses across multiple rounds
+- Hallucination check: Web-search verified fact-checking of model outputs
+- Integrated Synthesis: A dedicated integrator model produces a final unified answer with citations
+- Export to Word: Download any response or synthesis as a .docx file
+- Research Planning: AI-generated research plan before running queries
+
+## Supported Models (as of 2026)
+- Anthropic Claude: Opus 4.6, Sonnet 4.6, Haiku 4.5
+- OpenAI: GPT-5, GPT-5 Mini
+- Google: Gemini 3.1 Pro, Gemini 3 Flash
+- xAI: Grok 4.20, Grok 4.1 Fast
+- Perplexity: Sonar Pro, Sonar Reasoning Pro (real-time web search with citations)
+- Qwen (Alibaba): Qwen Max, Qwen 3 Plus, QwQ 32B
+
+## Pricing
+- Explorer: Free — 4 models, 3 queries/day
+- Professional: $29/mo — fast models, history, projects
+- Expert: $59/mo — all models, debate, hallucination analysis, cascade mode
+- Team: $49/user/mo — shared team accounts
+
+## Use Cases
+- Legal research and case preparation
+- Due diligence and investment research
+- Medical and scientific fact-checking
+- Strategic business decisions
+- Academic research with multiple perspectives
+- Regulatory compliance verification
+
+## Blog
+https://blog.reliableai.net — AI research techniques, model comparisons, use cases
+`);
+});
+
 // ─── Config ──────────────────────────────────────────────────────────────────
 app.get('/api/config', (req, res) => {
   // Returns 200 always (used as healthcheck path by Railway)
@@ -938,11 +1274,15 @@ app.get('/api/config', (req, res) => {
   if (!req.session.userId) return res.json({ ok: true });
   res.json({
     ok: true,
-    anthropic: !!process.env.ANTHROPIC_API_KEY,
-    openai:    !!process.env.OPENAI_API_KEY,
-    google:    !!process.env.GOOGLE_API_KEY,
-    xai:       !!process.env.XAI_API_KEY,
-    moonshot:  !!process.env.MOONSHOT_API_KEY,
+    anthropic:  !!process.env.ANTHROPIC_API_KEY,
+    openai:     !!process.env.OPENAI_API_KEY,
+    google:     !!process.env.GOOGLE_API_KEY,
+    xai:        !!process.env.XAI_API_KEY,
+    moonshot:   !!process.env.MOONSHOT_API_KEY,
+    qwen:       !!process.env.QWEN_API_KEY,
+    zhipu:      !!process.env.ZHIPU_API_KEY,
+    stripePk:   process.env.STRIPE_PUBLISHABLE_KEY || null,
+    stripeEnabled: !!process.env.STRIPE_SECRET_KEY,
   });
 });
 
@@ -1253,7 +1593,8 @@ async function runHallucinationCheck(question, results) {
 app.post('/api/research', async (req, res) => {
   const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096,
           attachments = [], amplitude = 'normal', conversationHistory = [],
-          debateEnabled = false, debateRounds = 1 } = req.body;
+          debateEnabled = false, debateRounds = 1,
+          cascadeEnabled = false, cascadeOrder = [] } = req.body;
   const userId = req.session.userId || null;
   const sessionId = crypto.randomUUID();
 
@@ -1291,58 +1632,76 @@ app.post('/api/research', async (req, res) => {
   const results = [];
   const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[effectiveAmplitude] || '';
 
-  // ── Run all models in parallel with streaming (improvement #1) ──
-  await Promise.allSettled(
-    enabledModels.map(async (m) => {
-      // Check cache — skip when attachments present (they change the context)
-      const cached = processedAttachments.length === 0 && conversationHistory.length === 0
-        ? getCached(m.modelId, question, amplitude) : null;
-      if (cached) {
-        send('model:start', { modelId: m.modelId, provider: m.provider });
-        results.push({ ...cached, cached: true });
-        send('model:done', { ...cached, cached: true });
-        return;
-      }
+  // ── Helper: run a single model and push result ────────────────────────────────
+  const PROV_LABELS = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi', perplexity: 'Perplexity', qwen: 'Qwen' };
 
+  async function runOneModel(m, userMessage) {
+    const cached = processedAttachments.length === 0 && conversationHistory.length === 0 && userMessage === question
+      ? getCached(m.modelId, question, amplitude) : null;
+    if (cached) {
       send('model:start', { modelId: m.modelId, provider: m.provider });
-      const t0 = Date.now();
-      try {
-        const sysInstr = [HIDDEN_INSTRUCTIONS, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
-        const r = await withTimeout(
-          callModelStream(m.provider, m.modelId, sysInstr || null, question, maxTokens,
-            processedAttachments, !!m.webSearch, conversationHistory,
-            (chunk) => send('model:chunk', { modelId: m.modelId, provider: m.provider, chunk }),
-            m.temperature ?? null),
-          modelTimeout(m.modelId), m.modelId
-        );
-        const cost = calcCost(m.modelId, r.inputTokens, r.outputTokens);
-        const durationMs = Date.now() - t0;
-
-        // Extract self-score (improvement #5)
-        let selfScore = null;
-        const scoreMatch = r.text.match(/<!--SELF_SCORE:([^]*?)-->/s);
-        if (scoreMatch) {
-          try { selfScore = JSON.parse(scoreMatch[1].trim()); } catch {}
-        }
-        const cleanText = r.text.replace(/<!--SELF_SCORE:[^]*?-->/gs, '').trim() || r.text;
-
-        const payload = { modelId: m.modelId, provider: m.provider, text: cleanText, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs, selfScore };
-        results.push(payload);
-        send('model:done', payload);
-
-        // Cache the response (improvement #10)
-        setCache(m.modelId, question, amplitude, payload);
-
-        // Save to history
-        if (userId) {
-          db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-            .run(userId, sessionId, m.provider, m.modelId, question, cleanText, r.inputTokens, r.outputTokens, cost, durationMs);
-        }
-      } catch (err) {
-        send('model:error', { modelId: m.modelId, provider: m.provider, error: err.message });
+      results.push({ ...cached, cached: true });
+      send('model:done', { ...cached, cached: true });
+      return;
+    }
+    send('model:start', { modelId: m.modelId, provider: m.provider });
+    const t0 = Date.now();
+    try {
+      const sysInstr = [HIDDEN_INSTRUCTIONS, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
+      const r = await withTimeout(
+        callModelStream(m.provider, m.modelId, sysInstr || null, userMessage, maxTokens,
+          processedAttachments, !!m.webSearch, conversationHistory,
+          (chunk) => send('model:chunk', { modelId: m.modelId, provider: m.provider, chunk }),
+          m.temperature ?? null),
+        modelTimeout(m.modelId), m.modelId
+      );
+      const cost = calcCost(m.modelId, r.inputTokens, r.outputTokens);
+      const durationMs = Date.now() - t0;
+      let selfScore = null;
+      const scoreMatch = r.text.match(/<!--SELF_SCORE:([^]*?)-->/s);
+      if (scoreMatch) { try { selfScore = JSON.parse(scoreMatch[1].trim()); } catch {} }
+      const cleanText = r.text.replace(/<!--SELF_SCORE:[^]*?-->/gs, '').trim() || r.text;
+      const payload = { modelId: m.modelId, provider: m.provider, text: cleanText, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs, selfScore };
+      results.push(payload);
+      send('model:done', payload);
+      if (userMessage === question) setCache(m.modelId, question, amplitude, payload);
+      if (userId) {
+        db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+          .run(userId, sessionId, m.provider, m.modelId, question, cleanText, r.inputTokens, r.outputTokens, cost, durationMs);
       }
-    })
-  );
+    } catch (err) {
+      send('model:error', { modelId: m.modelId, provider: m.provider, error: err.message });
+    }
+  }
+
+  if (cascadeEnabled && enabledModels.length > 1) {
+    // ── Cascade mode: sequential, each model sees previous results ───────────
+    send('cascade:start', { order: enabledModels.map(m => m.provider) });
+    const orderedModels = cascadeOrder.length > 0
+      ? cascadeOrder.map(p => enabledModels.find(m => m.provider === p)).filter(Boolean)
+      : enabledModels;
+
+    const cascadeAccum = []; // accumulates { label, modelId, text } as models complete
+    for (const m of orderedModels) {
+      let userMessage = question;
+      if (cascadeAccum.length > 0) {
+        const contextBlock = cascadeAccum
+          .map(r => `## ${r.label} (${r.modelId})\n\n${r.text}`)
+          .join('\n\n---\n\n');
+        userMessage = `${question}\n\n---\n\n**Cascade context — previous model analyses:**\n\n${contextBlock}`;
+      }
+      await runOneModel(m, userMessage);
+      // Add completed result to cascade context
+      const done = results[results.length - 1];
+      if (done && done.modelId === m.modelId) {
+        cascadeAccum.push({ label: PROV_LABELS[m.provider] || m.provider, modelId: m.modelId, text: done.text });
+      }
+    }
+    send('cascade:done', {});
+  } else {
+    // ── Run all models in parallel with streaming (improvement #1) ──
+    await Promise.allSettled(enabledModels.map(m => runOneModel(m, question)));
+  }
 
   // ── Cross-validation consensus scoring (improvement #2) ──
   if (results.length >= 2) {
@@ -1431,7 +1790,7 @@ app.post('/api/research', async (req, res) => {
     // Build model label map for citations
     const modelLabels = {};
     for (const r of results) {
-      const provCfg = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi' };
+      const provCfg = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi', perplexity: 'Perplexity', qwen: 'Qwen' };
       modelLabels[r.modelId] = provCfg[r.provider] || r.modelId;
     }
 
@@ -1851,7 +2210,7 @@ app.post('/api/admin/billing/plans', (req, res) => {
 });
 
 // ─── DB Migration import (temporary, protected by token) ─────────────────────
-const MIGRATE_TOKEN = 'mig_7x9kQpL2wNzR4vT8sY1uJ3bX';
+const MIGRATE_TOKEN = process.env.MIGRATE_TOKEN || 'mig_change_me_in_env';
 app.post('/api/migrate-import', express.json({ limit: '50mb' }), (req, res) => {
   if (req.headers['x-migrate-token'] !== MIGRATE_TOKEN) return res.status(403).json({ error: 'forbidden' });
   const { users: srcUsers = [], history: srcHistory = [], debate_responses: srcDebate = [],
@@ -1910,6 +2269,90 @@ app.post('/api/migrate-import', express.json({ limit: '50mb' }), (req, res) => {
   }
 
   res.json({ ok: true, inserted, userIdMap });
+});
+
+// ─── Export to Word (.docx) ───────────────────────────────────────────────────
+app.post('/api/export-docx', async (req, res) => {
+  const { title = '', sections = [] } = req.body;
+  if (!Array.isArray(sections) || sections.length === 0)
+    return res.status(400).json({ error: 'sections[] required' });
+
+  let docx;
+  try { docx = require('docx'); } catch {
+    return res.status(503).json({ error: 'docx package not installed. Run: npm install docx' });
+  }
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = docx;
+
+  function markdownToParagraphs(text) {
+    const paras = [];
+    const lines = (text || '').split('\n');
+    for (const raw of lines) {
+      const line = raw.trimEnd();
+      // Headings
+      const h3 = line.match(/^### (.+)/); if (h3) { paras.push(new Paragraph({ text: h3[1], heading: HeadingLevel.HEADING_3 })); continue; }
+      const h2 = line.match(/^## (.+)/);  if (h2) { paras.push(new Paragraph({ text: h2[1], heading: HeadingLevel.HEADING_2 })); continue; }
+      const h1 = line.match(/^# (.+)/);   if (h1) { paras.push(new Paragraph({ text: h1[1], heading: HeadingLevel.HEADING_1 })); continue; }
+      // Bullet lists
+      const bullet = line.match(/^[-*] (.+)/);
+      if (bullet) { paras.push(new Paragraph({ bullet: { level: 0 }, children: parseInline(bullet[1]) })); continue; }
+      // Numbered list
+      const num = line.match(/^\d+\. (.+)/);
+      if (num) { paras.push(new Paragraph({ numbering: { reference: 'default', level: 0 }, children: parseInline(num[1]) })); continue; }
+      // Empty line
+      if (!line.trim()) { paras.push(new Paragraph({ text: '' })); continue; }
+      // Normal paragraph
+      paras.push(new Paragraph({ children: parseInline(line) }));
+    }
+    return paras;
+  }
+
+  function parseInline(text) {
+    const runs = [];
+    // Bold+italic, bold, italic, code
+    const regex = /(\*\*\*(.+?)\*\*\*|\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`)/g;
+    let last = 0, m;
+    while ((m = regex.exec(text)) !== null) {
+      if (m.index > last) runs.push(new TextRun(text.slice(last, m.index)));
+      if (m[2]) runs.push(new TextRun({ text: m[2], bold: true, italics: true }));
+      else if (m[3]) runs.push(new TextRun({ text: m[3], bold: true }));
+      else if (m[4]) runs.push(new TextRun({ text: m[4], italics: true }));
+      else if (m[5]) runs.push(new TextRun({ text: m[5], font: 'Courier New', size: 18 }));
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) runs.push(new TextRun(text.slice(last)));
+    return runs.length ? runs : [new TextRun(text)];
+  }
+
+  const children = [];
+  if (title) children.push(new Paragraph({ text: title, heading: HeadingLevel.TITLE }));
+
+  for (const sec of sections) {
+    if (sec.label) {
+      children.push(new Paragraph({ text: sec.label, heading: HeadingLevel.HEADING_2,
+        spacing: { before: 300, after: 100 } }));
+    }
+    children.push(...markdownToParagraphs(sec.text || ''));
+    children.push(new Paragraph({ text: '' })); // spacer
+  }
+
+  try {
+    const doc = new Document({ sections: [{ children }] });
+    const buffer = await Packer.toBuffer(doc);
+    const safeName = (title || 'research').replace(/[^a-z0-9_\- ]/gi, '').trim().replace(/\s+/g, '-').slice(0, 60) || 'research';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}.docx"`);
+    res.send(buffer);
+  } catch (e) {
+    res.status(500).json({ error: 'Error generating docx: ' + e.message });
+  }
+});
+
+// ─── Global Express error handler ────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[error]', req.method, req.path, err.message, err.stack?.split('\n')[1] || '');
+  if (res.headersSent) return;
+  res.status(err.statusCode || err.status || 500).json({ error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message });
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

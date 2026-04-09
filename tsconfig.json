@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "strict": false,
+    "esModuleInterop": true
+  },
+  "include": ["capacitor.config.ts"],
+  "exclude": ["node_modules"]
+}

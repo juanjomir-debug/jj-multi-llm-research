@@ -10,3 +10,16 @@ sessions.db*
 github-deploy.js
 railway-deploy.js
 probe-upload.js
+
+# iOS / Capacitor
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+*.ipa
+*.xcarchive
+DerivedData/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/.env.*
+Gemfile.lock

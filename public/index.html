@@ -3,42 +3,144 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ReliableAI — Multi-model Reliable Intelligence</title>
+  <title>reliableaiprueba</title>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4278E5RC6V"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4278E5RC6V');
+  </script>
+  <meta name="description" content="Research any topic with Claude, GPT, Gemini, Grok, Perplexity and Qwen simultaneously. Compare AI models in parallel or cascade, detect hallucinations, and export verified insights." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://reliableai.net/analyze" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://reliableai.net/analyze" />
+  <meta property="og:title" content="ReliableAI — Multi-Model AI Research Platform" />
+  <meta property="og:description" content="Query Claude, GPT, Gemini, Grok, Perplexity and Qwen in parallel or cascade. Compare, verify and export AI-powered research." />
+  <meta property="og:image" content="https://reliableai.net/og-image.png" />
+  <meta property="og:site_name" content="ReliableAI" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@reliableai" />
+  <meta name="twitter:title" content="ReliableAI — Multi-Model AI Research Platform" />
+  <meta name="twitter:description" content="Query Claude, GPT, Gemini, Grok, Perplexity and Qwen in parallel or cascade. Compare, verify and export AI-powered research." />
+  <meta name="twitter:image" content="https://reliableai.net/og-image.png" />
+
+  <!-- JSON-LD: WebApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ReliableAI",
+    "url": "https://reliableai.net/analyze",
+    "description": "Multi-model AI research and verification platform. Query Claude, GPT, Gemini, Grok, Perplexity and Qwen simultaneously to cross-verify AI-generated insights.",
+    "applicationCategory": "ResearchApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Explorer plan — free, up to 4 models, 3 queries/day"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ReliableAI",
+      "url": "https://reliableai.net"
+    }
+  }
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     /* ── Design tokens — dark (default) ──────────────────────────────────────── */
     :root {
-      --bg: #1c1c1c; --surface: #282828; --surface1: #313131; --surface2: #3a3a3a; --border: #484848;
-      --text: #ececec; --text-muted: #9e9e9e; --accent: #cf7d4e; --accent-dim: rgba(207,125,78,.14);
-      --success: #4caf72; --warn: #d4a017; --danger: #e5534b;
-      --claude: #cc785c; --openai: #10a37f; --gemini: #4285f4; --grok: #a78bfa; --kimi: #06b6d4;
-      --radius: 8px; --sidebar-w: 380px;
-      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --body-bg: #1c1c1c;
+      /* ── New Design System Colors ── */
+      --bg: #0c0d12;
+      --surface: #15171e;
+      --surface1: #1c1f2a;
+      --surface2: #232736;
+      --border: #2a2f42;
+      --border-subtle: #1f2233;
+      --text: #e4e5ea;
+      --text-muted: #8b8fa3;
+      --text-dim: #5c6070;
+      --accent: #6366f1;
+      --accent-dim: rgba(99,102,241,0.12);
+      --accent2: #818cf8;
+      --success: #10b981;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --radius-pill: 24px;
+      /* Model colors */
+      --claude: #D97757;
+      --openai: #10a37f;
+      --gemini: #4285f4;
+      --grok: #9ca3af;
+      /* Shadows */
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+      /* Keep legacy vars for compat */
+      --sidebar-w: 380px;
+      --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --body-bg: #0c0d12;
+      --kimi: #06b6d4;
     }
     /* ── Light theme ─────────────────────────────────────────────────────────── */
     [data-theme="light"] {
-      --bg: #f4f1ec; --surface: #ffffff; --surface1: #faf9f7; --surface2: #f0ece6; --border: #e2ddd6;
-      --text: #1c1c1c; --text-muted: #6e6e6e; --accent: #b5622c; --accent-dim: rgba(181,98,44,.1);
-      --success: #2d8f50; --warn: #a37000; --danger: #cc2929;
-      --body-bg: #f4f1ec;
+      --bg: #f8f9fb;
+      --surface: #ffffff;
+      --surface1: #f1f2f5;
+      --surface2: #e8eaef;
+      --border: #d1d5db;
+      --border-subtle: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --text-dim: #9ca3af;
+      --accent: #6366f1;
+      --accent-dim: rgba(99,102,241,0.10);
+      --body-bg: #f8f9fb;
     }
     /* ── Auto: respeta preferencia del sistema cuando no hay tema guardado ─────── */
     @media (prefers-color-scheme: light) {
       :root:not([data-theme="dark"]):not([data-theme="light"]) {
-        --bg: #f4f1ec; --surface: #ffffff; --surface1: #faf9f7; --surface2: #f0ece6; --border: #e2ddd6;
-        --text: #1c1c1c; --text-muted: #6e6e6e; --accent: #b5622c; --accent-dim: rgba(181,98,44,.1);
-        --success: #2d8f50; --warn: #a37000; --danger: #cc2929;
-        --body-bg: #f4f1ec;
+        --bg: #f8f9fb;
+        --surface: #ffffff;
+        --surface1: #f1f2f5;
+        --surface2: #e8eaef;
+        --border: #d1d5db;
+        --border-subtle: #e5e7eb;
+        --text: #111827;
+        --text-muted: #6b7280;
+        --text-dim: #9ca3af;
+        --accent: #6366f1;
+        --accent-dim: rgba(99,102,241,0.10);
+        --body-bg: #f8f9fb;
       }
     }
     html { font-size: 14px; scroll-behavior: smooth; background: var(--bg); }
     body {
-      font-family: var(--font); color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
-      background: var(--body-bg);
-      background-attachment: fixed;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+      background: var(--bg); background-attachment: fixed;
     }
+    h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .result-meta, .cost-chip, .tval, .cfg-temp-val, .tab-status, .cost-val,
+    .history-row-cost, code, pre { font-family: 'JetBrains Mono', 'Courier New', monospace; }
     /* todos los elementos por encima del fondo */
     .app-header, .layout, .auth-overlay, .history-overlay, .toast-container { position: relative; z-index: 1; }
 
@@ -60,7 +162,7 @@
     select option { background: var(--surface); }
 
     /* ── App Header ─────────────────────────────────────────────────────────── */
-    .app-header { background: rgba(28,28,28,.96); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,.07); padding: 12px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .app-header { background: var(--surface); border-bottom: 1px solid var(--border-subtle); padding: 12px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
     .app-header-brand { flex: 1; min-width: 0; }
     .app-header-brand h1 { font-size: 1.55rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text); line-height: 1.15; margin: 0; white-space: nowrap; }
     .app-header-brand .app-claim { font-size: .72rem; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; color: rgba(158,158,158,.7); margin-top: 1px; }
@@ -71,7 +173,7 @@
     .user-avatar-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-dim); border: 1.5px solid rgba(207,125,78,.45); color: var(--accent); font-weight: 800; font-size: .9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
     .user-avatar-btn:hover { background: rgba(207,125,78,.22); border-color: var(--accent); }
     /* ── Dropdown ────────────────────────────────────────────────────────────── */
-    .user-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 10px); background: var(--surface1); border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-width: 210px; z-index: 300; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+    .user-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 10px); background: var(--surface1); border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-width: 210px; z-index: 300; box-shadow: var(--shadow-md); }
     .user-dropdown.open { display: block; }
     .udd-name { font-size: .9rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .udd-plan-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -89,13 +191,13 @@
     .udd-theme-opt:hover { border-color: var(--accent); color: var(--text); }
     .udd-theme-opt.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
     /* Light mode overrides for key surfaces */
-    [data-theme="light"] .app-header { background: rgba(255,255,255,.96); border-bottom-color: rgba(0,0,0,.1); }
+    [data-theme="light"] .app-header { background: var(--surface); border-bottom-color: var(--border-subtle); }
     [data-theme="light"] .app-header-brand h1 { color: #1c1c1c; }
     [data-theme="light"] .user-avatar-btn { background: rgba(181,98,44,.12); border-color: rgba(181,98,44,.4); color: #b5622c; }
     [data-theme="light"] .user-avatar-btn:hover { background: rgba(181,98,44,.22); border-color: #b5622c; }
     [data-theme="light"] .user-dropdown { box-shadow: 0 8px 24px rgba(0,0,0,.12); }
     @media (prefers-color-scheme: light) {
-      :root:not([data-theme="dark"]):not([data-theme="light"]) .app-header { background: rgba(255,255,255,.96); border-bottom-color: rgba(0,0,0,.1); }
+      :root:not([data-theme="dark"]):not([data-theme="light"]) .app-header { background: var(--surface); border-bottom-color: var(--border-subtle); }
       :root:not([data-theme="dark"]):not([data-theme="light"]) .app-header-brand h1 { color: #1c1c1c; }
     }
     /* Mobile */
@@ -104,8 +206,11 @@
       .app-header-brand h1 { font-size: 1.2rem; }
       .app-header-brand .app-claim { display: none; }
       .user-dropdown { right: -4px; min-width: 190px; }
+      /* Match result text size to prompt textarea on mobile */
+      .result-body { font-size: .95rem; }
+      .imc-result-area .result-body { font-size: .95rem; }
     }
-    .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 5px 10px; font-size: .85rem; transition: all .15s; }
+    .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 5px 10px; font-size: .85rem; transition: all 150ms ease; }
     .btn-icon:hover { background: var(--surface2); color: var(--text); }
 
     .layout { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
@@ -121,17 +226,22 @@
     .inline-section .inline-arrow { font-size: .8rem; color: var(--text-muted); transition: transform .2s; }
     .inline-section.collapsed .inline-arrow { transform: rotate(-90deg); }
 
-    .model-toggles-row { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; margin-bottom: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); overflow-x: auto; }
-    .model-toggles-row .mt-item { display: flex; align-items: center; gap: 5px; font-size: .82rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); transition: all .15s; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    .model-toggles-row { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; margin-bottom: 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); overflow-x: auto; }
+    .model-toggles-row:empty { display: none; }
+    .model-toggles-row .mt-item { display: flex; align-items: center; gap: 5px; font-size: .82rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); transition: all 150ms ease; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .model-toggles-row .mt-item.active { border-color: var(--accent); background: var(--accent-dim); }
     .model-toggles-row .mt-item .mt-dot { width: 8px; height: 8px; border-radius: 50%; }
     @media (max-width: 767px) {
-      .model-toggles-row { gap: 5px; }
-      .model-toggles-row .mt-item { font-size: .7rem; padding: 3px 7px; gap: 4px; }
+      .model-toggles-row { gap: 4px; padding: 6px 8px; }
+      .model-toggles-row .mt-item { font-size: .65rem; padding: 3px 6px; gap: 3px; }
       .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; }
-      .model-toggle { width: 26px !important; height: 14px !important; border-radius: 7px !important; }
-      .model-toggle::after { width: 9px !important; height: 9px !important; top: 2px !important; left: 2px !important; }
-      .model-toggle.on::after { transform: translateX(12px) !important; }
+      .model-toggle { width: 24px !important; height: 13px !important; border-radius: 7px !important; }
+      .model-toggle::after { width: 8px !important; height: 8px !important; top: 2px !important; left: 2px !important; }
+      .model-toggle.on::after { transform: translateX(11px) !important; }
+    }
+    @media (max-width: 400px) {
+      .model-toggles-row .mt-item { font-size: .6rem; padding: 2px 5px; }
+      .model-toggles-row .mt-item .mt-dot { width: 5px; height: 5px; }
     }
 
     .inline-models-grid { display: grid; grid-template-columns: repeat(var(--model-cols, 4), 1fr); gap: 12px; }
@@ -140,23 +250,23 @@
     /* Mobile phones (≤767px): 1 column */
     @media (max-width: 767px) { .inline-models-grid { grid-template-columns: 1fr !important; } }
 
-    .inline-model-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s, opacity .15s; min-width: 0; }
+    .inline-model-card { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s, opacity .15s; min-width: 0; }
     .imc-result-area { display: flex; flex-direction: column; }
     .inline-model-card.active { border-color: var(--accent); }
     .inline-model-card.disabled { display: none; }
     .inline-model-card-header { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: var(--surface2); border-bottom: 1px solid var(--border); }
     .inline-model-card-header .model-name { font-weight: 600; font-size: .82rem; flex: 1; }
-    .inline-model-card-header .imc-research-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-size: .72rem; font-weight: 700; padding: 3px 10px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .inline-model-card-header .imc-research-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-size: .72rem; font-weight: 700; padding: 3px 10px; cursor: pointer; transition: all 150ms ease; white-space: nowrap; }
     .inline-model-card-header .imc-research-btn:hover { background: var(--accent); color: #000; }
     .inline-model-card-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 
     .inline-integrator { background: rgba(167,139,250,.06); border: 1px solid rgba(167,139,250,.25); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px; }
     .inline-integrator-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .inline-integrator-header h2 { font-size: .9rem; font-weight: 700; color: var(--grok); flex: 1; }
+    .inline-integrator-header h2 { font-size: .9rem; font-weight: 700; color: var(--accent); flex: 1; }
     .inline-int-grid { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
     .inline-int-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .inline-int-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .int-action-btn { border: none; border-radius: var(--radius); padding: 9px 20px; font-size: .85rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+    .int-action-btn { border: none; border-radius: var(--radius); padding: 9px 20px; font-size: .85rem; font-weight: 700; cursor: pointer; transition: all 150ms ease; }
     .int-action-btn.primary { background: var(--accent); color: #000; }
     .int-action-btn.primary:hover { background: #e8935f; }
     .int-action-btn.secondary { background: rgba(167,139,250,.15); border: 1px solid rgba(167,139,250,.35); color: var(--grok); }
@@ -184,7 +294,7 @@
     .integrator-header { background: rgba(167,139,250,.1); padding: 8px 10px; font-weight: 600; font-size: .85rem; color: var(--grok); display: flex; align-items: center; gap: 6px; }
     .integrator-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; }
     .integrator-row { display: flex; gap: 6px; } .integrator-row select { flex: 1; padding: 5px 6px; font-size: .82rem; border-radius: var(--radius); }
-    .int-toggle-btn { margin-left: auto; background: none; border: 1px solid var(--grok); border-radius: 20px; color: var(--grok); font-size: .7rem; font-weight: 700; padding: 2px 8px; transition: all .15s; opacity: .6; }
+    .int-toggle-btn { margin-left: auto; background: none; border: 1px solid var(--grok); border-radius: 20px; color: var(--grok); font-size: .7rem; font-weight: 700; padding: 2px 8px; transition: all 150ms ease; opacity: .6; }
     .int-toggle-btn.on { background: rgba(167,139,250,.18); opacity: 1; }
     .integrator-card.disabled { opacity: .5; } .integrator-card.disabled .integrator-body { pointer-events: none; }
 
@@ -220,11 +330,16 @@
 
     .conv-bar { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: .78rem; color: var(--text-muted); flex-wrap: wrap; }
     .conv-bar .conv-turns { font-weight: 600; color: var(--accent); }
-    .conv-clear-btn { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 20px; padding: 5px 16px; font-size: .82rem; font-weight: 600; transition: all .15s; }
+    .conv-clear-btn { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 20px; padding: 5px 16px; font-size: .82rem; font-weight: 600; transition: all 150ms ease; }
     .conv-clear-btn:hover { border-color: var(--danger); color: var(--danger); }
-    .stop-btn { display: none; align-items: center; gap: 6px; background: var(--danger); color: #fff; border: none; border-radius: var(--radius); padding: 9px 18px; font-size: .9rem; font-weight: 700; transition: background .15s; }
-    .stop-btn:hover { background: #c03030; } .stop-btn.visible { display: flex; }
-    .history-recover-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-size: .72rem; font-weight: 600; padding: 3px 10px; cursor: pointer; transition: all .15s; flex-shrink: 0; }
+    .stop-btn { display: none; align-items: center; gap: 6px; background: var(--danger); color: #fff; border: none; border-radius: 24px; padding: 10px 22px; font-size: .92rem; font-weight: 700; transition: background .15s, box-shadow .15s; cursor: pointer; }
+    .stop-btn:hover { background: #c03030; }
+    .stop-btn.visible {
+      display: flex;
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 1500; box-shadow: 0 4px 20px rgba(229,83,75,.55);
+    }
+    .history-recover-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-size: .72rem; font-weight: 600; padding: 3px 10px; cursor: pointer; transition: all 150ms ease; flex-shrink: 0; }
     .history-recover-btn:hover { background: var(--accent); color: #000; }
     .vote-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 20px; padding: 2px 8px; font-size: .72rem; font-weight: 700; border: 1px solid; }
     .vote-badge.winner { background: rgba(210,153,34,.18); border-color: var(--warn); color: var(--warn); }
@@ -257,7 +372,7 @@
     .total-cost-badge .tval.cheap { color: var(--success); } .total-cost-badge .tval.medium { color: var(--warn); } .total-cost-badge .tval.pricey { color: var(--danger); }
     .enabled-count { font-size: .78rem; color: var(--text-muted); margin-left: auto; }
 
-.attach-btn { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 2px solid var(--accent); color: var(--accent); border-radius: var(--radius); padding: 7px 16px; font-size: .85rem; font-weight: 600; transition: all .15s; flex-shrink: 0; cursor: pointer; }
+.attach-btn { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 2px solid var(--accent); color: var(--accent); border-radius: var(--radius); padding: 7px 16px; font-size: .85rem; font-weight: 600; transition: all 150ms ease; flex-shrink: 0; cursor: pointer; }
     .attach-btn:hover { background: var(--accent); color: #fff; }
     .attach-chip { display: flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 8px 3px 10px; font-size: .75rem; color: var(--text-muted); max-width: 180px; }
     .attach-chip .chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -266,13 +381,13 @@
 
     .results-section { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
     .results-grid { display: grid; gap: 12px; }
-    .result-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+    .result-card { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; }
     .result-card-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-bottom: 1px solid var(--border); }
     .result-provider-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .result-model-name { font-size: .82rem; font-weight: 600; flex: 1; }
     .result-meta { font-size: .72rem; color: var(--text-muted); display: flex; gap: 10px; }
     .result-meta span { display: flex; align-items: center; gap: 3px; }
-    .result-body { padding: 12px; font-size: .85rem; line-height: 1.6; overflow-y: auto; min-height: 200px; max-height: 70vh; }
+    .result-body { padding: 12px; font-size: .85rem; line-height: 1.6; min-height: 120px; }
     .result-height-bar { display: none; align-items: center; gap: 10px; padding: 6px 0 2px; }
     .result-height-bar.visible { display: flex; }
     .rh-label { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
@@ -283,12 +398,33 @@
     .result-body .loading-row { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: .83rem; }
     .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface1) 25%, var(--surface2) 50%, var(--surface1) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+      min-height: 16px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton-line { height: 12px; border-radius: 6px; margin-bottom: 8px; }
+    .skeleton-line.w-3\/4 { width: 75%; }
+    .skeleton-line.w-1\/2 { width: 50%; }
     .result-error { color: var(--danger); font-size: .82rem; display: flex; align-items: flex-start; gap: 6px; }
     .result-footer { padding: 6px 12px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-    .copy-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 9px; font-size: .75rem; transition: all .15s; }
+    .copy-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 9px; font-size: .75rem; transition: all 150ms ease; cursor:pointer; }
     .copy-btn:hover { background: var(--surface2); color: var(--text); } .copy-btn.copied { color: var(--success); border-color: var(--success); }
+    .export-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 9px; font-size: .75rem; transition: all 150ms ease; cursor:pointer; }
+    .export-btn:hover { background: var(--surface2); color: #2b7cff; border-color: #2b7cff; }
+    .int-action-btn.cascade-on { background: #6550d4 !important; color: #fff !important; border-color: #6550d4 !important; }
+    .cascade-order-item { display:flex; align-items:center; gap:8px; padding:6px 10px; background:var(--surface); border:1px solid var(--border); border-radius:7px; font-size:.82rem; }
+    .cascade-order-item .cascade-pos { width:20px; height:20px; border-radius:50%; background:#6550d4; color:#fff; font-size:.72rem; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
+    .cascade-order-item .cascade-arrow { background:transparent; border:1px solid var(--border); border-radius:4px; padding:1px 6px; cursor:pointer; font-size:.75rem; color:var(--text-muted); transition:all .15s; }
+    .cascade-order-item .cascade-arrow:hover { background:var(--surface2); color:var(--text); }
 
-    .integrator-result-card { border: 1px solid var(--grok); border-radius: var(--radius); overflow: hidden; }
+    .integrator-result-card { border: 1px solid var(--grok); border-radius: var(--radius-lg); overflow: hidden; }
     .integrator-result-header { background: rgba(167,139,250,.12); padding: 10px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(167,139,250,.3); }
     .integrator-result-header h3 { font-size: .9rem; font-weight: 700; flex: 1; color: var(--grok); }
     .integrator-result-body { padding: 16px; font-size: .88rem; line-height: 1.7; max-height: 70vh; overflow-y: auto; }
@@ -316,7 +452,7 @@
     .hall-verdict { font-size: .8rem; padding: 8px 12px; background: var(--surface1); border-radius: 8px; border-left: 3px solid var(--accent); }
     .hall-verdict-summary { font-style: italic; color: var(--text-muted); margin-top: 4px; font-size: .76rem; }
     .hall-loading { padding: 12px 16px; color: var(--text-muted); font-size: .82rem; display: flex; align-items: center; gap: 8px; }
-    .hall-run-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 7px 16px; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .hall-run-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 7px 16px; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all 150ms ease; }
     .hall-run-btn:hover { background: var(--accent); color: #fff; }
     /* Follow-up bar */
     .followup-bar { display: flex; gap: 10px; align-items: flex-end; padding: 12px 16px; background: var(--surface1); border-radius: 12px; border: 1px solid var(--border); margin-top: 16px; }
@@ -394,7 +530,7 @@
     .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 360px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
     .auth-box h2 { font-size: 1.2rem; margin-bottom: 20px; text-align: center; } .auth-box h2 span { color: var(--accent); }
     .auth-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
-    .auth-tab { flex: 1; padding: 8px; text-align: center; background: var(--surface2); border: none; color: var(--text-muted); font-size: .85rem; cursor: pointer; transition: all .15s; }
+    .auth-tab { flex: 1; padding: 8px; text-align: center; background: var(--surface2); border: none; color: var(--text-muted); font-size: .85rem; cursor: pointer; transition: all 150ms ease; }
     .auth-tab.active { background: var(--accent); color: #000; font-weight: 600; }
     .auth-form { display: flex; flex-direction: column; gap: 12px; }
     .auth-form input { width: 100%; padding: 9px 12px; font-size: .9rem; border-radius: var(--radius); }
@@ -410,11 +546,20 @@
     .history-panel { width: min(680px, 100vw); height: 100%; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: -8px 0 30px rgba(0,0,0,.4); }
     .history-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; } .history-header h2 { font-size: 1rem; flex: 1; }
     .history-body { flex: 1; overflow-y: auto; padding: 16px; }
-    .history-session { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
-    .history-session-header { padding: 10px 14px; background: var(--surface2); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .history-session { border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; }
+    .history-session-header {
+      padding: 9px 10px 9px 12px;
+      background: var(--surface2);
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer;
+      border-radius: var(--radius);
+    }
     .history-session-header:hover { background: var(--border); }
-    .history-session-prompt { flex: 1; font-size: .82rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .history-session-meta { font-size: .72rem; color: var(--text-muted); display: flex; gap: 10px; flex-shrink: 0; }
+    .history-session-prompt {
+      flex: 1; font-size: .82rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .history-session-meta { font-size: .7rem; color: var(--text-muted); display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
     .history-session-rows { display: none; } .history-session-rows.open { display: block; }
     .history-row { padding: 10px 14px; border-top: 1px solid var(--border); font-size: .8rem; }
     .history-row-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -423,15 +568,26 @@
     .history-row-response.expanded { max-height: none; overflow: visible; }
     .history-row-actions { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
     .history-expand-btn { background: none; border: none; color: var(--accent); font-size: .75rem; cursor: pointer; padding: 2px 0; }
-    .history-copy-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: 4px; font-size: .72rem; cursor: pointer; padding: 2px 8px; transition: all .15s; }
+    .history-copy-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: 4px; font-size: .72rem; cursor: pointer; padding: 2px 8px; transition: all 150ms ease; }
     .history-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
     .history-del-session { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: .85rem; padding: 2px 6px; border-radius: 4px; }
     .history-del-session:hover { color: var(--danger); background: rgba(248,81,73,.1); }
     .history-empty { text-align: center; color: var(--text-muted); padding: 40px; font-size: .85rem; }
 
-    .md-content .consensus-full { border-left: 3px solid var(--success); padding-left: 8px; background: rgba(63,185,80,.06); }
-    .md-content .consensus-partial { border-left: 3px solid var(--warn); padding-left: 8px; background: rgba(210,153,34,.06); }
-    .md-content .consensus-unique { border-left: 3px solid var(--danger); padding-left: 8px; background: rgba(248,81,73,.06); }
+    /* Consensus side-bar indicators */
+    .md-content .consensus-full,
+    .md-content .consensus-partial,
+    .md-content .consensus-individual,
+    .md-content .consensus-disagree {
+      padding-left: 12px;
+      margin-left: 0;
+      border-radius: 0 4px 4px 0;
+      position: relative;
+    }
+    .md-content .consensus-full       { border-left: 4px solid #4caf72; background: rgba(76,175,114,.07); }
+    .md-content .consensus-partial    { border-left: 4px solid #cf7d4e; background: rgba(207,125,78,.07); }
+    .md-content .consensus-individual { border-left: 4px solid #d4a017; background: rgba(212,160,23,.06); }
+    .md-content .consensus-disagree   { border-left: 4px solid #e5534b; background: rgba(229,83,75,.06); }
 
     .websearch-row { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-muted); }
     .websearch-toggle { width: 28px; height: 16px; border-radius: 8px; background: var(--border); border: none; position: relative; flex-shrink: 0; cursor: pointer; transition: background .2s; }
@@ -484,11 +640,11 @@
     .amplitude-select { width: 100%; padding: 5px 8px; font-size: .82rem; border-radius: var(--radius); }
 
     /* Vote buttons (improvement #13) */
-    .vote-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: .75rem; cursor: pointer; transition: all .15s; }
+    .vote-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: .75rem; cursor: pointer; transition: all 150ms ease; }
     .vote-btn:hover { border-color: var(--accent); } .vote-btn.voted { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
     /* Retry button (improvement #14) */
-    .retry-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 4px; padding: 2px 8px; font-size: .72rem; cursor: pointer; transition: all .15s; }
+    .retry-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 4px; padding: 2px 8px; font-size: .72rem; cursor: pointer; transition: all 150ms ease; }
     .retry-btn:hover { border-color: var(--warn); color: var(--warn); }
 
     /* Consensus panel (improvement #2) */
@@ -509,7 +665,7 @@
     .template-select { width: 100%; padding: 5px 8px; font-size: .82rem; border-radius: var(--radius); margin-bottom: 4px; }
 
     /* Export button */
-    .export-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 4px 12px; font-size: .78rem; cursor: pointer; transition: all .15s; }
+    .export-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 4px 12px; font-size: .78rem; cursor: pointer; transition: all 150ms ease; }
     .export-btn:hover { border-color: var(--accent); color: var(--accent); }
 
     /* Duration indicator */
@@ -517,11 +673,11 @@
     .duration-badge.fast { color: var(--success); } .duration-badge.normal { color: var(--warn); } .duration-badge.slow { color: var(--danger); }
 
     /* ── Projects ── */
-    .proj-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 4px 10px; font-size: .8rem; cursor: pointer; transition: all .15s; display:flex;align-items:center;gap:5px; }
+    .proj-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: var(--radius); padding: 4px 10px; font-size: .8rem; cursor: pointer; transition: all 150ms ease; display:flex;align-items:center;gap:5px; }
     .proj-btn:hover { border-color: var(--accent); color: var(--accent); }
     .proj-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
-    .add-proj-btn { background: none; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-muted); font-size: .78rem; padding: 3px 10px; cursor: pointer; transition: all .15s; white-space:nowrap; }
+    .add-proj-btn { background: none; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-muted); font-size: .78rem; padding: 3px 10px; cursor: pointer; transition: all 150ms ease; white-space:nowrap; }
     .add-proj-btn:hover { border-color: var(--accent); color: var(--accent); }
 
     /* Projects panel (right slide-over, like history) */
@@ -542,7 +698,7 @@
     .project-card-name { font-size: .9rem; font-weight: 600; flex: 1; }
     .project-card-meta { font-size: .72rem; color: var(--text-muted); }
     .project-card-actions { display: flex; gap: 6px; }
-    .proj-action-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 5px; font-size: .72rem; padding: 2px 8px; cursor: pointer; transition: all .15s; }
+    .proj-action-btn { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 5px; font-size: .72rem; padding: 2px 8px; cursor: pointer; transition: all 150ms ease; }
     .proj-action-btn:hover { border-color: var(--accent); color: var(--accent); }
     .proj-action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
     .project-card-body { display: none; padding: 12px 14px; border-top: 1px solid var(--border); }
@@ -636,6 +792,373 @@
     .billing-usage-fill.warn { background:var(--warn); }
     .billing-usage-fill.danger { background:var(--danger); }
     .billing-paused-banner { background:rgba(248,81,73,.12); border:1px solid var(--danger); border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:.83rem; color:var(--danger); }
+    /* ── Cookie banner (F6 GDPR) ── */
+    #appCookieBanner { position:fixed;bottom:0;left:0;right:0;background:rgba(40,40,40,.97);border-top:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;z-index:9998;font-size:.78rem;color:var(--text-muted);backdrop-filter:blur(8px); }
+    #appCookieBanner a { color:var(--accent); }
+    .ck-app-btn { padding:5px 14px;border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer;border:none; }
+    .ck-app-accept { background:var(--accent);color:#000; }
+    .ck-app-decline { background:transparent;border:1px solid var(--border) !important;color:var(--text-muted); }
+    /* ── Forgot-password modal (F5) ── */
+    #forgotModal { position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9100; }
+    #forgotModal.hidden { display:none; }
+    #forgotModal .fm-box { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;width:340px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:14px; }
+    #forgotModal h3 { font-size:1rem;font-weight:700; }
+    #forgotModal input { width:100%;padding:9px 12px;background:var(--surface1);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem; }
+    #forgotModal .fm-msg { font-size:.8rem;color:var(--text-muted);min-height:16px; }
+    #forgotModal .fm-btns { display:flex;gap:8px; }
+    #forgotModal .fm-btns button { flex:1;padding:9px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;transition:opacity .15s; }
+    #forgotModal .fm-submit { background:var(--accent);color:#000; }
+    #forgotModal .fm-cancel { background:var(--surface2);color:var(--text-muted); }
+    /* ── Keyboard shortcut tooltip ── */
+    .kbd-hint { font-size:.65rem;color:var(--text-muted);opacity:.6;margin-left:6px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       3-COLUMN LAYOUT
+    ══════════════════════════════════════════════════════════════ */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 250px 1fr 270px;
+      grid-template-rows: 1fr auto;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+      transition: grid-template-columns .22s ease;
+    }
+    .app-layout > .main {
+      grid-column: 2; grid-row: 1;
+      display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+      min-width: 0;
+    }
+    /* Sidebar widths controlled by grid column */
+    .right-sidebar { overflow: hidden; }
+    .left-sidebar { overflow: hidden; }
+    /* ── Left sidebar (History — far left column) ── */
+    .left-sidebar {
+      grid-column: 1; grid-row: 1 / 3;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--surface);
+    }
+    /* ── Left sidebar topbar (ChatGPT-style) ── */
+    .lsb-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px 6px; flex-shrink: 0;
+    }
+    .lsb-app-name {
+      font-size: .78rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-muted); opacity: .7;
+    }
+    .lsb-close-btn {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      padding: 4px 6px; border-radius: 6px; font-size: 1rem; line-height: 1;
+      transition: color .15s, background .15s;
+    }
+    .lsb-close-btn:hover { color: var(--text); background: var(--surface2); }
+    /* Nav action items (New chat / Search chats) */
+    .lsb-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; cursor: pointer; border-radius: 8px; margin: 1px 6px;
+      font-size: .86rem; color: var(--text-muted);
+      transition: background .15s, color .15s; user-select: none;
+    }
+    .lsb-nav-item:hover { background: var(--surface2); color: var(--text); }
+    .lsb-nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+    /* Collapsible search box */
+    .lsb-search-row { padding: 4px 10px 6px; }
+    .lsb-search {
+      width: 100%; padding: 7px 11px; font-size: .82rem; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+      outline: none; box-sizing: border-box;
+    }
+    .lsb-search:focus { border-color: var(--accent); }
+    /* Tab row separator */
+    .lsb-header {
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .lsb-tabs-row { display: flex; gap: 2px; border-bottom: 1px solid var(--border); padding: 0 6px; margin-top: 4px; }
+    .lsb-tab {
+      flex: 1; padding: 6px 8px; background: none; border: none;
+      color: var(--text-muted); font-size: .78rem; cursor: pointer;
+      border-bottom: 2px solid transparent; border-radius: 0;
+      transition: color .15s, border-color .15s;
+    }
+    .lsb-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .lsb-new-btn {
+      padding: 4px 8px; background: none; border: 1px solid var(--border);
+      color: var(--text-muted); border-radius: 6px; cursor: pointer; font-size: .9rem;
+      flex-shrink: 0; margin-bottom: 4px;
+    }
+    .lsb-new-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .lsb-panel { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 8px 0; }
+    /* ── Right sidebar (Config — rightmost column) ── */
+    .right-sidebar {
+      grid-column: 3; grid-row: 1 / 2;
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow-y: auto;
+      background: var(--surface);
+    }
+    /* ── Right sidebar topbar ── */
+    .rsb-topbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .rsb-close-btn {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      padding: 4px 6px; border-radius: 6px; font-size: 1rem; line-height: 1;
+      transition: color .15s, background .15s;
+    }
+    .rsb-close-btn:hover { color: var(--text); background: var(--surface2); }
+    .rsb-topbar-title {
+      flex: 1; font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .rsb-title {
+      padding: 10px 14px 6px;
+      font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .config-block {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .config-block-label {
+      font-size: .76rem; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .config-block-row {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .config-block-toggle {
+      cursor: pointer; user-select: none;
+    }
+    .config-block-toggle:hover { color: var(--accent); }
+    .config-block-arrow {
+      margin-left: auto; font-size: .7rem; transition: transform .2s;
+      display: inline-block;
+    }
+    .config-block-collapsible .config-block-body { overflow: hidden; }
+    .config-block-collapsible.collapsed .config-block-body { display: none; }
+    .config-block-collapsible.collapsed .config-block-arrow { transform: rotate(-90deg); }
+    /* ── Result tabs bar ── */
+    .result-tabs-bar {
+      display: flex; overflow-x: auto; padding: 0 12px;
+      background: var(--surface1); border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .result-tab {
+      padding: 8px 14px; border: none; background: none;
+      border-bottom: 2px solid transparent; color: var(--text-muted);
+      font-size: .8rem; cursor: pointer; white-space: nowrap;
+      transition: color .15s, border-color .15s;
+    }
+    .result-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    /* ── Answers area ── */
+    .answers-area {
+      flex: 1; overflow-y: auto; min-height: 0;
+    }
+    /* Tab panels: only the active one is shown */
+    .tab-panel { display: none; padding: 14px; }
+    .tab-panel.tab-panel-active { display: block; }
+    /* Result tabs with proper tab border look */
+    .result-tabs-bar {
+      border-bottom: 2px solid var(--border) !important;
+      padding-bottom: 0 !important;
+    }
+    .result-tab {
+      border: 1px solid transparent;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      border-radius: 6px 6px 0 0;
+    }
+    .result-tab.active {
+      border-color: var(--border);
+      border-bottom-color: var(--surface) !important;
+      background: var(--surface);
+      color: var(--text) !important;
+    }
+    /* ── Action row ── */
+    .action-row {
+      display: flex; align-items: center; gap: 5px;
+      flex-wrap: wrap; padding: 6px 0 4px;
+    }
+    .action-row-spacer { flex: 1; min-width: 10px; }
+    .act-btn {
+      padding: 5px 10px; border-radius: 6px; font-size: .77rem; cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      white-space: nowrap; transition: background .15s;
+    }
+    .act-btn:hover { background: var(--surface1); }
+    .act-btn-refine {
+      background: var(--accent-dim); border-color: var(--accent);
+      color: var(--accent);
+    }
+    .act-btn-refine:hover { background: var(--accent); color: #000; }
+    /* ── Bottom bar ── */
+    .bottom-bar {
+      grid-column: 2; grid-row: 2;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 14px; background: var(--surface);
+      flex-shrink: 0;
+    }
+    /* ── Planning modal ── */
+    .planning-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      z-index: 8500; display: flex; align-items: flex-start;
+      justify-content: center; padding: 60px 20px 20px; overflow-y: auto;
+    }
+    .planning-modal-overlay.hidden { display: none; }
+    .planning-modal {
+      background: var(--surface); border-radius: var(--radius-lg);
+      width: 640px; max-width: 95vw;
+      max-height: calc(100vh - 100px); overflow-y: auto; padding: 24px;
+      box-shadow: var(--shadow-md);
+    }
+    .planning-modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; position: sticky; top: 0;
+      background: var(--surface); padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .planning-modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .planning-modal-close {
+      padding: 5px 10px; border-radius: 6px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text); cursor: pointer;
+      font-size: .8rem;
+    }
+    .planning-modal-body { padding-top: 12px; }
+    /* ── Sidebar overlay for mobile ── */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      z-index: 1200;
+    }
+    .sidebar-overlay.active { display: block; }
+    /* ── Mobile sidebar toggle button ── */
+    .mob-sidebar-btn {
+      display: none;
+      padding: 5px 10px; border-radius: 6px; font-size: .77rem; cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      align-items: center; gap: 4px;
+    }
+    .cfg-temp-slider { width: 100%; height: 3px; accent-color: var(--accent); cursor: pointer; }
+    .cfg-temp-val { font-size: .72rem; font-family: monospace; color: var(--text-muted); min-width: 28px; }
+    /* Temperature hidden from individual model cards (global only) */
+    .inline-model-card-body .temp-section { display: none; }
+
+    /* ── Tab status indicators ──────────────────────────────────── */
+    .tab-status { margin-left: 5px; font-size: .68rem; font-family: monospace; vertical-align: middle; }
+    .tab-status.working { color: var(--text-muted); }
+    .tab-status.done.fast { color: var(--success); }
+    .tab-status.done.normal { color: var(--warn); }
+    .tab-status.done.slow { color: var(--danger); }
+    .tab-status.error { color: var(--danger); }
+    .tab-spinner { display: inline-block; width: 9px; height: 9px;
+      border: 1.5px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
+    /* ── Query section in new layout ── */
+    .app-layout .query-section {
+      padding: 10px 14px 4px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .app-layout .query-section textarea {
+      width: 100%; min-height: 80px; resize: vertical;
+    }
+    /* ── Right sidebar specific ── */
+    .right-sidebar .inline-models-grid { grid-template-columns: 1fr !important; }
+    .rsb-btn-group { display: flex; gap: 4px; }
+    .rsb-level-btn {
+      flex: 1; padding: 4px 0; border-radius: 6px; font-size: .75rem; cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+      transition: background .15s, color .15s;
+    }
+    .rsb-level-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+    .rsb-toggle-btn {
+      padding: 3px 10px; border-radius: 6px; font-size: .75rem; cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+      font-weight: 700; transition: background .15s;
+    }
+    .rsb-toggle-btn.on { background: var(--success); border-color: var(--success); color: #fff; }
+    .rsb-budget-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .rsb-budget-fill { height: 100%; border-radius: 3px; background: var(--success); transition: width .4s; }
+    .rsb-budget-fill.warn { background: var(--warn); }
+    .rsb-budget-fill.danger { background: var(--danger); }
+
+    /* ── Collapsible sidebar classes ── */
+    .app-layout.lsb-hidden { grid-template-columns: 48px 1fr 270px; }
+    .app-layout.rsb-hidden { grid-template-columns: 250px 1fr 48px; }
+    .app-layout.lsb-hidden.rsb-hidden { grid-template-columns: 48px 1fr 48px; }
+    .left-sidebar, .right-sidebar { overflow: hidden; }
+    /* Mini sidebar strips when collapsed */
+    .left-sidebar .lsb-header,
+    .left-sidebar .lsb-panel { transition: opacity 150ms ease; }
+    .app-layout.lsb-hidden .left-sidebar .lsb-header,
+    .app-layout.lsb-hidden .left-sidebar .lsb-panel { opacity: 0; pointer-events: none; overflow: hidden; max-height: 0; }
+    .app-layout.lsb-hidden .left-sidebar .lsb-mini { display: flex !important; }
+
+    .right-sidebar .rsb-topbar,
+    .right-sidebar .config-block { transition: opacity 150ms ease; }
+    .app-layout.rsb-hidden .right-sidebar .rsb-topbar,
+    .app-layout.rsb-hidden .right-sidebar .config-block { opacity: 0; pointer-events: none; overflow: hidden; max-height: 0; }
+    .app-layout.rsb-hidden .right-sidebar .rsb-mini { display: flex !important; }
+
+    /* Mini icon strips */
+    .lsb-mini, .rsb-mini {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 0;
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .mini-icon-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); padding: 8px; border-radius: 8px;
+      font-size: 1.1rem; line-height: 1; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 150ms ease, background 150ms ease;
+    }
+    .mini-icon-btn:hover { color: var(--text); background: var(--surface2); }
+    /* ── Sidebar toggle buttons ── */
+    .sb-toggle-btn {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      padding: 6px 8px; border-radius: 6px; font-size: 1.1rem; flex-shrink: 0;
+      transition: color .15s, background .15s; line-height: 1;
+    }
+    .sb-toggle-btn:hover { color: var(--text); background: var(--surface2); }
+
+
+    /* ── Responsive: ≤1100px hide config (right sidebar) ── */
+    @media (max-width: 1100px) {
+      .app-layout { grid-template-columns: 250px 1fr; }
+      .left-sidebar { grid-column: 1; grid-row: 1 / 3; }
+      .app-layout > .main { grid-column: 2; grid-row: 1; }
+      .bottom-bar { grid-column: 2; grid-row: 2; }
+      .right-sidebar {
+        position: fixed; top: 57px; right: 0; width: 270px; height: calc(100vh - 57px);
+        z-index: 1300; transform: translateX(100%);
+        transition: transform 250ms cubic-bezier(0.32, 0.72, 0, 1); grid-row: unset; grid-column: unset;
+      }
+      .right-sidebar.sidebar-open { transform: translateX(0); }
+    }
+    /* ── Responsive: ≤1024px everything fixed ── */
+    @media (max-width: 1024px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+        height: calc(100vh - 57px);
+      }
+      .app-layout > .main { grid-column: 1; grid-row: 1; }
+      .bottom-bar { grid-column: 1; grid-row: 2; }
+      .left-sidebar {
+        position: fixed; top: 57px; left: 0; width: 250px; height: calc(100vh - 57px);
+        z-index: 1300; transform: translateX(-100%);
+        transition: transform 250ms cubic-bezier(0.32, 0.72, 0, 1); grid-row: unset; grid-column: unset;
+      }
+      .left-sidebar.sidebar-open { transform: translateX(0); }
+      .right-sidebar { position: fixed; right: 0; }
+      .mob-sidebar-btn { display: flex; }
+    }
   </style>
 </head>
 <body>
@@ -648,10 +1171,11 @@
       <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Register</button>
     </div>
     <form class="auth-form" id="loginForm" onsubmit="submitLogin(event)">
-      <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email" />
-      <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password" />
+      <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email" aria-label="Email address" />
+      <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password" aria-label="Password" />
       <div class="auth-error" id="loginError"></div>
       <button type="submit" class="auth-submit">Sign in</button>
+      <p style="text-align:center;margin-top:8px;font-size:.78rem"><a href="#" onclick="openForgotModal(event)" style="color:var(--accent)">Forgot password?</a></p>
     </form>
     <form class="auth-form" id="registerForm" style="display:none" onsubmit="submitRegister(event)">
       <input type="text" id="regUsername" placeholder="Username" required autocomplete="username" />
@@ -669,13 +1193,43 @@
   </div>
 </div>
 
+<!-- Forgot password modal (F5) -->
+<div id="forgotModal" class="hidden" role="dialog" aria-modal="true" aria-label="Reset password">
+  <div class="fm-box">
+    <h3>Reset your password</h3>
+    <p style="font-size:.82rem;color:var(--text-muted)">Enter your email and we'll send you a reset link valid for 1 hour.</p>
+    <input type="email" id="forgotEmail" placeholder="your@email.com" autocomplete="email" aria-label="Email for password reset" />
+    <div class="fm-msg" id="forgotMsg"></div>
+    <div class="fm-btns">
+      <button class="fm-submit" onclick="submitForgotPassword()">Send reset link</button>
+      <button class="fm-cancel" onclick="closeForgotModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cookie banner (F6 GDPR) -->
+<div id="appCookieBanner" style="display:none" role="complementary" aria-label="Cookie consent">
+  <span>🍪 We use essential session cookies only — no tracking, no ads. <a href="mailto:info@reliableai.net">Privacy info</a></span>
+  <button class="ck-app-btn ck-app-accept" onclick="setAppCookieConsent('accepted')">Accept</button>
+  <button class="ck-app-btn ck-app-decline" onclick="setAppCookieConsent('declined')">Decline</button>
+</div>
+
+<!-- Email verification banner -->
+<div id="verifyBanner" style="display:none;background:#7c4a03;border-bottom:1px solid #a0620a;padding:9px 20px;font-size:.82rem;color:#ffd8a8;display:none;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center">
+  <span>📧 Please verify your email to unlock all features. Check your inbox.</span>
+  <button onclick="resendVerification(this)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 12px;border-radius:5px;cursor:pointer;font-size:.78rem">Resend email</button>
+  <button onclick="document.getElementById('verifyBanner').style.display='none'" style="background:none;border:none;color:#ffd8a8;cursor:pointer;font-size:14px;opacity:.7">✕</button>
+</div>
+
 <header class="app-header">
+  <button class="sb-toggle-btn" id="lsbToggleBtn" onclick="toggleLsb()" title="Open history sidebar" style="display:none">&#9776;</button>
   <div class="app-header-brand">
     <h1>ReliableAI</h1>
-    <div class="app-claim">Multi-model Reliable Intelligence</div>
+    <div class="app-claim">Multi-model Reliable Intelligence for all</div>
   </div>
   <!-- Badge oculto — se mantiene para compatibilidad JS -->
   <span class="header-badge" id="enabledBadge" style="display:none">0 models</span>
+  <button class="sb-toggle-btn" id="rsbToggleBtn" onclick="toggleRsb()" title="Open settings sidebar" style="display:none">&#9776;</button>
   <!-- User menu -->
   <div class="user-menu-wrap hidden" id="userBar">
     <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu(event)" aria-label="User menu">
@@ -705,175 +1259,286 @@
       <button class="udd-btn" onclick="openBilling(); closeUserMenu()">&#128179; Plan &amp; Billing</button>
       <button class="udd-btn" id="menuProjectsBtn" onclick="openProjects(); closeUserMenu()">&#128193; Projects</button>
       <button class="udd-btn" id="menuHistoryBtn" onclick="openHistory(); closeUserMenu()">History</button>
+      <button class="udd-btn" id="adminDashBtn" style="display:none;color:var(--accent)" onclick="location.href='/admin'">&#128272; Admin Dashboard</button>
       <div class="udd-sep"></div>
       <button class="udd-btn danger" onclick="logout()">Sign out</button>
     </div>
   </div>
 </header>
 
-<div class="layout">
+<div class="app-layout">
 
+  <!-- MAIN -->
   <main class="main" id="mainPanel">
-    <!-- ═══ Step 1: Research Planning & Configuration ═══ -->
-    <div class="planning-section" id="planningSection">
-      <div class="planning-header" onclick="togglePlanningSection()">
-        <span class="planning-step">1</span>
-        <h2>Research Planning &amp; Configuration</h2>
-        <span class="plan-arrow" id="planArrow">&#9660;</span>
-      </div>
-      <div class="planning-body" id="planningBody">
-        <label style="font-size:.75rem;color:var(--text-muted)">Research objective</label>
-        <textarea id="planObjective" placeholder="Describe your research objective: what you want to find out, why, and what type of answer you expect..."></textarea>
-        <div class="planning-config-row">
-          <label>Planner model:</label>
-          <select id="planProvider" onchange="updatePlanModels()">
-            <option value="anthropic">Claude</option>
-            <option value="openai" selected>OpenAI</option>
-            <option value="google">Gemini</option>
-            <option value="xai">Grok</option>
-          </select>
-          <select id="planModel"></select>
-          <input type="hidden" id="planAmplitude" value="concise">
-          <button class="plan-btn" id="planBtn" onclick="runPlanResearch()">
-            <span id="planBtnIcon">&#9881;</span> <span id="planBtnLabel">Plan Research</span>
-          </button>
-        </div>
-      </div>
-      <div class="planning-result" id="planningResult" style="display:none">
-        <div class="planning-result-header">
-          <span>&#128203;</span> Plan generated
-          <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)" id="planCost"></span>
-        </div>
-        <div class="planning-result-body" id="planResultBody"></div>
-        <div class="plan-missing-fields" id="planMissingFields"></div>
-        <div class="planning-result-footer">
-          <button class="plan-apply-btn" id="planApplyBtn" onclick="applyPlan()">Apply configuration</button>
-          <span style="font-size:.72rem;color:var(--text-muted)">Applies the plan to models, prompt and integrator</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ Step 2: General Prompt Proposal ═══ -->
     <div class="query-section">
-      <div class="query-label" style="display:flex;align-items:center;gap:10px">
-        <span class="planning-step">2</span><h2>PROMPT</h2>
-      </div>
       <textarea id="questionInput" placeholder="What do you want to research? Write your question here..."
         oninput="updateEstimate(); updateRunBtn()"></textarea>
       <div class="conv-bar" id="convBar" style="display:none">
-        <span class="conv-turns" id="convTurns">0 context turns</span>
-        <button class="conv-clear-btn" onclick="clearConversation()">New conversation</button>
-        <button class="add-proj-btn" id="addToProjBtn" onclick="openAddToProject()">&#128193; Add to project</button>
+        <span class="conv-turns" id="convTurns"></span>
         <div class="proj-tags-row" id="sessionProjTags"></div>
       </div>
-      <div class="query-footer">
+      <div class="action-row">
+        <button class="mob-sidebar-btn" onclick="toggleLeftSidebar()">&#9776;</button>
+        <button class="act-btn" onclick="clearConversation()">New conversation</button>
+        <button class="act-btn" id="addToProjBtn" onclick="openAddToProject()">&#128193; Add to project</button>
+        <button class="act-btn act-btn-refine" onclick="openRefinePanel()">&#9881; Refine Prompt &amp; Configure Research</button>
+        <div class="action-row-spacer"></div>
         <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none" onchange="handleFileSelect(event)">
-        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button">&#128206; Attach Files</button>
+        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button">&#128206; Attach</button>
         <div id="attachChips" style="display:contents"></div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <label style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">Amplitude:</label>
-          <select class="amplitude-select" id="responseAmplitude" onchange="updateEstimate()">
-            <option value="concise" selected>Concise (~512 tok)</option>
-            <option value="normal">Normal (~2048 tok)</option>
-            <option value="detailed">Detailed (~4096 tok)</option>
-            <option value="exhaustive">Exhaustive (~8192 tok)</option>
-          </select>
-        </div>
-        <button class="run-btn" id="runBtn" onclick="runResearch()" disabled>
-          <span id="runBtnIcon">&#9654;</span><span id="runBtnLabel">Research Selected</span>
-        </button>
+        <button class="run-btn" id="runBtn" onclick="runResearch()" disabled><span id="runBtnIcon">&#9654;</span> <span id="runBtnLabel">Research Selected</span></button>
+        <button class="run-btn" id="runIntegrateBtn" onclick="runResearch(true)" disabled style="background:var(--accent2,#6550d4);border-color:var(--accent2,#6550d4);white-space:nowrap">&#9654; Research &amp; Integrate</button>
         <button class="stop-btn" id="stopBtn" onclick="stopResearch()">&#9632; Stop</button>
-        <div class="total-cost-badge"><span>Est. cost:</span><span class="tval" id="totalCostVal">$0.0000</span></div>
-        <span class="enabled-count" id="enabledCountLabel">0 active models</span>
+        <div class="total-cost-badge"><span>Est:</span><span class="tval" id="totalCostVal">$0.0000</span></div>
         <span id="dailyQueryBadge" style="display:none;font-size:.72rem;padding:2px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)"></span>
         <button class="export-btn" id="exportBtn" onclick="exportResearch()" style="display:none">Export</button>
+        <button class="mob-sidebar-btn mob-cfg-btn" style="display:none" onclick="toggleRightSidebar()">Config &#9881;</button>
       </div>
     </div>
 
-    <!-- ═══ Individual Prompts + Results ═══ -->
-    <div class="inline-section" id="inlineModelsSection">
-      <div class="inline-section-header" onclick="this.parentElement.classList.toggle('collapsed')">
-        <h2>Individual Prompts</h2>
-        <div class="key-grid" id="keyGrid" style="display:flex;gap:6px;margin-left:auto;margin-right:12px">
+    <!-- Cascade order panel -->
+    <div id="cascadeOrderPanel" style="display:none;padding:12px 16px;background:var(--surface2);border-bottom:1px solid #6550d4;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:.87rem;color:#a78bfa">&#9654;&#9654; Cascade Analysis Order</span>
+        <span style="font-size:.75rem;color:var(--text-muted);flex:1">Each model receives the previous analyses as context</span>
+        <button class="run-btn" id="runCascadeBtn" onclick="runResearch()" disabled
+          style="padding:6px 18px;font-size:.82rem;background:#6550d4;border-color:#6550d4;white-space:nowrap">
+          &#9654;&#9654; Run Cascade
+        </button>
+      </div>
+      <div id="cascadeOrderList" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+
+    <!-- Model toggles -->
+    <div class="model-toggles-row" id="modelTogglesRow"></div>
+
+    <!-- Result tabs -->
+    <div class="result-tabs-bar" id="resultTabsBar" style="display:none">
+      <button class="result-tab active" data-tab="integration" onclick="switchResultTab('integration')">&#127775; Integration</button>
+    </div>
+
+    <!-- Answers area -->
+    <div class="answers-area" id="answersArea">
+      <div class="tab-panel" id="tabPanel-integration" style="display:none">
+        <div id="debateResultArea"></div>
+        <div id="hallucinationArea"></div>
+        <div id="integratorRow"><div id="integratorResultArea"></div></div>
+        <div id="bottomAnalysisRow" style="margin-top:12px">
+          <div id="reliabilityIndexArea"></div>
+          <div id="consensusPanelArea" style="display:none"></div>
+        </div>
+        <div class="results-section" id="resultsSection" style="padding:0"></div>
+        <div id="followUpArea" style="display:none"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT SIDEBAR: Config -->
+  <aside class="right-sidebar" id="rightSidebar">
+    <!-- Mini icon strip (shown when settings collapsed) -->
+    <div class="rsb-mini">
+      <button class="mini-icon-btn" onclick="toggleRsb()" title="Open settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="rsb-topbar">
+      <button class="rsb-close-btn" onclick="toggleRsb()" title="Close settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <span class="rsb-topbar-title">Settings</span>
+    </div>
+
+    <!-- Answer Length -->
+    <div class="config-block">
+      <div class="config-block-label">Answer Length</div>
+      <select class="amplitude-select" id="responseAmplitude" onchange="updateEstimate()" style="width:100%;font-size:.82rem;padding:5px 7px;margin-top:4px">
+        <option value="superconcise" selected>Brief (~1 paragraph)</option>
+        <option value="concise">Concise (~½ page)</option>
+        <option value="normal">Standard (~1-2 pages)</option>
+        <option value="detailed">Detailed (~3-5 pages)</option>
+        <option value="exhaustive">Exhaustive (~10+ pages)</option>
+      </select>
+    </div>
+
+    <!-- Model Level -->
+    <div class="config-block">
+      <div class="config-block-label" style="margin-bottom:6px">Model Level</div>
+      <div class="rsb-btn-group" id="modelLevelGroup">
+        <button class="rsb-level-btn active" data-level="fast" onclick="setModelLevel('fast')">Fast</button>
+        <button class="rsb-level-btn" data-level="medium" onclick="setModelLevel('medium')">Medium</button>
+        <button class="rsb-level-btn" data-level="high" onclick="setModelLevel('high')">High</button>
+      </div>
+    </div>
+
+    <!-- Web Search -->
+    <div class="config-block">
+      <div class="config-block-row">
+        <span class="config-block-label" style="flex:1">Web Search</span>
+        <button class="rsb-toggle-btn" id="globalWebSearchBtn" onclick="toggleGlobalWebSearch()">OFF</button>
+      </div>
+      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Google &amp; Grok only</div>
+    </div>
+
+    <!-- Temperature -->
+    <div class="config-block">
+      <div class="config-block-row" style="margin-bottom:6px">
+        <span class="config-block-label" style="flex:1">Temperature</span>
+        <span class="cfg-temp-val" id="globalTempVal">0.70</span>
+        <button class="temp-reset" id="globalTempReset" onclick="onGlobalTempReset()" style="visibility:hidden;margin-left:4px" title="Reset">×</button>
+      </div>
+      <input type="range" class="cfg-temp-slider" id="globalTempSlider" min="0" max="1.5" step="0.05" value="0.7"
+        oninput="onGlobalTempSlide(+this.value)">
+    </div>
+
+    <!-- Cascade Mode -->
+    <div class="config-block">
+      <div class="config-block-row">
+        <span class="config-block-label" style="flex:1">&#9654;&#9654; Cascade Mode</span>
+        <button class="rsb-toggle-btn" id="cascadeBtnMain" onclick="toggleCascade()">OFF</button>
+      </div>
+      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Each model receives previous responses as context</div>
+    </div>
+
+    <!-- Debate Mode -->
+    <div class="config-block">
+      <div class="config-block-row">
+        <span class="config-block-label" style="flex:1">&#9876; Debate Mode</span>
+        <button class="rsb-toggle-btn" id="debateBtn" onclick="toggleDebate()">OFF</button>
+      </div>
+      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Models critique and respond to each other's answers</div>
+    </div>
+
+    <!-- Specialize Models (collapsible) -->
+    <div class="config-block config-block-collapsible collapsed" id="configSpecializeBlock">
+      <div class="config-block-row config-block-toggle" onclick="toggleConfigPanel('specialize')" style="cursor:pointer">
+        <span class="config-block-label" style="flex:1">&#9965; Models</span>
+        <span id="enabledCountLabel" style="font-size:.68rem;color:var(--text-muted);margin-right:4px">0 active</span>
+        <span class="config-block-arrow" id="specializeArrow">&#9660;</span>
+      </div>
+      <div class="config-block-body">
+        <div class="key-grid" id="keyGrid" style="display:flex;gap:5px;margin:6px 0;flex-wrap:wrap">
           <div class="key-item"><div class="key-dot" id="dot-anthropic"></div>Claude</div>
           <div class="key-item"><div class="key-dot" id="dot-openai"></div>OpenAI</div>
           <div class="key-item"><div class="key-dot" id="dot-google"></div>Gemini</div>
           <div class="key-item"><div class="key-dot" id="dot-xai"></div>Grok</div>
         </div>
-        <span class="inline-arrow">&#9660;</span>
-      </div>
-      <div class="inline-section-body">
-        <div class="model-toggles-row" id="modelTogglesRow"></div>
-        <!-- Model cards + inline results grid -->
-        <div class="inline-models-grid" id="modelCards"></div>
+        <div id="inlineModelsSection">
+          <div class="inline-models-grid" id="modelCards"></div>
+        </div>
       </div>
     </div>
 
-    <!-- ═══ Step 3: Synthesis / Integrator ═══ -->
-    <div class="inline-integrator" id="inlineIntegratorSection">
-      <div class="inline-integrator-header">
-        <span class="planning-step">3</span>
-        <h2>Synthesis / Integrator</h2>
-        <span style="font-size:.72rem;color:var(--grok);margin-left:8px">Integrator model</span>
-        <button id="intToggleBtn" class="int-toggle-btn on" onclick="toggleIntegrator()" style="margin-left:auto">ON</button>
+    <!-- Integration (collapsible) -->
+    <div class="config-block config-block-collapsible collapsed" id="configIntBlock">
+      <div class="config-block-row config-block-toggle" onclick="toggleConfigPanel('int')" style="cursor:pointer">
+        <span class="config-block-label">&#9889; Integration</span>
+        <span class="config-block-arrow" id="intArrow">&#9660;</span>
       </div>
-      <div class="inline-int-row" style="margin-bottom:10px">
-        <select id="intProvider" onchange="onIntProviderChange()" style="padding:5px 8px;font-size:.82rem;border-radius:var(--radius)">
-          <option value="anthropic">Claude</option><option value="openai">OpenAI</option>
-          <option value="google">Gemini</option><option value="xai">Grok</option>
-        </select>
-        <select id="intModel" onchange="updateEstimate()" style="padding:5px 8px;font-size:.82rem;border-radius:var(--radius)"></select>
-        <div class="cost-chip"><span>Est. cost:</span><span class="cost-val" id="intCostVal">$0.0000</span></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-left:8px">
-          <label style="font-size:.75rem;color:var(--text-muted);white-space:nowrap">Amplitude:</label>
-          <select class="amplitude-select" id="maxTokensInt" onchange="updateEstimate()" style="font-size:.82rem">
-            <option value="512">Concise</option>
-            <option value="2048">Normal</option>
-            <option value="4096" selected>Detailed</option>
-            <option value="8192">Exhaustive</option>
+      <div class="config-block-body" id="inlineIntegratorSection">
+        <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px">
+          <select id="intProvider" onchange="onIntProviderChange()" style="padding:5px 8px;font-size:.82rem;border-radius:var(--radius);width:100%;box-sizing:border-box">
+            <option value="anthropic">Claude</option><option value="openai">OpenAI</option>
+            <option value="google">Gemini</option><option value="xai">Grok</option>
+          </select>
+          <select id="intModel" onchange="updateEstimate()" style="padding:5px 8px;font-size:.82rem;border-radius:var(--radius);width:100%;box-sizing:border-box"></select>
+          <select class="amplitude-select" id="maxTokensInt" onchange="updateEstimate()" style="font-size:.82rem;padding:5px 7px;width:100%;box-sizing:border-box">
+            <option value="170">Brief (~1 paragraph)</option>
+            <option value="512">Concise (~½ page)</option>
+            <option value="2048" selected>Standard (~1-2 pages)</option>
+            <option value="4096">Detailed (~3-5 pages)</option>
+            <option value="8192">Exhaustive (~10+ pages)</option>
             <option value="16384">Maximum</option>
           </select>
+          <div class="cost-chip"><span>Est:</span><span class="cost-val" id="intCostVal">$0.0000</span></div>
         </div>
+        <button class="instr-toggle" id="intInstrToggle" onclick="toggleInstrArea('int')" style="margin-top:6px"><span class="arrow">&#9654;</span> Custom instructions</button>
+        <div class="instr-area" id="intInstrArea">
+          <textarea id="intInstructions" rows="2" placeholder="Additional instructions for the integrator..." oninput="updateEstimate()" style="width:100%"></textarea>
+        </div>
+        <button class="model-toggle" id="debateToggle" onclick="toggleDebate()" style="display:none"></button>
+        <button class="int-action-btn primary" id="integrateBtn" onclick="runIntegration()" style="margin-top:8px;width:100%">Integrate</button>
       </div>
-      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
-        <div style="flex:1;min-width:250px">
-          <button class="instr-toggle" id="intInstrToggle" onclick="toggleInstrArea('int')"><span class="arrow">&#9654;</span> Custom instructions</button>
-          <div class="instr-area" id="intInstrArea">
-            <textarea id="intInstructions" rows="3" placeholder="Additional instructions for the integrator..." oninput="updateEstimate()"></textarea>
-            <span class="instr-hint">Optional. Prepended to the synthesizer base prompt.</span>
-          </div>
-        </div>
-        <div class="inline-int-actions">
-          <button class="int-action-btn secondary" id="hallucAuditBtn" onclick="runHallucinationAudit()">🔍 Hallucination Check</button>
-          <button class="int-action-btn secondary" id="debateBtn" onclick="runDebate()">Establish Debate</button>
-          <button class="int-action-btn primary" id="integrateBtn" onclick="runIntegration()">Integrate</button>
-        </div>
+    </div>
+
+    <!-- API Budget -->
+    <div class="config-block" style="margin-top:auto">
+      <div class="config-block-label">API Budget</div>
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-muted);margin:4px 0 3px">
+        <span id="rsbSpend">$0.00 used</span>
+        <span id="rsbBudgetOf">of $3</span>
       </div>
-      <button class="model-toggle" id="debateToggle" onclick="toggleDebate()" style="display:none"></button>
+      <div class="rsb-budget-bar">
+        <div class="rsb-budget-fill" id="rsbBudgetFill" style="width:0%"></div>
+      </div>
     </div>
+  </aside>
 
-    <!-- Debate result area (above synthesis) -->
-    <div id="debateResultArea"></div>
-
-    <!-- Hallucination audit (between models and integrator) -->
-    <div id="hallucinationArea"></div>
-    <!-- Integrator (full width) -->
-    <div id="integratorRow">
-      <div id="integratorResultArea"></div>
+  <!-- HISTORY SIDEBAR: History & Projects -->
+  <aside class="left-sidebar" id="leftSidebar">
+    <!-- Mini icon strip (shown when sidebar collapsed) -->
+    <div class="lsb-mini">
+      <button class="mini-icon-btn" onclick="toggleLsb()" title="Open history">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+      </button>
     </div>
-    <!-- Reliability Index (below integrator) -->
-    <div id="bottomAnalysisRow" style="margin-top:12px">
-      <div id="reliabilityIndexArea"></div>
-      <div id="consensusPanelArea" style="display:none"></div>
+    <div class="lsb-header">
+      <!-- Topbar: app name + close button -->
+      <div class="lsb-topbar">
+        <span class="lsb-app-name">ReliableAI</span>
+        <button class="lsb-close-btn" onclick="toggleLsb()" title="Close sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+        </button>
+      </div>
+      <!-- Nav items -->
+      <div class="lsb-nav-item" onclick="clearConversation()">
+        <span class="lsb-nav-icon">&#9998;</span>
+        <span>New chat</span>
+      </div>
+      <div class="lsb-nav-item" onclick="toggleLsbSearch()">
+        <span class="lsb-nav-icon">&#128269;</span>
+        <span>Search chats</span>
+      </div>
+      <div class="lsb-search-row" id="lsbSearchRow" style="display:none">
+        <input class="lsb-search" id="lsbSearch" type="text" placeholder="Search…" oninput="filterHistory(this.value)" autofocus>
+      </div>
+      <!-- Tabs -->
+      <div class="lsb-tabs-row">
+        <button class="lsb-tab active" id="lsbTabHistory" onclick="switchLeftTab('history')">History</button>
+        <button class="lsb-tab" id="lsbTabProjects" onclick="switchLeftTab('projects')">Projects</button>
+      </div>
     </div>
+    <div class="lsb-panel" id="lsbPanelHistory">
+      <div class="history-body" id="historyBody"><div class="history-empty"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line w-3/4"></div><div class="skeleton skeleton-line w-1/2"></div></div></div>
+    </div>
+    <div class="lsb-panel" id="lsbPanelProjects" style="display:none">
+      <div class="projects-body" id="projectsBody"><div class="proj-empty">Loading...</div></div>
+    </div>
+  </aside>
 
-    <!-- Results section -->
-    <div class="results-section" id="resultsSection" style="padding:0"></div>
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar" id="bottomBar">
+    <div id="bottomConfidence" style="flex:1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.76rem;color:var(--text-muted)">
+      <span id="bottomConfidenceLabel">Confidence data</span>
+    </div>
+    <button class="int-action-btn secondary" id="hallucAuditBtn" onclick="runHallucinationAudit()" style="flex-shrink:0">&#128270; Hallucination Check</button>
+  </div>
 
-    <!-- Follow-up bar (appears after research completes) -->
-    <div id="followUpArea" style="display:none"></div>
-  </main>
-</div>
+</div><!-- /app-layout -->
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarOverlay()"></div>
 
 <!-- Projects overlay -->
 <div class="projects-overlay hidden" id="projectsOverlay" onclick="closeProjects(event)">
@@ -882,9 +1547,6 @@
       <h2>&#128193; Projects</h2>
       <button class="projects-new-btn" onclick="openProjectModal(null)">&#43; New project</button>
       <button class="user-btn" onclick="closeProjects()" style="margin-left:8px">Close</button>
-    </div>
-    <div class="projects-body" id="projectsBody">
-      <div class="proj-empty">Loading...</div>
     </div>
   </div>
 </div>
@@ -973,10 +1635,51 @@
   </div>
 </div>
 
+<!-- Planning modal (triggered by "Refine Prompt" button) -->
+<div class="planning-modal-overlay hidden" id="planningModalOverlay" onclick="closePlanningModal(event)">
+  <div class="planning-modal" onclick="event.stopPropagation()">
+    <div class="planning-modal-header">
+      <h3>&#9881; Refine Prompt &amp; Configure Research</h3>
+      <button class="planning-modal-close" onclick="closePlanningModal()">&#10005; Close</button>
+    </div>
+    <div class="planning-modal-body">
+      <div id="planningSection">
+        <label style="font-size:.75rem;color:var(--text-muted)">Research objective</label>
+        <textarea id="planObjective" placeholder="Describe your research objective: what you want to find out, why, and what type of answer you expect..." style="width:100%;min-height:80px;padding:10px 12px;font-size:.88rem;resize:vertical;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font);margin:6px 0 10px"></textarea>
+        <div class="planning-config-row">
+          <label>Planner model:</label>
+          <select id="planProvider" onchange="updatePlanModels()">
+            <option value="anthropic">Claude</option>
+            <option value="openai" selected>OpenAI</option>
+            <option value="google">Gemini</option>
+            <option value="xai">Grok</option>
+          </select>
+          <select id="planModel"></select>
+          <input type="hidden" id="planAmplitude" value="concise">
+          <button class="plan-btn" id="planBtn" onclick="runPlanResearch()">
+            <span id="planBtnIcon">&#9881;</span> <span id="planBtnLabel">Plan Research</span>
+          </button>
+        </div>
+        <div class="planning-result" id="planningResult" style="display:none">
+          <div class="planning-result-header">
+            <span>&#128203;</span> Plan generated
+            <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)" id="planCost"></span>
+          </div>
+          <div class="planning-result-body" id="planResultBody"></div>
+          <div class="plan-missing-fields" id="planMissingFields"></div>
+          <div class="planning-result-footer">
+            <button class="plan-apply-btn" id="planApplyBtn" onclick="applyPlan(); closePlanningModal()">Apply configuration</button>
+            <span style="font-size:.72rem;color:var(--text-muted)">Applies the plan to models, prompt and integrator</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="history-overlay hidden" id="historyOverlay" onclick="closeHistory(event)">
   <div class="history-panel" onclick="event.stopPropagation()">
     <div class="history-header"><h2>Search History</h2><button class="user-btn" onclick="closeHistory()">Close</button></div>
-    <div class="history-body" id="historyBody"><div class="history-empty">Loading...</div></div>
   </div>
 </div>
 
@@ -999,7 +1702,7 @@ const PROVIDERS = {
       { id: 'claude-sonnet-4-5',           label: 'Claude Sonnet 4.5' },
       { id: 'claude-haiku-4-5-20251001',   label: 'Claude Haiku 4.5' },
     ],
-    defaultModel: 'claude-sonnet-4-6',
+    defaultModel: 'claude-haiku-4-5-20251001',
   },
   openai: {
     label: 'OpenAI', icon: '&#9889;', color: 'var(--openai)', dotColor: '#10a37f',
@@ -1036,6 +1739,28 @@ const PROVIDERS = {
     ],
     defaultModel: 'grok-4-1-fast-non-reasoning',
   },
+  qwen: {
+    label: 'Qwen', icon: '&#128200;', color: 'var(--qwen, #6550d4)', dotColor: '#6550d4',
+    models: [
+      { id: 'qwq-32b',     label: 'QwQ 32B (Reasoning)' },
+      { id: 'qwen-max',    label: 'Qwen Max' },
+      { id: 'qwen-plus',   label: 'Qwen Plus (Qwen3)' },
+      { id: 'qwen-turbo',  label: 'Qwen Turbo' },
+    ],
+    defaultModel: 'qwen-plus',
+  },
+  zhipu: {
+    label: 'GLM', icon: '&#127979;', color: 'var(--zhipu, #ff6b6b)', dotColor: '#ff6b6b',
+    models: [
+      { id: 'glm-5-turbo',   label: 'GLM 5 Turbo' },
+      { id: 'glm-5',         label: 'GLM 5' },
+      { id: 'glm-4.7',       label: 'GLM 4.7' },
+      { id: 'glm-4.6',       label: 'GLM 4.6' },
+      { id: 'glm-4.5',       label: 'GLM 4.5' },
+      { id: 'glm-4.5-air',   label: 'GLM 4.5 Air' },
+    ],
+    defaultModel: 'glm-5-turbo',
+  },
 };
 
 // Prices in USD per million tokens (input / output) — updated March 2026
@@ -1069,8 +1794,21 @@ const PRICING = {
   'grok-4.20-0309-reasoning':     { i: 2,   o: 6 },
   'grok-4.20-0309-non-reasoning': { i: 2,   o: 6 },
   // Grok 4.1
-  'grok-4-1-fast-reasoning':      { i: 0.2, o: 0.5 },
-  'grok-4-1-fast-non-reasoning':  { i: 0.2, o: 0.5 },
+  'grok-4-1-fast-reasoning':      { i: 0.2,  o: 0.5  },
+  'grok-4-1-fast-non-reasoning':  { i: 0.2,  o: 0.5  },
+  // Qwen
+  'qwq-32b':    { i: 0.6,  o: 2.4  },
+  'qwen-max':   { i: 1.6,  o: 6.4  },
+  'qwen-plus':  { i: 0.4,  o: 1.2  },
+  'qwen-turbo': { i: 0.05, o: 0.15 },
+  // Zhipu (GLM)
+  'glm-5.1':       { i: 0.5,  o: 2.0  },
+  'glm-5-turbo':   { i: 0.1,  o: 0.4  },
+  'glm-5':         { i: 0.3,  o: 1.2  },
+  'glm-4.7':       { i: 0.25, o: 1.0  },
+  'glm-4.6':       { i: 0.2,  o: 0.8  },
+  'glm-4.5':       { i: 0.15, o: 0.6  },
+  'glm-4.5-air':   { i: 0.05, o: 0.2  },
 };
 
 function calcCost(id,i,o){const p=PRICING[id];return p?(i/1e6)*p.i+(o/1e6)*p.o:0;}
@@ -1078,8 +1816,11 @@ function fmtCost(v){return v===0?'$0.0000':v<.001?'$<0.001':'$'+v.toFixed(4);}
 function costClass(v){return v<.02?'cheap':v<.10?'medium':'pricey';}
 
 const _copyBuf = {};
-const AMPLITUDE_TOKENS = { concise: 512, normal: 2048, detailed: 4096, exhaustive: 8192 };
+const AMPLITUDE_TOKENS     = { superconcise: 170,  concise: 512,  normal: 2048, detailed: 4096, exhaustive: 8192 };
+// Actual API ceiling: high enough to finish a brief response cleanly, not cut mid-sentence
+const AMPLITUDE_MAX_TOKENS = { superconcise: 600,  concise: 1200, normal: 2048, detailed: 4096, exhaustive: 8192 };
 const WEB_SEARCH_PROVIDERS = new Set(['google', 'xai']);
+const ALWAYS_SEARCH_PROVIDERS = new Set([]); // reserved for providers that always search
 const GEMINI_SEARCH_SUPPORTED = new Set(['models/gemini-3.1-pro-preview','models/gemini-3-flash-preview','models/gemini-3.1-flash-lite-preview']);
 
 // Templates (improvement #9)
@@ -1100,10 +1841,12 @@ const state = {
   models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({ provider, modelId: cfg.defaultModel, enabled: true, customInstructions: '', webSearch: false, temperature: null })),
   attachments: [], conversationHistory: [], integratorEnabled: true, isRunning: false, currentUser: null,
   debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [],
+  cascadeEnabled: false, cascadeOrder: [], globalTemperature: 0.7, // cascadeOrder: array of provider strings in execution order
 };
 
 let _lastIntegratorText = null;
 let _abortController = null;
+let _intAbortController = null;
 
 // ── Free plan model whitelist ───────────────────────────────────────────────
 const FREE_MODELS = new Set([
@@ -1157,7 +1900,7 @@ function applyPlanLimits() {
   // 2. Amplitude selectors: lock individual options not allowed by plan
   const allowedAmplitudes = new Set(limits.amplitudes || ['concise','normal','detailed','exhaustive']);
   // Map numeric token values (maxTokensInt) to amplitude names
-  const tokToAmp = { '512':'concise', '2048':'normal', '4096':'detailed', '8192':'exhaustive', '16384':'exhaustive' };
+  const tokToAmp = { '170':'superconcise', '512':'concise', '2048':'normal', '4096':'detailed', '8192':'exhaustive', '16384':'exhaustive' };
   function applyAmplitudeLock(sel) {
     if (!sel) return;
     sel.disabled = false;
@@ -1496,6 +2239,7 @@ function applyPlan() {
 // Initialize plan model selector
 document.addEventListener('DOMContentLoaded', () => {
   updatePlanModels();
+  setModelLevel('fast'); // default to Fast tier
 });
 
 function stopResearch() {
@@ -1504,7 +2248,7 @@ function stopResearch() {
   const runBtn = document.getElementById('runBtn');
   runBtn.classList.remove('running');
   document.getElementById('runBtnIcon').textContent = '\u25B6';
-  document.getElementById('runBtnLabel').textContent = 'Research Selected';
+  document.getElementById('runBtnLabel').textContent = 'Research';
   document.getElementById('stopBtn').classList.remove('visible');
   updateRunBtn();
   toast('Research stopped', 'warn');
@@ -1515,16 +2259,79 @@ async function init() { renderModelCards(); populateIntegratorDropdowns(); await
 function toggleIntegrator() {
   state.integratorEnabled = !state.integratorEnabled;
   const btn = document.getElementById('intToggleBtn');
+  if (btn) {
+    btn.textContent = state.integratorEnabled ? 'ON' : 'OFF';
+    btn.classList.toggle('on', state.integratorEnabled);
+  }
   const section = document.getElementById('inlineIntegratorSection');
-  btn.textContent = state.integratorEnabled ? 'ON' : 'OFF';
-  btn.classList.toggle('on', state.integratorEnabled);
   if (section) section.style.opacity = state.integratorEnabled ? '' : '0.5';
   updateEstimate();
 }
 
 function toggleDebate() {
   state.debateEnabled = !state.debateEnabled;
-  document.getElementById('debateToggle').classList.toggle('on', state.debateEnabled);
+  // Update sidebar toggle button
+  const btn = document.getElementById('debateBtn');
+  if (btn && btn.classList.contains('rsb-toggle-btn')) {
+    btn.textContent = state.debateEnabled ? 'ON' : 'OFF';
+    btn.classList.toggle('on', state.debateEnabled);
+  }
+  // Legacy hidden toggle (old layout)
+  const legacyToggle = document.getElementById('debateToggle');
+  if (legacyToggle) legacyToggle.classList.toggle('on', state.debateEnabled);
+}
+
+function toggleCascade() {
+  state.cascadeEnabled = !state.cascadeEnabled;
+  ['cascadeBtn', 'cascadeBtnMain'].forEach(id => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.classList.toggle('cascade-on', state.cascadeEnabled);
+    if (b.classList.contains('rsb-toggle-btn')) {
+      b.textContent = state.cascadeEnabled ? 'ON' : 'OFF';
+      b.classList.toggle('on', state.cascadeEnabled);
+    }
+  });
+  renderCascadeOrderPanel();
+}
+
+function renderCascadeOrderPanel() {
+  const panel = document.getElementById('cascadeOrderPanel');
+  const list  = document.getElementById('cascadeOrderList');
+  if (!panel || !list) return;
+  panel.style.display = state.cascadeEnabled ? '' : 'none';
+  if (!state.cascadeEnabled) return;
+
+  const enabled = state.models.filter(m => m.enabled);
+  // Init cascade order from current enabled providers if not set or stale
+  const validProviders = new Set(enabled.map(m => m.provider));
+  state.cascadeOrder = state.cascadeOrder.filter(p => validProviders.has(p));
+  for (const m of enabled) {
+    if (!state.cascadeOrder.includes(m.provider)) state.cascadeOrder.push(m.provider);
+  }
+
+  list.innerHTML = '';
+  state.cascadeOrder.forEach((provider, idx) => {
+    const m = enabled.find(x => x.provider === provider);
+    if (!m) return;
+    const prov = PROVIDERS[provider];
+    const item = document.createElement('div');
+    item.className = 'cascade-order-item';
+    item.innerHTML = `
+      <span class="cascade-pos">${idx + 1}</span>
+      <span>${prov?.icon || ''} ${prov?.label || provider}</span>
+      <span style="color:var(--text-muted);font-size:.75rem;flex:1">${m.modelId}</span>
+      ${idx > 0 ? `<button class="cascade-arrow" onclick="moveCascadeItem(${idx},-1)" title="Move up">&#9650;</button>` : '<span style="width:26px"></span>'}
+      ${idx < state.cascadeOrder.length - 1 ? `<button class="cascade-arrow" onclick="moveCascadeItem(${idx},1)" title="Move down">&#9660;</button>` : '<span style="width:26px"></span>'}`;
+    list.appendChild(item);
+  });
+}
+
+function moveCascadeItem(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.cascadeOrder.length) return;
+  [state.cascadeOrder[idx], state.cascadeOrder[newIdx]] = [state.cascadeOrder[newIdx], state.cascadeOrder[idx]];
+  renderCascadeOrderPanel();
 }
 
 function updateConvIndicator() {
@@ -1550,6 +2357,11 @@ function clearConversation() {
   const ha = document.getElementById('hallucinationArea'); if (ha) ha.innerHTML = '';
   const fua = document.getElementById('followUpArea'); if (fua) { fua.innerHTML = ''; fua.style.display = 'none'; }
   document.querySelectorAll('.imc-result-area').forEach(el => el.remove());
+  // Reset model tab panels from previous run
+  document.querySelectorAll('.tab-panel[id^="tabPanel-"]:not(#tabPanel-integration)').forEach(el => el.remove());
+  const bar = document.getElementById('resultTabsBar');
+  if (bar) { bar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); bar.style.display = 'none'; }
+  const intP = document.getElementById('tabPanel-integration'); if (intP) intP.style.display = 'none';
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
   document.getElementById('convBar').style.display = 'none';
@@ -1635,6 +2447,7 @@ function renderModelCards() {
     container.appendChild(card);
   });
   updateEnabledBadge();
+  buildResultTabs();
 }
 
 // Helper: call retryModel using the currently selected model in the card
@@ -1646,20 +2459,44 @@ function retryModelFromCard(provider) {
 
 // Creates (or replaces) an inline result area inside the model card
 function prepareInlineResultArea(provider, modelId) {
+  // Also clean the card in sidebar (remove old result area if any)
   const card = document.getElementById(`card-${provider}`);
-  if (!card) return;
+  if (card) card.querySelector('.imc-result-area')?.remove();
+
   const safeId = modelId.replace(/[^a-z0-9]/gi, '-');
-  card.querySelector('.imc-result-area')?.remove();
-  const area = document.createElement('div');
-  area.className = 'imc-result-area';
-  area.id = `rcard-${safeId}`;   // enables updateScoreRow / applyDebateVoteBadges
-  area.innerHTML =
-    `<div style="border-top:1px solid var(--border)"></div>` +
+
+  // Get or create tab panel — insert BEFORE integration panel so model results appear first
+  const tabPanelId = `tabPanel-${provider}`;
+  let tabPanel = document.getElementById(tabPanelId);
+  const answersArea = document.getElementById('answersArea');
+  const intPanel = document.getElementById('tabPanel-integration');
+  if (!tabPanel) {
+    tabPanel = document.createElement('div');
+    tabPanel.className = 'tab-panel';
+    tabPanel.id = tabPanelId;
+    if (answersArea && intPanel) answersArea.insertBefore(tabPanel, intPanel);
+    else if (answersArea) answersArea.appendChild(tabPanel);
+  }
+  tabPanel.innerHTML = '';
+
+  const prov = PROVIDERS[provider];
+  tabPanel.innerHTML =
+    `<div style="padding:7px 12px;display:flex;align-items:center;gap:8px;background:var(--surface2);border-bottom:1px solid var(--border);border-radius:4px 4px 0 0">` +
+    `<span style="color:${prov.dotColor};font-weight:700;font-size:.9rem">${prov.icon || ''} ${prov.label}</span>` +
+    `</div>` +
     `<div class="result-body" id="rbody-${safeId}">` +
-      `<div class="loading-row"><div class="spinner"></div> Waiting...</div></div>` +
+      `<div class="loading-row"><div class="spinner"></div> Waiting…</div></div>` +
     `<div style="display:flex;align-items:center;gap:10px;padding:4px 12px;font-size:.72rem;color:var(--text-muted);flex-wrap:wrap;border-top:1px solid var(--border)" id="rmeta-${safeId}"></div>` +
     `<div class="result-footer" id="rfoot-${safeId}" data-provider="${provider}" data-modelid="${modelId}"></div>`;
-  card.appendChild(area);
+
+  // Ensure tab button exists in the tab bar
+  _ensureModelTab(provider);
+  document.getElementById('resultTabsBar').style.display = 'flex';
+  setTabStatus(provider, 'working');
+  // Auto-switch to first model tab so the spinner is immediately visible
+  if (_activeResultTab === 'integration') {
+    switchResultTab(`model-${provider}`);
+  }
 }
 
 function toggleModel(idx) {
@@ -1667,7 +2504,7 @@ function toggleModel(idx) {
   const m = state.models[idx];
   // If trying to enable and already at limit, block
   if (!m.enabled && state.models.filter(x => x.enabled).length >= maxModels) {
-    toast(`Free plan: max ${maxModels} models. Upgrade for more.`, 'error'); return;
+    toast(`Explorer plan: max ${maxModels} models. Upgrade for more.`, 'error'); return;
   }
   state.models[idx].enabled = !state.models[idx].enabled;
   document.getElementById(`card-${m.provider}`).className = 'inline-model-card' + (m.enabled ? ' active' : ' disabled');
@@ -1675,6 +2512,7 @@ function toggleModel(idx) {
   const mt = document.getElementById(`mt-${m.provider}`);
   if (mt) mt.className = 'mt-item' + (m.enabled ? ' active' : '');
   updateEnabledBadge(); updateEstimate(); updateRunBtn();
+  if (state.cascadeEnabled) renderCascadeOrderPanel();
 }
 
 function onModelChange(idx, newId) { const m = state.models[idx];
@@ -1742,11 +2580,15 @@ function onIntProviderChange() {
 }
 function getIntegratorConfig() { return { provider: document.getElementById('intProvider').value, modelId: document.getElementById('intModel').value, customInstructions: document.getElementById('intInstructions').value }; }
 function toggleAdv() { const body = document.getElementById('advBody'); const arr = document.getElementById('advArrow'); const open = body.classList.toggle('open'); arr.textContent = open ? '\u25B2' : '\u25BC'; }
-function getAmplitudeTokens() { return AMPLITUDE_TOKENS[document.getElementById('responseAmplitude')?.value || 'normal'] || 2048; }
+function getAmplitudeTokens() {
+  const amp = document.getElementById('responseAmplitude')?.value || 'normal';
+  return AMPLITUDE_MAX_TOKENS[amp] || AMPLITUDE_TOKENS[amp] || 2048;
+}
+function getAmplitudeCostTokens() { return AMPLITUDE_TOKENS[document.getElementById('responseAmplitude')?.value || 'normal'] || 2048; }
 
 function updateEstimate() {
   const question = document.getElementById('questionInput').value; const qTok = Math.ceil(question.length / 4);
-  const estOut = getAmplitudeTokens(); const estIntOut = parseInt(document.getElementById('maxTokensInt')?.value) || 4096;
+  const estOut = getAmplitudeCostTokens(); const estIntOut = parseInt(document.getElementById('maxTokensInt')?.value) || 4096;
   let totalCost = 0;
   state.models.forEach(m => { if (!m.enabled) return; const inTok = qTok + Math.ceil((m.customInstructions || '').length / 4) + 30;
     const cost = calcCost(m.modelId, inTok, estOut); totalCost += cost; const el = document.getElementById(`mcost-${m.provider}`);
@@ -1761,7 +2603,10 @@ function updateEstimate() {
 }
 
 function updateRunBtn() { const hasQ = document.getElementById('questionInput').value.trim().length > 0;
-  const hasM = state.models.some(m => m.enabled); document.getElementById('runBtn').disabled = !hasQ || !hasM || state.isRunning;
+  const hasM = state.models.some(m => m.enabled); const dis = !hasQ || !hasM || state.isRunning;
+  document.getElementById('runBtn').disabled = dis;
+  const ri = document.getElementById('runIntegrateBtn'); if (ri) ri.disabled = dis;
+  const cb = document.getElementById('runCascadeBtn'); if (cb) cb.disabled = dis;
 }
 
 // Templates (improvement #9)
@@ -1801,6 +2646,7 @@ async function runResearch(withIntegrator = false) {
   // Increment client-side daily counter
   if (state.currentUser) { state.currentUser.daily_queries = (state.currentUser.daily_queries || 0) + 1; updateDailyQueryUI(); }
   state.isRunning = true; _lastIntegratorText = null; state.lastResults = [];
+  _activeResultTab = 'integration'; // reset so first model auto-switches
   Object.keys(_consensusScores).forEach(k => delete _consensusScores[k]);
   Object.keys(_resultData).forEach(k => delete _resultData[k]);
   Object.keys(_llmAnalysisCache).forEach(k => delete _llmAnalysisCache[k]);
@@ -1811,17 +2657,25 @@ async function runResearch(withIntegrator = false) {
   document.getElementById('runBtnLabel').textContent = 'Researching...';
   document.getElementById('stopBtn').classList.add('visible');
 
-  // Prepare inline result areas inside each model card
+  // Remove previous model tab panels and reset tab bar
+  document.querySelectorAll('.tab-panel[id^="tabPanel-"]:not(#tabPanel-integration)').forEach(el => el.remove());
+  const _rbar = document.getElementById('resultTabsBar');
+  if (_rbar) { _rbar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); _rbar.style.display = 'none'; }
+  const _intP = document.getElementById('tabPanel-integration'); if (_intP) _intP.style.display = 'none';
+
+  // Prepare inline result areas for each enabled model
   enabledModels.forEach(m => prepareInlineResultArea(m.provider, m.modelId));
 
   // Clear consensus / debate areas from previous run
   document.getElementById('resultsSection').innerHTML = '';
   document.getElementById('debateResultArea').innerHTML = '';
+  document.getElementById('integratorResultArea').innerHTML = '';
 
   try {
     const amplitude = document.getElementById('responseAmplitude')?.value || 'normal';
     const intCfg = withIntegrator ? getIntegratorConfig() : {};
     if (withIntegrator && intCfg.modelId) {
+      showIntegrationPanel();
       const intArea = document.getElementById('integratorResultArea');
       if (intArea) { intArea.innerHTML = ''; const card = buildIntegratorCard('pending'); intArea.appendChild(card); }
     }
@@ -1829,6 +2683,8 @@ async function runResearch(withIntegrator = false) {
       question, models: state.models,
       integrator: intCfg,
       debateEnabled: false,
+      cascadeEnabled: state.cascadeEnabled,
+      cascadeOrder: state.cascadeOrder,
       maxTokens: getAmplitudeTokens(),
       maxTokensIntegrator: parseInt(document.getElementById('maxTokensInt')?.value) || 4096,
       attachments: state.attachments, amplitude,
@@ -1863,10 +2719,11 @@ async function runResearch(withIntegrator = false) {
 
   state.isRunning = false; runBtn.classList.remove('running');
   document.getElementById('runBtnIcon').textContent = '\u25B6';
-  document.getElementById('runBtnLabel').textContent = 'Research Selected';
+  document.getElementById('runBtnLabel').textContent = 'Research';
   document.getElementById('stopBtn').classList.remove('visible');
   updateRunBtn();
   document.getElementById('exportBtn').style.display = state.lastResults.length > 0 ? '' : 'none';
+  if (state.lastResults.length >= 2) setTimeout(runDiffAnalysis, 300);
 }
 
 // Streaming text buffers per model
@@ -1950,6 +2807,7 @@ function updateResultCard(modelId, status, data) {
   if (!body) return;
   if (status === 'loading') { body.innerHTML = `<div class="loading-row"><div class="spinner"></div> Generating response...</div>`; }
   else if (status === 'done') {
+    if (data.provider) setTabStatus(data.provider, 'done', data.durationMs);
     body.innerHTML = `<div class="md-content">${renderMarkdown(data.text)}</div>`;
     const dur = (data.durationMs / 1000).toFixed(1);
     meta.innerHTML = `
@@ -1970,10 +2828,12 @@ function updateResultCard(modelId, status, data) {
     // Footer: copy + vote + retry
     foot.innerHTML = `
       <button class="retry-btn" onclick="retryModelFromCard('${data.provider}')" title="Re-research this model">&#x21bb; Re-research</button>
-      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','up',this)" title="Good response">&#9650;</button>
-      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','down',this)" title="Bad response">&#9660;</button>
-      <button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copy</button>`;
+      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','up',this)" title="Good response">👍</button>
+      <button class="vote-btn" onclick="vote('${safeId}','${data.modelId}','down',this)" title="Bad response">👎</button>
+      <button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copy</button>
+      <button class="export-btn" onclick="exportToWord('${safeId}','${data.modelId}',this)" title="Export to Word (.docx)">&#128196; Word</button>`;
   } else if (status === 'error') {
+    if (data.provider) setTabStatus(data.provider, 'error');
     body.innerHTML = `<div class="result-error">&#9888; ${data.error}</div>
       <div style="margin-top:8px"><button class="retry-btn" onclick="retryModelFromCard('${data.provider}')">&#x21bb; Retry</button></div>`;
   }
@@ -2047,8 +2907,10 @@ async function runIntegration() {
       sessionId: state.lastSessionId,
       ...(debateContext ? { debateContext } : {}),
     };
+    _intAbortController = new AbortController();
     const response = await fetch('/api/integrate', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      signal: _intAbortController.signal,
     });
     const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = '';
     while (true) {
@@ -2084,10 +2946,15 @@ async function runIntegration() {
       }
     }
   } catch (err) {
-    updateIntegratorCard('error', { error: err.message });
-    toast('Integration error: ' + err.message, 'error');
+    if (err.name !== 'AbortError') {
+      updateIntegratorCard('error', { error: err.message });
+      toast('Integration error: ' + err.message, 'error');
+    }
   }
 
+  _intAbortController = null;
+  const stopBtn2 = document.getElementById('intStopBtn');
+  if (stopBtn2) stopBtn2.style.display = 'none';
   if (intBtn) { intBtn.disabled = false; intBtn.textContent = 'Integrate'; }
 }
 
@@ -2174,6 +3041,7 @@ function buildIntegratorCard(status) {
       <span style="font-size:.75rem;color:var(--text-muted)">${prov?.icon || ''} ${prov?.label || ''} — ${modLabel}</span>
       <div id="intScoreBadges" style="display:flex;gap:6px;align-items:center;margin-left:8px"></div>
       <div id="intMeta" style="font-size:.75rem;color:var(--text-muted);margin-left:auto"></div>
+      <button id="intStopBtn" onclick="stopIntegration()" title="Stop synthesis" style="display:none;margin-left:8px;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:2px 9px;font-size:.75rem;cursor:pointer;transition:all .15s">&#9632; Stop</button>
     </div>
     <div class="integrator-result-body" id="intBody"><div class="loading-row"><div class="spinner"></div> Waiting for results...</div></div>
     <div class="integrator-result-footer" id="intFoot"></div>`;
@@ -2182,6 +3050,7 @@ function buildIntegratorCard(status) {
 
 function renderReliabilityIndex() {
   const area = document.getElementById('reliabilityIndexArea'); if (!area) return;
+  showIntegrationPanel();
   area.innerHTML = ''; // clear previous
 
   const provName = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi' };
@@ -2277,18 +3146,46 @@ function renderReliabilityIndex() {
   area.innerHTML = html;
 }
 
+function stopIntegration() {
+  if (_intAbortController) { _intAbortController.abort(); _intAbortController = null; }
+  const stopBtn = document.getElementById('intStopBtn');
+  if (stopBtn) stopBtn.style.display = 'none';
+  const intBtn = document.getElementById('integrateBtn');
+  if (intBtn) { intBtn.disabled = false; intBtn.textContent = 'Integrate'; }
+  // Show partial content if any was streamed
+  const partial = _streamBuf['__integrator'];
+  if (partial && partial.trim()) {
+    const intBody = document.getElementById('intBody');
+    if (intBody) intBody.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(partial))}</div><div style="margin-top:8px;font-size:.75rem;color:var(--text-muted)">⚠ Synthesis stopped — partial result</div>`;
+    _copyBuf['integrator'] = partial;
+    const foot = document.getElementById('intFoot');
+    if (foot) foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copy partial</button>`;
+  }
+  _streamBuf['__integrator'] = '';
+}
+
 function updateIntegratorCard(status, data) {
+  showIntegrationPanel();
   const body = document.getElementById('intBody'), meta = document.getElementById('intMeta'), foot = document.getElementById('intFoot');
+  const stopBtn = document.getElementById('intStopBtn');
   if (!body) return;
-  if (status === 'loading') { body.innerHTML = `<div class="loading-row"><div class="spinner"></div> Synthesizing responses...</div>`; }
+  if (status === 'loading') {
+    body.innerHTML = `<div class="loading-row"><div class="spinner"></div> Synthesizing responses...</div>`;
+    if (stopBtn) stopBtn.style.display = '';
+  }
   else if (status === 'done') {
+    if (stopBtn) stopBtn.style.display = 'none';
     body.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(data.text))}</div>`;
     const dur = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : '';
     meta.innerHTML = `<span class="duration-badge ${durationClass(data.durationMs || 0)}">${dur}</span> ${data.inputTokens}&#8593; ${data.outputTokens}&#8595; &nbsp;${fmtCost(data.cost)}`;
     _copyBuf['integrator'] = data.text;
-    foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copy synthesis</button>`;
+    foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copy synthesis</button>
+      <button class="export-btn" onclick="exportToWord('integrator','Synthesis',this)" title="Export synthesis to Word (.docx)">&#128196; Word</button>`;
     renderReliabilityIndex();
-  } else if (status === 'error') { body.innerHTML = `<div class="result-error">&#9888; Error: ${data.error}</div>`; }
+  } else if (status === 'error') {
+    if (stopBtn) stopBtn.style.display = 'none';
+    body.innerHTML = `<div class="result-error">&#9888; Error: ${data.error}</div>`;
+  }
 }
 
 // Consensus panel — aparece a la derecha del integrador
@@ -2321,6 +3218,7 @@ async function runHallucinationAudit() {
   const question = document.getElementById('questionInput')?.value?.trim();
   if (!question) { toast('Write your question first.', 'error'); return; }
   if (!state.lastResults.length) { toast('Run research first to get model responses.', 'error'); return; }
+  showIntegrationPanel();
   renderHallucinationLoading();
   try {
     const res = await fetch('/api/hallucination-check', {
@@ -2422,6 +3320,7 @@ const PROV_ICON = { anthropic: '🟣', openai: '🟢', google: '🔵', xai: '⚫
 function showFollowUpBar() {
   const area = document.getElementById('followUpArea');
   if (!area) return;
+  showIntegrationPanel();
   area.style.display = '';
   const hasIntegrator = state.integratorEnabled && document.getElementById('intProvSel')?.value;
   const intCfg = hasIntegrator ? getIntegratorConfig() : null;
@@ -2652,34 +3551,209 @@ function exportResearch() {
   toast('Research exported as Markdown', 'success');
 }
 
-// Consensus colorizer
-const CONSENSUS_FULL = /\b(todos (los modelos|coinciden|acuerdan|se.alan|indican)|consenso (total|un.nime|completo)|unanimidad|all models agree|unanimous)\b/i;
-const CONSENSUS_PARTIAL = /\b(la mayor.a|varios modelos|algunos modelos|en general|generalmente|parcialmente|most models|several|largely|broadly)\b/i;
-const CONSENSUS_UNIQUE = /\b(solo [a-zA-Z]+ (se.ala|indica|menciona|sostiene|argumenta|afirma)|.nicamente [a-zA-Z]+|discrepa|en desacuerdo|contradice|no coincide|only one|disagrees|contrario a|a diferencia de los dem.s)\b/i;
+// Consensus colorizer — 4 levels
+// 🟢 Full consensus: all models agree
+const CONSENSUS_FULL = /\b(todos (los modelos|coinciden|acuerdan|se[ñn]alan|indican)|consenso (total|un[áa]nime|completo)|unanimidad|all (four|4|los) models?( agree| coincid| se[ñn]alan)?|unanimous(ly)?|los cuatro( modelos)?)\b/i;
+// 🟠 Partial consensus: most/several models agree
+const CONSENSUS_PARTIAL = /\b(la mayor[íi]a|varios modelos|algunos modelos|en general|generalmente|parcialmente|predominantemente|most models|several models|largely|broadly|majority|la mayor parte|predomina)\b/i;
+// 🔴 Disagreement: explicit contradiction or conflict
+const CONSENSUS_DISAGREE = /\b(discrepa|en desacuerdo|contradice|no coincide|contrario a|a diferencia de los dem[áa]s|disagrees?|contradicts?|at odds|conflicts? with|unlike the others?|se opone|posici[óo]n contraria)\b/i;
+// 🟡 Individual contribution: one model adds something unique (not a disagreement)
+const CONSENSUS_INDIVIDUAL = /\b(solo (Claude|GPT|Gemini|Grok|Kimi|Sonar|Qwen|[A-Z][a-z]+) (se[ñn]ala|indica|menciona|sostiene|argumenta|afirma|apunta|destaca|a[ñn]ade|propone)|[úu]nicamente (Claude|GPT|Gemini|Grok|[A-Z][a-z]+)|only (Claude|GPT|Gemini|Grok|one model)|exclusivamente|aporta de forma [úu]nica|nota (adicional|[úu]nica)|nota espec[íi]fica)\b/i;
+
+// ===== DIFF ANALYSIS — Features 1, 2, 5, 6 =====
+const _DIFF_SW = new Set([
+  'the','a','an','is','are','was','were','be','been','have','has','had','do','does','did',
+  'will','would','could','should','may','might','shall','can','that','this','these','those',
+  'it','its','they','them','their','there','and','or','but','if','in','on','at','to','for',
+  'of','with','as','by','from','not','no','so','yet','nor','than','then','when','which',
+  'who','what','how','also','very','more','most','some','any','all','both','each','its',
+  'que','de','la','el','en','es','se','del','los','las','una','con','por','para','este',
+  'esta','estos','estas','pero','como','más','muy','también','esto','eso','su','sus','le',
+  'lo','al','y','o','e','ni','sin','sobre','entre','hasta','desde','un','son','fue','ser',
+  'está','están','era','eran','han','ha','uno','una','unos','unas','entre','hacia','según',
+]);
+
+function _normD(t) {
+  return t.toLowerCase().replace(/[^a-záéíóúüñàèìòùâêîôû0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+function _ngrams(text, n) {
+  const ws = _normD(text).split(' ').filter(w => w.length > 2 && !_DIFF_SW.has(w));
+  const out = [];
+  for (let i = 0; i <= ws.length - n; i++) out.push(ws.slice(i, i+n).join(' '));
+  return out;
+}
+
+function runDiffAnalysis() {
+  if (state.lastResults.length < 2) return;
+  const results = state.lastResults.filter(r => r.text && r.text.length > 80);
+  if (results.length < 2) return;
+  showIntegrationPanel();
+
+  // Build per-model data
+  const models = results.map(r => ({
+    modelId: r.modelId,
+    text: r.text,
+    norm: _normD(r.text),
+    grams4: new Set(_ngrams(r.text, 4)),
+  }));
+
+  // Mark unique & shared 4-grams per model
+  models.forEach((m, idx) => {
+    const others = models.filter((_, i) => i !== idx);
+    m.uniqueG = new Set(); m.sharedG = new Set();
+    m.grams4.forEach(g => {
+      const cnt = others.filter(o => o.grams4.has(g) || o.norm.includes(g)).length;
+      if (cnt === 0) m.uniqueG.add(g);
+      else if (cnt === others.length) m.sharedG.add(g);
+    });
+  });
+
+  // Annotate each card
+  models.forEach((m, idx) => {
+    const safeId = m.modelId.replace(/[^a-z0-9]/gi,'-');
+    const body = document.getElementById(`rbody-${safeId}`);
+    if (!body) return;
+    const mdDiv = body.querySelector('.md-content');
+    if (!mdDiv) return;
+    const others = models.filter((_, i) => i !== idx);
+
+    // Feature 1 + 2 + 5: annotate paragraphs
+    mdDiv.querySelectorAll('p, li').forEach(p => {
+      if (p.querySelector('.diff-badge, .diff-contradict')) return; // already done (retry)
+      const pNorm = _normD(p.textContent || '');
+      const pWs = pNorm.split(' ').filter(w => w.length > 2 && !_DIFF_SW.has(w));
+      if (pWs.length < 4) return;
+
+      // Measure word overlap with each other model
+      let totalOv = 0;
+      others.forEach(o => {
+        const ov = pWs.filter(w => o.norm.includes(w)).length / pWs.length;
+        totalOv += ov;
+      });
+      const avgOv = totalOv / others.length;
+
+      if (avgOv > 0.52) {
+        // Consensus: green left bar + badge
+        p.style.borderLeft = '3px solid rgba(76,175,114,0.55)';
+        p.style.paddingLeft = '8px';
+        const b = document.createElement('span');
+        b.className = 'diff-badge'; b.textContent = `✓×${results.length}`;
+        b.title = 'Point shared by all models';
+        b.style.cssText = 'font-size:.6rem;padding:1px 5px;border-radius:9px;background:rgba(76,175,114,.18);color:#4caf72;margin-left:5px;vertical-align:middle;cursor:default;white-space:nowrap';
+        p.appendChild(b);
+      } else if (avgOv < 0.18 && pWs.length > 7) {
+        // Unique: orange left bar + badge
+        p.style.borderLeft = '3px solid rgba(207,125,78,0.55)';
+        p.style.paddingLeft = '8px';
+        const b = document.createElement('span');
+        b.className = 'diff-badge'; b.textContent = '⚡Único';
+        b.title = 'Unique insight from this model';
+        b.style.cssText = 'font-size:.6rem;padding:1px 5px;border-radius:9px;background:rgba(207,125,78,.18);color:#cf7d4e;margin-left:5px;vertical-align:middle;cursor:default;white-space:nowrap';
+        p.appendChild(b);
+      }
+    });
+  });
+
+  // Feature 6: Contradiction detection
+  _diffContradictions(models);
+}
+
+function _diffContradictions(models) {
+  const negRx = /\b(no|not|never|false|incorrect|wrong|sin|nunca|jamás|imposible|no es|no son|no hay|doesn't|don't|isn't|aren't|cannot|can't)\b/i;
+  const seen = new Set();
+  for (let i = 0; i < models.length; i++) {
+    for (let j = i+1; j < models.length; j++) {
+      const sentsA = (models[i].text.match(/[^.!?\n]{25,200}/g) || []);
+      sentsA.forEach(s => {
+        const key = _normD(s).split(' ').filter(w => w.length > 4 && !_DIFF_SW.has(w)).slice(0,4).join(' ');
+        if (key.length < 12 || seen.has(key)) return;
+        if (models[j].norm.includes(key)) {
+          const idxK = models[j].norm.indexOf(key);
+          const ctx = models[j].norm.slice(Math.max(0,idxK-50), idxK+key.length+50);
+          if (negRx.test(ctx) && !negRx.test(s.toLowerCase())) {
+            seen.add(key);
+            [models[i].modelId, models[j].modelId].forEach(mid => {
+              const sid = mid.replace(/[^a-z0-9]/gi,'-');
+              const body = document.getElementById(`rbody-${sid}`);
+              if (!body) return;
+              const mdDiv = body.querySelector('.md-content');
+              if (!mdDiv) return;
+              mdDiv.querySelectorAll('p, li').forEach(el => {
+                if (_normD(el.textContent).includes(key) && !el.querySelector('.diff-contradict')) {
+                  const b = document.createElement('span');
+                  b.className = 'diff-contradict'; b.textContent = '⚔';
+                  b.title = `Possible contradiction with another model`;
+                  b.style.cssText = 'font-size:.72rem;padding:1px 4px;border-radius:9px;background:rgba(229,83,75,.18);color:#e5534b;margin-left:5px;vertical-align:middle;cursor:default';
+                  el.appendChild(b);
+                }
+              });
+            });
+          }
+        }
+      });
+      if (seen.size > 10) return;
+    }
+  }
+}
+// ===== END DIFF ANALYSIS =====
 
 function colorizeConsensus(html) {
-  const tmp = document.createElement('div'); tmp.innerHTML = html;
-  tmp.querySelectorAll('p, li').forEach(el => { const txt = el.textContent;
-    if (CONSENSUS_UNIQUE.test(txt)) el.classList.add('consensus-unique');
-    else if (CONSENSUS_FULL.test(txt)) el.classList.add('consensus-full');
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('p, li, h2, h3').forEach(el => {
+    const txt = el.textContent;
+    // Priority: disagree > full > partial > individual
+    if (CONSENSUS_DISAGREE.test(txt))    el.classList.add('consensus-disagree');
+    else if (CONSENSUS_FULL.test(txt))   el.classList.add('consensus-full');
     else if (CONSENSUS_PARTIAL.test(txt)) el.classList.add('consensus-partial');
+    else if (CONSENSUS_INDIVIDUAL.test(txt)) el.classList.add('consensus-individual');
   });
   return tmp.innerHTML;
 }
 
-// Sanitise markdown output — strip script/event-handler injection
+// Sanitise markdown output — DOMPurify (S6 security fix)
 function renderMarkdown(text) {
   if (!text) return '';
   marked.setOptions({ breaks: true, gfm: true });
   const raw = marked.parse(text);
-  // Remove <script> blocks and on* attributes (basic XSS guard)
-  return raw
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/javascript\s*:/gi, 'nojs:');
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(raw, {
+      ALLOWED_TAGS: ['p','br','strong','em','b','i','u','s','del','ins','code','pre','blockquote',
+        'ul','ol','li','h1','h2','h3','h4','h5','h6','a','table','thead','tbody','tr','th','td','hr','span','div'],
+      ALLOWED_ATTR: ['href','title','target','rel','class','id'],
+      ALLOW_DATA_ATTR: false,
+    });
+  }
+  // Fallback if DOMPurify not loaded
+  return raw.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/\son\w+\s*=\s*["'][^"']*["']/gi,'').replace(/javascript\s*:/gi,'nojs:');
 }
 function copyFromBuf(key, btn) { navigator.clipboard.writeText(_copyBuf[key] || '').then(() => { btn.textContent = 'Copied!'; btn.classList.add('copied');
   setTimeout(() => { btn.textContent = key === 'integrator' ? 'Copy synthesis' : 'Copy'; btn.classList.remove('copied'); }, 2000); }); }
+
+async function exportToWord(key, label, btn) {
+  const text = _copyBuf[key] || '';
+  if (!text) { toast('Nothing to export yet.', 'error'); return; }
+  const origText = btn.textContent;
+  btn.textContent = 'Exporting...'; btn.disabled = true;
+  try {
+    const title = document.getElementById('questionInput')?.value?.trim() || 'Research';
+    const resp = await fetch('/api/export-docx', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, sections: [{ label, text }] }),
+    });
+    if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || resp.statusText); }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (title.replace(/[^a-z0-9_\- ]/gi,'').trim().replace(/\s+/g,'-').slice(0,50) || 'research') + '.docx';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast('Word document downloaded.', 'success');
+  } catch(e) { toast('Export failed: ' + e.message, 'error'); }
+  btn.textContent = origText; btn.disabled = false;
+}
 function toast(msg, type = 'success') { const c = document.getElementById('toastContainer'); const t = document.createElement('div');
   t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t); setTimeout(() => t.remove(), 3000); }
 function toggleMobileSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
@@ -2953,16 +4027,39 @@ function onLoginSuccess(user) {
   document.getElementById('userName').textContent = user.username;
   const ini = document.getElementById('userInitial');
   if (ini) ini.textContent = (user.username || '?')[0].toUpperCase();
+  const adminBtn = document.getElementById('adminDashBtn');
+  if (adminBtn) adminBtn.style.display = (user.role === 'admin' || user.role === 'superadmin') ? '' : 'none';
   updateUserSpend(user.total_cost_usd || 0);
   updateQuotaUI(user);
   applyPlanLimits();
+  // Email verification banner
+  const vb = document.getElementById('verifyBanner');
+  if (vb) vb.style.display = user.email_verified ? 'none' : 'flex';
   // Pre-load projects cache silently (only if plan allows)
   if (user.limits && user.limits.projects) {
     fetch('/api/projects').then(r => r.json()).then(({ projects }) => { _projects = projects; updateAtpSelect(); }).catch(() => {});
   }
-  // Check for billing redirect
+  // Initialize sidebar content
+  initSidebar();
+  // Check for billing redirect or email verified
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('billing') === 'success') { toast('🎉 Subscription activated!', 'success'); history.replaceState({}, '', '/'); }
+  if (urlParams.get('billing') === 'success') { toast('🎉 Subscription activated!', 'success'); history.replaceState({}, '', '/analyze'); }
+  if (urlParams.get('verified') === '1') { toast('✅ Email verified! Welcome to ReliableAI.', 'success'); history.replaceState({}, '', '/analyze'); if (vb) vb.style.display = 'none'; }
+}
+
+async function resendVerification(btn) {
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await fetch('/api/auth/resend-verification', { method: 'POST' });
+    const d = await r.json();
+    if (d.already) { toast('Your email is already verified.', 'success'); document.getElementById('verifyBanner').style.display = 'none'; return; }
+    if (!r.ok) throw new Error(d.error || 'Error');
+    btn.textContent = 'Sent ✓';
+    toast('Verification email sent. Check your inbox.', 'success');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Resend email';
+    toast(e.message, 'error');
+  }
 }
 function updateUserSpend(cost) { const el = document.getElementById('userSpend'); if (el) el.textContent = '$' + (cost || 0).toFixed(4); }
 
@@ -2983,6 +4080,16 @@ function updateQuotaUI(user) {
   } else {
     document.getElementById('quotaPlanBadge').style.color = '';
     document.getElementById('quotaLabel').style.color = '';
+  }
+  // Sync right sidebar budget
+  const rsbSpend = document.getElementById('rsbSpend');
+  const rsbOf = document.getElementById('rsbBudgetOf');
+  const rsbFill = document.getElementById('rsbBudgetFill');
+  if (rsbSpend) rsbSpend.textContent = `$${used.toFixed(2)} used`;
+  if (rsbOf) rsbOf.textContent = `of $${budget}`;
+  if (rsbFill) {
+    rsbFill.style.width = pct + '%';
+    rsbFill.className = 'rsb-budget-fill' + (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
   }
 }
 
@@ -3018,16 +4125,16 @@ function renderBillingPlans() {
   const grid = document.getElementById('billingPlansGrid');
   const currentPlan = state.currentUser?.plan || 'free';
   const plansMeta = {
-    free:       { popular: false, features: ['2 models simultaneously', 'Previous-gen models only', '3 queries/day', 'Concise answers only', 'Basic synthesis', 'No history / projects', 'No hallucination / debate'] },
-    starter:    { popular: false, features: ['Fast models', 'Normal length answers', 'Daily query limit', 'History', 'Projects'] },
-    pro:        { popular: true,  features: ['All models', 'Detailed & exhaustive answers', 'Research planning', 'Hallucination analysis', 'Model Debate Mode', 'Web Search', 'Confidence scoring'] },
-    enterprise: { popular: false, features: ['5 team shared accounts', 'High Security Mode', 'BYO credentials'] },
+    free:       { popular: false, features: ['Up to 4 models simultaneously', 'Previous-gen models only', '3 queries/day', 'Superconcise & Concise answers', 'Basic synthesis', '$3/mo API budget included'] },
+    starter:    { popular: false, features: ['Up to 4 fast models', 'Superconcise, Concise & Normal answers', 'Projects & 30-day history', 'Basic synthesis', '$15/mo API budget included'] },
+    pro:        { popular: true,  features: ['All models (Claude, GPT, Gemini, Grok, Kimi, Qwen)', 'All answer lengths incl. Detailed & Exhaustive', 'Web Search', 'Hallucination analysis', 'Model Debate Mode', 'Research planning & Cascade', 'Full synthesis', '$40/mo API budget included', '1-year history'] },
+    enterprise: { popular: false, features: ['Everything in Expert', 'Per-user pricing ($49/user/mo)', 'Shared team accounts', 'Priority support', '$200/mo API budget included', 'High Security Mode'] },
   };
   const plans = _billingPlans || [
-    { id:'free',       name:'Free',       price_eur:0  },
-    { id:'starter',    name:'Starter',    price_eur:10 },
-    { id:'pro',        name:'Pro',        price_eur:25 },
-    { id:'enterprise', name:'Enterprise', price_eur:90 },
+    { id:'free',       name:'Explorer',      price_eur:0  },
+    { id:'starter',    name:'Professional',  price_eur:29 },
+    { id:'pro',        name:'Expert',        price_eur:59 },
+    { id:'enterprise', name:'Team',          price_eur:49 },
   ];
   // Filter out pro_demo from display
   const visiblePlans = plans.filter(p => p.id !== 'pro_demo');
@@ -3037,13 +4144,15 @@ function renderBillingPlans() {
     return `<div class="plan-card ${isCurrent ? 'current' : ''} ${meta.popular ? 'popular' : ''}">
       ${meta.popular ? '<span class="plan-badge">POPULAR</span>' : ''}
       <h3>${p.name}</h3>
-      <div class="plan-price"><sup>$</sup>${p.price_eur > 0 ? p.price_eur.toFixed(0) : '0'}<span>/mo</span></div>
+      <div class="plan-price"><sup>$</sup>${p.price_eur > 0 ? p.price_eur.toFixed(0) : '0'}<span>${p.id === 'enterprise' ? '/user/mo' : '/mo'}</span></div>
       <ul class="plan-features">${meta.features.map(f => `<li>${f}</li>`).join('')}</ul>
       ${isCurrent
         ? `<button class="plan-btn current" disabled>Current plan</button>`
         : p.price_eur === 0
           ? `<button class="plan-btn" style="background:var(--surface2);border:1px solid var(--border)" onclick="closeBilling()">Use for free</button>`
-          : `<button class="plan-btn primary" onclick="startCheckout('${p.id}')">Upgrade to ${p.name}</button>`
+          : p.id === 'enterprise'
+            ? `<button class="plan-btn primary" onclick="startCheckout('${p.id}')">Get ${p.name}</button>`
+            : `<button class="plan-btn primary" onclick="startCheckout('${p.id}')">Upgrade to ${p.name}</button>`
       }
     </div>`;
   }).join('');
@@ -3082,7 +4191,7 @@ async function openBillingPortal() {
   try {
     const r = await fetch('/api/billing/portal', { method: 'POST' });
     const d = await r.json();
-    if (d.url) window.open(d.url, '_blank');
+    if (d.url) window.location.href = d.url;
     else toast(d.error || 'Error opening portal', 'error');
   } catch (err) { toast('Error: ' + err.message, 'error'); }
 }
@@ -3150,9 +4259,18 @@ function _updateThemeBtns(theme) {
 // History
 function openHistory() {
   if (state.currentUser?.plan === 'free') { toast('Upgrade to access History 🔒', 'error'); return; }
-  document.getElementById('historyOverlay').classList.remove('hidden'); loadHistory();
+  if (window.innerWidth <= 1024) {
+    toggleLeftSidebar();
+  }
+  switchLeftTab('history');
 }
-function closeHistory(e) { if (!e || e.target === document.getElementById('historyOverlay')) document.getElementById('historyOverlay').classList.add('hidden'); }
+function closeHistory(e) {
+  if (window.innerWidth <= 1024) {
+    document.getElementById('leftSidebar')?.classList.remove('sidebar-open');
+    document.getElementById('sidebarOverlay')?.classList.remove('active');
+  }
+  document.getElementById('historyOverlay')?.classList.add('hidden');
+}
 
 const _historySessions = new Map();
 
@@ -3166,68 +4284,90 @@ async function recoverSession(sid) {
   document.getElementById('questionInput').value = prompt;
   updateRunBtn();
 
-  // Clear results section
-  const resultsSection = document.getElementById('resultsSection');
-  document.getElementById('emptyState')?.remove();
-  resultsSection.innerHTML = '';
-
   const nonIntRows = sRows.filter(r => !r.is_integrator);
   const intRow = sRows.find(r => r.is_integrator);
 
-  // Build grid
-  const grid = document.createElement('div');
-  grid.className = 'results-grid'; grid.id = 'resultsGrid';
-  const N = nonIntRows.length, cols = N <= 4 ? N : Math.ceil(N / 2);
-  grid.style.gridTemplateColumns = `repeat(${Math.max(1, cols)}, 1fr)`;
+  // Reset active tab tracker
+  _activeResultTab = 'integration';
+
+  // Clear previous tab panels and tab bar buttons
+  document.querySelectorAll('.tab-panel[id^="tabPanel-"]:not(#tabPanel-integration)').forEach(el => el.remove());
+  const bar = document.getElementById('resultTabsBar');
+  if (bar) { bar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); bar.style.display = 'none'; }
+
+  // Hide integration panel initially
+  const intPanel = document.getElementById('tabPanel-integration');
+  if (intPanel) { intPanel.style.display = 'none'; intPanel.classList.remove('tab-panel-active'); }
+
+  // Clear integration areas
+  document.getElementById('resultsSection').innerHTML = '';
+  document.getElementById('debateResultArea').innerHTML = '';
+  document.getElementById('integratorResultArea').innerHTML = '';
+  const ha = document.getElementById('hallucinationArea'); if (ha) ha.innerHTML = '';
+  const ria = document.getElementById('reliabilityIndexArea'); if (ria) ria.innerHTML = '';
+
+  // Build tab panels for each model result
+  const answersArea = document.getElementById('answersArea');
+  let firstProvider = null;
 
   for (const r of nonIntRows) {
     const safeId = r.model_id.replace(/[^a-z0-9]/gi, '-');
-    const prov = PROVIDERS[r.provider] || {};
-    const modelLabel = r.model_label || r.model_id;
-    const dur = r.duration_ms ? (r.duration_ms / 1000).toFixed(1) + 's' : '';
-    const div = document.createElement('div');
-    div.className = 'result-card'; div.id = `rcard-${safeId}`;
-    div.innerHTML = `
-      <div class="result-card-header">
-        <div class="result-provider-dot" style="background:${prov.dotColor || '#888'}"></div>
-        <span class="result-model-name">${prov.icon || ''} ${prov.label || r.provider} — ${modelLabel}</span>
-        <div class="result-meta" id="rmeta-${safeId}">
-          ${dur ? `<span class="duration-badge">${dur}</span>` : ''}
-          <span>${r.input_tokens}&#8593; ${r.output_tokens}&#8595;</span>
-          <span>${fmtCost(r.cost_usd)}</span>
-        </div>
-      </div>
-      <div class="result-body" id="rbody-${safeId}"><div class="md-content">${renderMarkdown(r.response)}</div></div>
-      <div class="result-footer" id="rfoot-${safeId}">
-        <button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copy</button>
-      </div>`;
+    const prov = PROVIDERS[r.provider] || { label: r.provider, icon: '', dotColor: '#888' };
+    const tabPanelId = `tabPanel-${r.provider}`;
+    let tabPanel = document.getElementById(tabPanelId);
+    if (!tabPanel) {
+      tabPanel = document.createElement('div');
+      tabPanel.className = 'tab-panel';
+      tabPanel.id = tabPanelId;
+      if (answersArea && intPanel) answersArea.insertBefore(tabPanel, intPanel);
+      else if (answersArea) answersArea.appendChild(tabPanel);
+    }
+    tabPanel.innerHTML =
+      `<div style="padding:7px 12px;display:flex;align-items:center;gap:8px;background:var(--surface2);border-bottom:1px solid var(--border);border-radius:4px 4px 0 0">` +
+      `<span style="color:${prov.dotColor};font-weight:700;font-size:.9rem">${prov.icon || ''} ${prov.label}</span>` +
+      `</div>` +
+      `<div class="result-body" id="rbody-${safeId}"><div class="md-content">${renderMarkdown(r.response)}</div></div>` +
+      `<div style="display:flex;align-items:center;gap:10px;padding:4px 12px;font-size:.72rem;color:var(--text-muted);flex-wrap:wrap;border-top:1px solid var(--border)" id="rmeta-${safeId}">` +
+        (r.duration_ms ? `<span>${(r.duration_ms/1000).toFixed(1)}s</span>` : '') +
+        `<span>${r.input_tokens || 0}&#8593; ${r.output_tokens || 0}&#8595;</span>` +
+        `<span>${fmtCost(r.cost_usd)}</span>` +
+      `</div>` +
+      `<div class="result-footer" id="rfoot-${r.provider}" data-provider="${r.provider}" data-modelid="${r.model_id}">` +
+        `<button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copy</button>` +
+      `</div>`;
+
     _copyBuf[safeId] = r.response;
-    grid.appendChild(div);
+    _ensureModelTab(r.provider);
+    setTabStatus(r.provider, 'done', r.duration_ms);
+    if (!firstProvider) firstProvider = r.provider;
   }
-  resultsSection.appendChild(grid);
 
-  // Integrator
+  if (bar && nonIntRows.length > 0) bar.style.display = 'flex';
+
+  // Show first model tab
+  if (firstProvider) switchResultTab(`model-${firstProvider}`);
+
+  // Integration / integrator result
   if (intRow) {
-    const intDiv = document.createElement('div'); intDiv.className = 'integrator-result-card'; intDiv.id = 'intResultCard';
-    const dur = intRow.duration_ms ? (intRow.duration_ms / 1000).toFixed(1) + 's' : '';
-    intDiv.innerHTML = `
-      <div class="integrator-result-header">
-        <h3>Integrated Synthesis</h3>
-        <span style="font-size:.75rem;color:var(--text-muted)">${intRow.model_label || intRow.model_id}</span>
-        <div id="intMeta" style="font-size:.75rem;color:var(--text-muted);margin-left:auto">
-          ${dur ? `<span class="duration-badge">${dur}</span>` : ''}
-          ${intRow.input_tokens}&#8593; ${intRow.output_tokens}&#8595; &nbsp;${fmtCost(intRow.cost_usd)}
-        </div>
-      </div>
-      <div class="integrator-result-body" id="intBody"><div class="md-content">${colorizeConsensus(renderMarkdown(intRow.response))}</div></div>
-      <div class="integrator-result-footer" id="intFoot">
-        <button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copy synthesis</button>
-      </div>`;
-    _copyBuf['integrator'] = intRow.response;
-    resultsSection.appendChild(intDiv);
+    const safeIntId = intRow.model_id.replace(/[^a-z0-9]/gi, '-');
+    showIntegrationPanel();
+    const intArea = document.getElementById('integratorResultArea');
+    if (intArea) {
+      intArea.innerHTML =
+        `<div class="integrator-result-card" id="intResultCard">` +
+        `<div class="integrator-result-header"><h3>Integrated Synthesis</h3>` +
+        `<span style="font-size:.75rem;color:var(--text-muted)">${intRow.model_label || intRow.model_id}</span>` +
+        `<div style="font-size:.75rem;color:var(--text-muted);margin-left:auto">` +
+        (intRow.duration_ms ? `<span>${(intRow.duration_ms/1000).toFixed(1)}s</span> ` : '') +
+        `${fmtCost(intRow.cost_usd)}</div></div>` +
+        `<div class="integrator-result-body" id="intBody"><div class="md-content">${colorizeConsensus(renderMarkdown(intRow.response))}</div></div>` +
+        `<div class="integrator-result-footer" id="intFoot">` +
+        `<button class="copy-btn" onclick="copyFromBuf('integrator',this)">Copy synthesis</button></div></div>`;
+      _copyBuf['integrator'] = intRow.response;
+    }
   }
 
-  document.getElementById('exportBtn').style.display = '';
+  document.getElementById('exportBtn').style.display = nonIntRows.length > 0 ? '' : 'none';
 
   // Recover debate if available
   try {
@@ -3240,7 +4380,6 @@ async function recoverSession(sid) {
           renderDebateResponse({ round: resp.round, modelId: resp.model_id, provider: resp.provider, text: resp.response, cost: resp.cost_usd });
         }
         if (Object.keys(debateData.votes || {}).length > 0) {
-          // Apply vote badges — temporarily populate lastResults with the recovered rows for applyDebateVoteBadges
           state.lastResults = nonIntRows.map(r => ({ modelId: r.model_id, provider: r.provider }));
           applyDebateVoteBadges({ votes: debateData.votes, winner: debateData.winner, voterLog: debateData.voterLog, totalVoters: debateData.totalVoters });
         }
@@ -3248,19 +4387,15 @@ async function recoverSession(sid) {
     }
   } catch {}
 
-  // Set lastSessionId so "Add to project" works on recovered sessions
   state.lastSessionId = sid;
   state.lastResults = nonIntRows.map(r => ({ modelId: r.model_id, provider: r.provider, text: r.response, cost: r.cost_usd }));
 
-  // Rebuild conversation history so follow-up messages have proper context
-  state.conversationHistory = [];
-  const prompt0 = sRows[0].prompt;
-  state.conversationHistory.push({ role: 'user', content: prompt0 });
-  const combined0 = nonIntRows.map(r => r.response).filter(Boolean).join('\n\n---\n\n');
-  if (combined0) state.conversationHistory.push({ role: 'assistant', content: combined0 });
-
+  // Rebuild conversation history
+  state.conversationHistory = [
+    { role: 'user', content: prompt },
+    { role: 'assistant', content: nonIntRows.map(r => r.response).join('\n\n---\n\n') }
+  ];
   updateConvIndicator();
-
   toast('Session restored', 'success');
 }
 async function loadHistory() { const body = document.getElementById('historyBody'); body.innerHTML = '<div class="history-empty">Loading...</div>';
@@ -3275,10 +4410,9 @@ function renderHistory(rows, total) {
   _historySessions.clear();
   for (const row of rows) { if (!sessions[row.session_id]) { sessions[row.session_id] = []; sessionOrder.push(row.session_id); } sessions[row.session_id].push(row); }
   for (const [sid, sRows] of Object.entries(sessions)) { _historySessions.set(sid, sRows); }
-  const fmt = d => new Date(d).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
-  body.innerHTML = `<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:12px">${total} entradas</div>`;
+  body.innerHTML = '';
   for (const sid of sessionOrder) {
-    const sRows = sessions[sid], first = sRows[0], totalCost = sRows.reduce((s, r) => s + r.cost_usd, 0);
+    const sRows = sessions[sid], first = sRows[0];
     const div = document.createElement('div'); div.className = 'history-session';
     const rowsHtml = sRows.map(r => {
       const escaped = r.response.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -3291,11 +4425,11 @@ function renderHistory(rows, total) {
           ${long ? `<button class="history-expand-btn" onclick="toggleHistoryRow(${r.id})">Show more</button>` : ''}
           <button class="history-copy-btn" onclick="copyHistoryRow(${r.id})">Copy</button></div></div>`;
     }).join('');
-    div.innerHTML = `<div class="history-session-header" onclick="toggleSession(this)">
-        <span class="history-session-prompt">${first.prompt.slice(0, 80)}${first.prompt.length > 80 ? '...' : ''}</span>
-        <div class="history-session-meta"><span>${sRows.length} models</span><span>${fmtCost(totalCost)}</span><span>${fmt(first.created_at)}</span></div>
-        <button class="history-recover-btn" onclick="event.stopPropagation(); recoverSession('${sid}')">&#9100; Recover</button>
-        <button class="history-del-session" onclick="event.stopPropagation(); deleteSession('${sid}', this)">&#128465;</button></div>
+    div.innerHTML = `
+      <div class="history-session-header" onclick="recoverSession('${sid}')">
+        <span class="history-session-prompt">${first.prompt.slice(0, 80)}${first.prompt.length > 80 ? '…' : ''}</span>
+        <button class="history-del-session" onclick="event.stopPropagation(); deleteSession('${sid}', this)" title="Delete">&#128465;</button>
+      </div>
       <div class="history-session-rows">${rowsHtml}</div>`;
     body.appendChild(div);
   }
@@ -3338,14 +4472,18 @@ let _projModalAttachments = []; // pending attachments in edit modal
 // ── Projects panel ──────────────────────────────────────────────────────────
 
 function openProjects() {
-  if (state.currentUser?.plan === 'free') { toast('Upgrade to access Projects 🔒', 'error'); return; }
-  document.getElementById('projectsOverlay').classList.remove('hidden');
-  loadProjects();
+  if (window.innerWidth <= 1024) {
+    toggleLeftSidebar();
+  }
+  switchLeftTab('projects');
 }
 
 function closeProjects(e) {
-  if (!e || e.target === document.getElementById('projectsOverlay'))
-    document.getElementById('projectsOverlay').classList.add('hidden');
+  if (!e || e.target === document.getElementById('projectsOverlay') || window.innerWidth <= 1024) {
+    document.getElementById('leftSidebar')?.classList.remove('sidebar-open');
+    document.getElementById('sidebarOverlay')?.classList.remove('active');
+  }
+  document.getElementById('projectsOverlay')?.classList.add('hidden');
 }
 
 async function loadProjects() {
@@ -3701,6 +4839,326 @@ async function updateSessionProjTags() {
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 init();
+
+// ── Cookie banner (F6 GDPR) ──────────────────────────────────────────────────
+function setAppCookieConsent(val) {
+  try { localStorage.setItem('cookieConsent', val); } catch(e) {}
+  const b = document.getElementById('appCookieBanner');
+  if (b) b.style.display = 'none';
+}
+(function() {
+  try {
+    if (!localStorage.getItem('cookieConsent')) {
+      setTimeout(() => {
+        const b = document.getElementById('appCookieBanner');
+        if (b) b.style.display = 'flex';
+      }, 1500);
+    }
+  } catch(e) {}
+})();
+
+// ── Forgot password modal (F5) ───────────────────────────────────────────────
+function openForgotModal(e) {
+  if (e) e.preventDefault();
+  const m = document.getElementById('forgotModal');
+  if (m) { m.classList.remove('hidden'); document.getElementById('forgotEmail').focus(); }
+}
+function closeForgotModal() {
+  const m = document.getElementById('forgotModal');
+  if (m) m.classList.add('hidden');
+  const msg = document.getElementById('forgotMsg');
+  if (msg) { msg.textContent = ''; msg.style.color = ''; }
+}
+async function submitForgotPassword() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const msg = document.getElementById('forgotMsg');
+  if (!email) { msg.textContent = 'Enter your email.'; msg.style.color = 'var(--danger)'; return; }
+  msg.textContent = 'Sending…'; msg.style.color = 'var(--text-muted)';
+  try {
+    const r = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+    const d = await r.json();
+    msg.textContent = d.message || 'If that email exists, a reset link has been sent.';
+    msg.style.color = 'var(--success)';
+  } catch(e) { msg.textContent = 'Error — try again.'; msg.style.color = 'var(--danger)'; }
+}
+// Handle ?reset_token= in URL
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const rt = params.get('reset_token');
+  if (!rt) return;
+  // Show a reset-password prompt after DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const newPw = prompt('Enter your new password (minimum 8 characters):');
+    if (!newPw || newPw.length < 8) { toast('Password must be at least 8 characters.', 'error'); return; }
+    fetch('/api/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: rt, password: newPw }) })
+      .then(r => r.json()).then(d => {
+        if (d.ok) { toast('✅ Password updated — you can now sign in.', 'success'); window.history.replaceState({}, '', '/analyze'); }
+        else toast(d.error || 'Reset failed.', 'error');
+      }).catch(() => toast('Reset error — try again.', 'error'));
+  });
+})();
+
+// ── New layout functions ──────────────────────────────────────────
+
+// Planning modal
+function openRefinePanel() {
+  document.getElementById('planningModalOverlay').classList.remove('hidden');
+  if (typeof updatePlanModels === 'function') updatePlanModels();
+}
+function closePlanningModal(e) {
+  if (!e || e.target === document.getElementById('planningModalOverlay'))
+    document.getElementById('planningModalOverlay').classList.add('hidden');
+}
+
+// Left sidebar tab switching
+function switchLeftTab(tab) {
+  const panelH = document.getElementById('lsbPanelHistory');
+  const panelP = document.getElementById('lsbPanelProjects');
+  const tabH = document.getElementById('lsbTabHistory');
+  const tabP = document.getElementById('lsbTabProjects');
+  if (!panelH) return;
+  const isHistory = tab === 'history';
+  panelH.style.display = isHistory ? 'flex' : 'none';
+  panelP.style.display = isHistory ? 'none' : 'flex';
+  tabH.classList.toggle('active', isHistory);
+  tabP.classList.toggle('active', !isHistory);
+  if (isHistory) {
+    if (state.currentUser && state.currentUser.plan !== 'free') loadHistory();
+  } else {
+    if (state.currentUser) loadProjects();
+  }
+}
+
+// Desktop collapsible sidebar toggles
+function toggleLsb() {
+  document.querySelector('.app-layout').classList.toggle('lsb-hidden');
+}
+
+function toggleRsb() {
+  document.querySelector('.app-layout').classList.toggle('rsb-hidden');
+}
+
+function toggleLsbSearch() {
+  const row = document.getElementById('lsbSearchRow');
+  if (!row) return;
+  const visible = row.style.display !== 'none';
+  row.style.display = visible ? 'none' : '';
+  if (!visible) {
+    const inp = document.getElementById('lsbSearch');
+    if (inp) { inp.value = ''; inp.focus(); filterHistory(''); }
+  }
+}
+
+function filterHistory(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('#historyBody .history-session').forEach(el => {
+    const text = el.querySelector('.history-session-prompt')?.textContent?.toLowerCase() || '';
+    el.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+}
+
+// Mobile sidebar toggles
+function toggleLeftSidebar() {
+  // History sidebar (right column) — slides from right on mobile
+  const sb = document.getElementById('leftSidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  const isOpen = sb.classList.toggle('sidebar-open');
+  if (ov) ov.classList.toggle('active', isOpen);
+  if (isOpen) document.getElementById('rightSidebar')?.classList.remove('sidebar-open');
+  const tab = document.getElementById('historyEdgeTab');
+  if (tab) tab.style.opacity = isOpen ? '0' : '';
+}
+function toggleRightSidebar() {
+  // Config sidebar (center column) — slides from right on mobile
+  const sb = document.getElementById('rightSidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  const isOpen = sb.classList.toggle('sidebar-open');
+  if (ov) ov.classList.toggle('active', isOpen);
+  if (isOpen) document.getElementById('leftSidebar')?.classList.remove('sidebar-open');
+  const tab = document.getElementById('configEdgeTab');
+  if (tab) tab.style.opacity = isOpen ? '0' : '';
+}
+function closeSidebarOverlay() {
+  document.getElementById('leftSidebar')?.classList.remove('sidebar-open');
+  document.getElementById('rightSidebar')?.classList.remove('sidebar-open');
+  document.getElementById('sidebarOverlay')?.classList.remove('active');
+  document.getElementById('configEdgeTab') && (document.getElementById('configEdgeTab').style.opacity = '');
+  document.getElementById('historyEdgeTab') && (document.getElementById('historyEdgeTab').style.opacity = '');
+}
+
+// Result tab management
+let _activeResultTab = 'integration';
+
+function buildResultTabs() {
+  // Only pre-registers tab buttons — bar stays hidden until research runs
+  const bar = document.getElementById('resultTabsBar');
+  if (!bar) return;
+  bar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove());
+  state.models.filter(m => m.enabled).forEach(m => {
+    _ensureModelTab(m.provider);
+  });
+  // Do NOT show bar here — prepareInlineResultArea reveals it when research starts
+}
+
+function _ensureModelTab(provider) {
+  const bar = document.getElementById('resultTabsBar');
+  if (!bar || bar.querySelector(`[data-tab="model-${provider}"]`)) return;
+  const prov = PROVIDERS[provider];
+  const btn = document.createElement('button');
+  btn.className = 'result-tab';
+  btn.dataset.tab = `model-${provider}`;
+  btn.onclick = () => switchResultTab(`model-${provider}`);
+  btn.innerHTML = `${prov.icon || ''} ${prov.label}<span class="tab-status" id="tabStatus-${provider}"></span>`;
+  bar.appendChild(btn);
+}
+
+function setTabStatus(provider, status, durationMs) {
+  const el = document.getElementById(`tabStatus-${provider}`);
+  if (!el) return;
+  if (status === 'working') {
+    el.innerHTML = '<span class="tab-spinner"></span>';
+    el.className = 'tab-status working';
+  } else if (status === 'done') {
+    const dur = durationMs ? (durationMs / 1000).toFixed(1) + 's' : '';
+    el.innerHTML = `&#10003; ${dur}`;
+    el.className = `tab-status done ${durationClass(durationMs || 0)}`;
+  } else if (status === 'error') {
+    el.innerHTML = '&#9888;';
+    el.className = 'tab-status error';
+  } else {
+    el.innerHTML = '';
+    el.className = 'tab-status';
+  }
+}
+
+function switchResultTab(tabId) {
+  _activeResultTab = tabId;
+  // Update tab button active states
+  const bar = document.getElementById('resultTabsBar');
+  if (bar) bar.querySelectorAll('.result-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabId);
+  });
+  // Hide all panels, show only the active one
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.remove('tab-panel-active');
+    p.style.display = 'none';
+  });
+  const provider = tabId === 'integration' ? null : tabId.replace('model-', '');
+  const panelId = provider ? `tabPanel-${provider}` : 'tabPanel-integration';
+  const panel = document.getElementById(panelId);
+  if (panel) {
+    panel.style.display = '';
+    panel.classList.add('tab-panel-active');
+    const answersArea = document.getElementById('answersArea');
+    if (answersArea) answersArea.scrollTop = 0;
+  }
+}
+
+function showIntegrationPanel() {
+  // Ensure the integration tab bar is visible, then switch to it
+  const bar = document.getElementById('resultTabsBar');
+  if (bar) bar.style.display = 'flex';
+  switchResultTab('integration');
+}
+
+// Config panel toggle (right sidebar collapsibles)
+function toggleConfigPanel(name) {
+  const block = document.getElementById(`config${name.charAt(0).toUpperCase() + name.slice(1)}Block`);
+  const arrow = document.getElementById(`${name}Arrow`);
+  if (!block) return;
+  const nowCollapsed = block.classList.toggle('collapsed');
+  if (arrow) arrow.innerHTML = nowCollapsed ? '&#9660;' : '&#9650;';
+}
+
+// Config block collapse toggle (legacy)
+function toggleConfigBlock(blockId) {
+  const block = document.getElementById(`config${blockId}Block`);
+  if (block) block.classList.toggle('collapsed');
+}
+
+// Global temperature
+function onGlobalTempSlide(val) {
+  state.globalTemperature = val;
+  const el = document.getElementById('globalTempVal');
+  if (el) el.textContent = val.toFixed(2);
+  const rst = document.getElementById('globalTempReset');
+  if (rst) rst.style.visibility = 'visible';
+  state.models.forEach(m => { m.temperature = val; });
+  updateEstimate();
+}
+function onGlobalTempReset() {
+  state.globalTemperature = 0.7;
+  const slider = document.getElementById('globalTempSlider');
+  if (slider) slider.value = 0.7;
+  const el = document.getElementById('globalTempVal');
+  if (el) el.textContent = '0.70';
+  const rst = document.getElementById('globalTempReset');
+  if (rst) rst.style.visibility = 'hidden';
+  state.models.forEach(m => { m.temperature = 0.7; });
+  updateEstimate();
+}
+
+// Model level selector (High / Medium / Fast)
+const MODEL_LEVELS = {
+  high:   { anthropic: 'claude-sonnet-4-6', openai: 'gpt-5', google: 'models/gemini-3.1-pro-preview', xai: 'grok-4.20-0309-non-reasoning', qwen: 'qwen-max', zhipu: 'glm-5-turbo' },
+  medium: { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'models/gemini-3-flash-preview', xai: 'grok-4-1-fast-non-reasoning', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
+  fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'models/gemini-3.1-flash-lite-preview', xai: 'grok-4-1-fast-non-reasoning', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
+};
+function setModelLevel(level) {
+  const map = MODEL_LEVELS[level];
+  if (!map) return;
+  state.models.forEach(m => {
+    const modelId = map[m.provider];
+    if (modelId) {
+      m.modelId = modelId;
+      const sel = document.getElementById(`sel-${m.provider}`);
+      if (sel) sel.value = modelId;
+    }
+  });
+  document.querySelectorAll('.rsb-level-btn').forEach(b => b.classList.toggle('active', b.dataset.level === level));
+  updateEstimate();
+}
+
+// Global web search toggle
+function toggleGlobalWebSearch() {
+  const btn = document.getElementById('globalWebSearchBtn');
+  const isOn = btn.classList.toggle('on');
+  btn.textContent = isOn ? 'ON' : 'OFF';
+  state.models.forEach((m, i) => {
+    if (WEB_SEARCH_PROVIDERS.has(m.provider)) {
+      m.webSearch = isOn;
+      const wsBtn = document.getElementById(`wsToggle-${m.provider}`);
+      if (wsBtn) wsBtn.className = `websearch-toggle${isOn ? ' on' : ''}`;
+    }
+  });
+  updateEstimate();
+}
+
+// Auto-load sidebar content when user is ready
+function initSidebar() {
+  if (state.currentUser) {
+    if (state.currentUser.plan !== 'free') loadHistory();
+    loadProjects();
+  }
+}
+
+// ── Keyboard shortcuts (F10) ─────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  // Cmd/Ctrl + Enter → submit research
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    const authOverlay = document.getElementById('authOverlay');
+    if (authOverlay && !authOverlay.classList.contains('hidden')) return;
+    const runBtn = document.getElementById('runBtn');
+    if (runBtn && !runBtn.disabled) { e.preventDefault(); runBtn.click(); }
+  }
+  // Escape → close modals
+  if (e.key === 'Escape') {
+    const fm = document.getElementById('forgotModal');
+    if (fm && !fm.classList.contains('hidden')) { closeForgotModal(); return; }
+    const billing = document.getElementById('billingModal');
+    if (billing && billing.style.display !== 'none') { closeBilling?.(); return; }
+  }
+});
 </script>
 </body>
 </html>

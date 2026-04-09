@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reliableaiprueba</title>
+  <meta name="description" content="See ReliableAI in action. A live example of multi-model AI research detecting contradictions and synthesizing reliable answers.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://reliableai.net/demo">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1c1c1c; --bg2: #282828; --bg3: #313131; --border: #484848;
+      --text: #ececec; --muted: #9e9e9e;
+      --accent: #cf7d4e; --green: #4caf72; --red: #e5534b; --yellow: #d4a017;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { position: sticky; top: 0; background: rgba(28,28,28,.95); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; z-index: 100; backdrop-filter: blur(8px); }
+    .nav-logo { font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--text); }
+    .nav-logo span { color: var(--accent); }
+    .nav-cta { background: var(--accent); color: #000; font-weight: 700; font-size: .85rem; padding: 8px 18px; border-radius: 8px; text-decoration: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+    .demo-eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; margin-bottom: 12px; line-height: 1.25; }
+    h1 span { color: var(--accent); }
+    .demo-sub { font-size: 1rem; color: var(--muted); margin-bottom: 48px; line-height: 1.7; max-width: 600px; }
+    .question-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+    .question-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; }
+    .question-text { font-size: 1.05rem; font-weight: 600; color: var(--text); }
+    .models-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
+    @media (max-width: 600px) { .models-grid { grid-template-columns: 1fr; } }
+    .model-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .model-header { padding: 10px 14px; background: var(--bg3); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 700; }
+    .model-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .model-body { padding: 14px; font-size: .88rem; line-height: 1.7; color: var(--muted); }
+    .model-body p { margin-bottom: 8px; }
+    .model-body p:last-child { margin-bottom: 0; }
+    .highlight-unique { border-left: 3px solid rgba(207,125,78,.55); padding-left: 8px; }
+    .highlight-consensus { border-left: 3px solid rgba(76,175,114,.55); padding-left: 8px; }
+    .highlight-disagree { border-left: 3px solid rgba(229,83,75,.55); padding-left: 8px; }
+    .badge { font-size: .6rem; padding: 1px 5px; border-radius: 9px; margin-left: 5px; vertical-align: middle; cursor: default; white-space: nowrap; }
+    .badge-unique { background: rgba(207,125,78,.18); color: #cf7d4e; }
+    .badge-consensus { background: rgba(76,175,114,.18); color: #4caf72; }
+    .badge-conflict { background: rgba(229,83,75,.18); color: #e5534b; }
+    .synthesis-card { background: var(--bg2); border: 1px solid rgba(167,139,250,.3); border-radius: 12px; overflow: hidden; margin-bottom: 32px; }
+    .synthesis-header { padding: 12px 16px; background: rgba(167,139,250,.08); border-bottom: 1px solid rgba(167,139,250,.2); font-weight: 700; font-size: .9rem; color: #a78bfa; display: flex; align-items: center; gap: 8px; }
+    .synthesis-body { padding: 18px; font-size: .9rem; line-height: 1.75; color: var(--muted); }
+    .synthesis-body p { margin-bottom: 10px; }
+    .synthesis-body p:last-child { margin-bottom: 0; }
+    .score-row { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--bg3); border-top: 1px solid var(--border); font-size: .82rem; }
+    .score-badge { background: var(--green); color: #000; font-weight: 800; padding: 3px 10px; border-radius: 20px; font-size: .75rem; }
+    .contradiction-banner { background: rgba(229,83,75,.08); border: 1px solid rgba(229,83,75,.3); border-radius: 10px; padding: 14px 18px; margin-bottom: 32px; font-size: .85rem; }
+    .contradiction-banner strong { color: var(--red); }
+    .cta-section { text-align: center; background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 48px 32px; }
+    .cta-section h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; }
+    .cta-section p { color: var(--muted); margin-bottom: 28px; font-size: .95rem; }
+    .cta-btn { display: inline-block; background: var(--accent); color: #000; font-weight: 800; font-size: 1rem; padding: 14px 36px; border-radius: 10px; text-decoration: none; transition: opacity .15s; }
+    .cta-btn:hover { opacity: .85; }
+    .cta-sub { margin-top: 12px; font-size: .78rem; color: var(--muted); }
+    .tag { display: inline-block; font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; background: rgba(207,125,78,.12); color: var(--accent); margin-right: 6px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Reliable<span>AI</span></a>
+  <a href="/analyze" class="nav-cta">Try it free →</a>
+</nav>
+
+<div class="container">
+  <div class="demo-eyebrow">Live demo</div>
+  <h1>See where the models <span>disagree.</span></h1>
+  <p class="demo-sub">This is a real example of what ReliableAI surfaces. We ran this question through Claude, GPT, Gemini and Grok simultaneously — and the differences are exactly where the analysis gets interesting.</p>
+
+  <!-- Question -->
+  <div class="question-box">
+    <div class="question-label">Query submitted</div>
+    <div class="question-text">"What is the current corporate tax rate in the United States, and how does it compare to the EU average?"</div>
+  </div>
+
+  <!-- Model responses -->
+  <div class="models-grid">
+    <!-- Claude -->
+    <div class="model-card">
+      <div class="model-header">
+        <div class="model-dot" style="background:#d97706"></div>
+        Claude Sonnet
+      </div>
+      <div class="model-body">
+        <p class="highlight-consensus">The US federal corporate tax rate is 21%, established by the Tax Cuts and Jobs Act of 2017. <span class="badge badge-consensus">✓×4</span></p>
+        <p class="highlight-unique">When including state and local taxes, the combined effective rate typically ranges from 25–28% depending on the state, with California reaching up to 29.84%. <span class="badge badge-unique">⚡Único</span></p>
+        <p class="highlight-consensus">The EU average corporate tax rate sits around 21.3%, making the US federal rate roughly at parity with the EU average, though this varies significantly by member state.</p>
+      </div>
+    </div>
+    <!-- GPT -->
+    <div class="model-card">
+      <div class="model-header">
+        <div class="model-dot" style="background:#10a37f"></div>
+        GPT-4o
+      </div>
+      <div class="model-body">
+        <p class="highlight-consensus">The federal US corporate tax rate is 21%, unchanged since the 2017 tax reform. <span class="badge badge-consensus">✓×4</span></p>
+        <p class="highlight-disagree">The EU's weighted average corporate tax is approximately 19.7%, meaning the US federal rate is modestly higher than the EU average on a headline basis. <span class="badge badge-conflict">⚔</span></p>
+        <p class="highlight-unique">It's worth noting that the effective tax rate paid by large US corporations, after deductions and credits, is often considerably lower than the statutory 21%. <span class="badge badge-unique">⚡Único</span></p>
+      </div>
+    </div>
+    <!-- Gemini -->
+    <div class="model-card">
+      <div class="model-header">
+        <div class="model-dot" style="background:#4285f4"></div>
+        Gemini Pro
+      </div>
+      <div class="model-body">
+        <p class="highlight-consensus">The US corporate tax rate is 21% at the federal level. <span class="badge badge-consensus">✓×4</span></p>
+        <p class="highlight-disagree">The EU average varies by source, but according to the European Commission, the statutory average across EU member states is closer to 21.8%, making the US and EU rates nearly identical. <span class="badge badge-conflict">⚔</span></p>
+        <p class="highlight-unique">Ireland (12.5%), Hungary (9%), and Bulgaria (10%) are notable outliers that significantly pull down EU averages in some calculations. <span class="badge badge-unique">⚡Único</span></p>
+      </div>
+    </div>
+    <!-- Grok -->
+    <div class="model-card">
+      <div class="model-header">
+        <div class="model-dot" style="background:#fff"></div>
+        Grok 3
+      </div>
+      <div class="model-body">
+        <p class="highlight-consensus">21% federal corporate tax rate in the US, set in 2017. <span class="badge badge-consensus">✓×4</span></p>
+        <p class="highlight-unique">The Biden administration has proposed raising this to 28%, and global minimum tax discussions under OECD Pillar Two (15% minimum) may affect comparisons going forward. <span class="badge badge-unique">⚡Único</span></p>
+        <p>The EU average depends heavily on whether you use simple or GDP-weighted averages — the range cited in research goes from 19.5% to 22%, making direct comparison nuanced.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contradiction flag -->
+  <div class="contradiction-banner">
+    <strong>⚔ Contradiction detected:</strong> GPT-4o cites the EU average as 19.7% (US higher than EU). Gemini cites 21.8% (near parity). Claude cites 21.3% (at parity). This discrepancy stems from different methodologies — simple average vs. GDP-weighted average — and reflects a genuine ambiguity in how the EU figure is measured. <strong>This is exactly the kind of divergence a single-model answer would hide.</strong>
+  </div>
+
+  <!-- Synthesis -->
+  <div class="synthesis-card">
+    <div class="synthesis-header">⚗ Integrated Synthesis · Claude Opus</div>
+    <div class="synthesis-body">
+      <p>The US federal corporate tax rate of <strong>21%</strong> is unambiguous and agreed upon by all four models. The comparison with the EU average, however, requires methodological precision.</p>
+      <p>The apparent contradiction between models (19.7%–21.8% EU average) resolves when accounting for measurement method: <strong>simple average</strong> across EU member states yields ~21.3–21.8%, while a <strong>GDP-weighted average</strong> (which gives more weight to Germany, France) produces ~19.5–20%. Both figures are cited in reputable sources.</p>
+      <p>The most defensible conclusion: at the federal level, the US rate (21%) is broadly comparable to the EU average, with the precise difference depending on methodology and the inclusion of tax havens like Ireland and Hungary. For business decisions requiring cross-jurisdictional comparisons, effective rates (post-deductions) are more meaningful than statutory headlines.</p>
+    </div>
+    <div class="score-row">
+      <span class="score-badge">78% confidence</span>
+      <span style="color:var(--muted)">Contradiction resolved · 4 models · Hallucination risk: Low</span>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:48px;font-size:.8rem;color:var(--muted)">
+    <span><span class="badge badge-consensus" style="font-size:.7rem">✓×4</span> Point agreed by all models</span>
+    <span><span class="badge badge-unique" style="font-size:.7rem">⚡Único</span> Unique insight from this model</span>
+    <span><span class="badge badge-conflict" style="font-size:.7rem">⚔</span> Potential contradiction detected</span>
+    <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:3px;background:rgba(76,175,114,.6);border-radius:2px;display:inline-block"></span> Consensus paragraph</span>
+    <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:3px;background:rgba(207,125,78,.6);border-radius:2px;display:inline-block"></span> Unique paragraph</span>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>Your turn. Run your own question.</h2>
+    <p>Free plan · No credit card · Claude, GPT, Gemini and Grok in parallel</p>
+    <a href="/analyze" class="cta-btn">▶ Start researching free</a>
+    <p class="cta-sub">Or <a href="#" onclick="history.back();return false" style="color:var(--accent)">go back</a> to explore more.</p>
+  </div>
+</div>
+
+</body>
+</html>

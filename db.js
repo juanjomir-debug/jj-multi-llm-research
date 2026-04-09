@@ -101,7 +101,7 @@ db.exec(`
 
   -- ── User plans & billing ──────────────────────────────────────────────────
   CREATE TABLE IF NOT EXISTS plans (
-    id              TEXT PRIMARY KEY,          -- 'free' | 'starter' | 'pro' | 'business'
+    id              TEXT PRIMARY KEY,          -- 'free' | 'starter' | 'pro' | 'enterprise'
     name            TEXT NOT NULL,
     price_eur       REAL NOT NULL DEFAULT 0,   -- monthly subscription price
     monthly_budget  REAL NOT NULL DEFAULT 3,   -- max API spend USD/month
@@ -112,12 +112,21 @@ db.exec(`
     stripe_price_id TEXT                       -- Stripe Price ID for this plan
   );
 
-  INSERT OR IGNORE INTO plans VALUES
-    ('free',      'Free',      0,      3,    2,  0, 0,  0,   NULL),
-    ('pro_demo',  'Pro Demo',  0,      3,    99, 1, 1,  30,  NULL),
-    ('starter',   'Starter',   9.99,   25,   4,  1, 1,  30,  NULL),
-    ('pro',       'Pro',       29.99,  100,  99, 1, 1,  90,  NULL),
-    ('business',  'Business',  99.00,  500,  99, 1, 1, 365,  NULL);
+  -- Upsert plans so name/price changes apply on restart even if rows already exist
+  INSERT INTO plans VALUES
+    ('free',       'Explorer',      0,     3,    4,  0, 0,   0,  NULL),
+    ('pro_demo',   'Pro Demo',      0,     3,   99,  1, 1,  30,  NULL),
+    ('starter',    'Professional', 29.00, 15,    4,  0, 1,  30,  NULL),
+    ('pro',        'Expert',       59.00, 40,   99,  1, 1, 365,  NULL),
+    ('enterprise', 'Team',         49.00, 200,  99,  1, 1, 365,  NULL)
+  ON CONFLICT(id) DO UPDATE SET
+    name            = excluded.name,
+    price_eur       = excluded.price_eur,
+    monthly_budget  = excluded.monthly_budget,
+    max_models      = excluded.max_models,
+    web_search      = excluded.web_search,
+    projects        = excluded.projects,
+    history_days    = excluded.history_days;
 
   -- Promo codes
   CREATE TABLE IF NOT EXISTS promo_codes (
@@ -173,6 +182,10 @@ const userBillingCols = [
   `ALTER TABLE users ADD COLUMN city TEXT DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN birthdate TEXT DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN occupation TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'`,
+  `ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN verification_token TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN verification_sent_at TEXT DEFAULT NULL`,
 ];
 for (const sql of userBillingCols) {
   try {
@@ -189,5 +202,61 @@ db.prepare(`
   UPDATE users SET billing_period_start = strftime('%Y-%m-01', 'now')
   WHERE billing_period_start IS NULL
 `).run();
+
+// Migrate legacy plan IDs to current schema
+db.prepare(`UPDATE users SET plan = 'enterprise' WHERE plan = 'business'`).run();
+db.prepare(`DELETE FROM plans WHERE id = 'business'`).run();
+
+// ── Admin tables & indexes ────────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_id   INTEGER NOT NULL REFERENCES users(id),
+    action     TEXT NOT NULL,
+    target_id  INTEGER,
+    details    TEXT,
+    ip_address TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_audit_admin  ON admin_audit_log(admin_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_audit_target ON admin_audit_log(target_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS model_config (
+    model_id     TEXT PRIMARY KEY,
+    provider     TEXT NOT NULL,
+    enabled      INTEGER NOT NULL DEFAULT 1,
+    price_input  REAL,
+    price_output REAL,
+    display_name TEXT,
+    sort_order   INTEGER DEFAULT 100,
+    updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS system_metrics (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    metric_type TEXT NOT NULL,
+    value       REAL,
+    provider    TEXT,
+    model_id    TEXT,
+    details     TEXT,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_metrics_type_date ON system_metrics(metric_type, created_at DESC);
+
+  CREATE INDEX IF NOT EXISTS idx_users_plan    ON users(plan);
+  CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at);
+  CREATE INDEX IF NOT EXISTS idx_users_role    ON users(role);
+  CREATE INDEX IF NOT EXISTS idx_history_created  ON history(created_at);
+  CREATE INDEX IF NOT EXISTS idx_history_provider ON history(provider, created_at);
+  CREATE INDEX IF NOT EXISTS idx_billing_events_type ON billing_events(type, created_at DESC);
+`);
+
+// Promote ADMIN_EMAIL to superadmin if set
+if (process.env.ADMIN_EMAIL) {
+  try {
+    db.prepare(`UPDATE users SET role = 'superadmin' WHERE email = ? AND role = 'user'`)
+      .run(process.env.ADMIN_EMAIL);
+  } catch (e) { /* ignore */ }
+}
 
 module.exports = db;

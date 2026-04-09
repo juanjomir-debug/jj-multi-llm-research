@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>reliableaiprueba</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #222; --surface3: #2a2a2a;
+      --border: #333; --text: #e8e8e8; --muted: #888; --accent: #cf7d4e;
+      --accent2: #e89a6a; --success: #4caf72; --warn: #d4a017; --danger: #e5534b;
+      --info: #4dabf7; --sidebar-w: 220px; --radius: 8px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 10; overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 20px 16px 12px; border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo strong { font-size: 16px; color: var(--accent); }
+    .sidebar-logo span { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; }
+    .nav-group { padding: 8px 0; }
+    .nav-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 4px 16px 2px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+      cursor: pointer; color: var(--muted); font-size: 13px; transition: all .15s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--surface3); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+    .sidebar-footer { margin-top: auto; padding: 12px 0; border-top: 1px solid var(--border); }
+    .sidebar-footer .nav-item { color: var(--muted); }
+
+    /* ── Main ── */
+    #main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    #topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 5;
+    }
+    #topbar h1 { font-size: 16px; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    #content { padding: 24px; flex: 1; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+    .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .kpi-value { font-size: 28px; font-weight: 700; margin: 4px 0 2px; color: var(--text); }
+    .kpi-sub { font-size: 12px; color: var(--muted); }
+    .kpi-card.accent .kpi-value { color: var(--accent2); }
+    .kpi-card.success .kpi-value { color: var(--success); }
+    .kpi-card.info .kpi-value { color: var(--info); }
+
+    /* ── Charts ── */
+    .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px;
+    }
+    .chart-card h3 { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* ── Tables ── */
+    .table-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+    }
+    .table-header {
+      padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-header h3 { font-size: 14px; font-weight: 600; }
+    .table-header .actions { display: flex; gap: 8px; align-items: center; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 9px 14px; text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); font-weight: 500; background: var(--surface2); }
+    td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* ── Badges ── */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .badge-free     { background: rgba(136,136,136,.15); color: #aaa; }
+    .badge-starter  { background: rgba(77,171,247,.15);  color: var(--info); }
+    .badge-pro      { background: rgba(207,125,78,.15);  color: var(--accent2); }
+    .badge-enterprise { background: rgba(76,175,114,.15);color: var(--success); }
+    .badge-pro_demo { background: rgba(212,160,23,.15);  color: var(--warn); }
+    .badge-paused   { background: rgba(229,83,75,.15);   color: var(--danger); }
+    .badge-active   { background: rgba(76,175,114,.15);  color: var(--success); }
+    .badge-admin    { background: rgba(207,125,78,.2);   color: var(--accent2); }
+    .badge-superadmin{ background: rgba(77,171,247,.2);  color: var(--info); }
+
+    /* ── Inputs & Buttons ── */
+    input[type=text], input[type=search], input[type=email], select, input[type=number], input[type=date] {
+      background: var(--surface3); border: 1px solid var(--border); color: var(--text);
+      padding: 7px 11px; border-radius: 6px; font-size: 13px; outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+      border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface3); color: var(--text); transition: all .15s;
+    }
+    .btn:hover { background: var(--surface2); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: .85; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
+
+    /* ── Pagination ── */
+    .pagination { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
+    .pagination span { font-size: 12px; color: var(--muted); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      width: 600px; max-width: 95vw; max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .modal-head {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-head h2 { font-size: 15px; font-weight: 600; }
+    .modal-body { padding: 20px; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+    .modal-close:hover { color: var(--text); }
+    .field-row { display: flex; gap: 16px; margin-bottom: 14px; align-items: flex-start; }
+    .field-row label { font-size: 12px; color: var(--muted); min-width: 140px; padding-top: 8px; }
+    .field-row .val { font-size: 13px; }
+    .field-group { margin-bottom: 16px; }
+    .field-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .field-group input, .field-group select { width: 100%; }
+
+    /* ── Tabs ── */
+    .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .tab-btn { padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+    /* ── Misc ── */
+    .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+    .empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+    .loading { text-align: center; padding: 32px; color: var(--muted); }
+    .toggle { position: relative; display: inline-block; width: 36px; height: 20px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer; inset: 0; background: #555; border-radius: 20px; transition: .3s;
+    }
+    .toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; left: 3px; top: 3px; transition: .3s; }
+    .toggle input:checked + .toggle-slider { background: var(--success); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+    .pill { padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+    .text-danger { color: var(--danger); }
+    .text-success { color: var(--success); }
+    .text-warn { color: var(--warn); }
+    .text-muted { color: var(--muted); }
+    .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; } .mb-3 { margin-bottom: 12px; }
+    .flex { display: flex; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .items-center { align-items: center; }
+    #impersonation-banner {
+      display: none; background: var(--warn); color: #000; padding: 8px 24px;
+      font-size: 13px; font-weight: 500; text-align: center; gap: 12px; align-items: center; justify-content: center;
+    }
+    #impersonation-banner button { background: rgba(0,0,0,.2); border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    .stat-mini { font-size: 12px; color: var(--muted); }
+
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); }
+      #main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <strong>ReliableAI</strong>
+    <span>Admin Dashboard</span>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="nav('overview')"><span class="nav-icon">📊</span> Overview</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Management</div>
+    <div class="nav-item" onclick="nav('users')"><span class="nav-icon">👥</span> Users</div>
+    <div class="nav-item" onclick="nav('revenue')"><span class="nav-icon">💰</span> Revenue</div>
+    <div class="nav-item" onclick="nav('analytics')"><span class="nav-icon">📈</span> Analytics</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Config</div>
+    <div class="nav-item" onclick="nav('models')"><span class="nav-icon">🤖</span> Models</div>
+    <div class="nav-item" onclick="nav('promos')"><span class="nav-icon">🎟️</span> Promo Codes</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Operations</div>
+    <div class="nav-item" onclick="nav('moderation')"><span class="nav-icon">🔍</span> Moderation</div>
+    <div class="nav-item" onclick="nav('system')"><span class="nav-icon">⚙️</span> System</div>
+    <div class="nav-item" onclick="nav('audit')"><span class="nav-icon">📋</span> Audit Log</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="location.href='/analyze'"><span class="nav-icon">←</span> Back to App</div>
+    <div class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> Logout</div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div id="main">
+  <div id="impersonation-banner">
+    ⚠️ Impersonating: <span id="impersonate-name"></span>
+    <button onclick="stopImpersonate()">Stop Impersonating</button>
+  </div>
+  <div id="topbar">
+    <h1 id="page-title">Overview</h1>
+    <div class="topbar-right">
+      <div class="live-dot" title="Live updates active"></div>
+      <span id="admin-name" class="text-muted" style="font-size:12px"></span>
+    </div>
+  </div>
+  <div id="content">
+    <div class="loading">Loading…</div>
+  </div>
+</div>
+
+<!-- User Detail Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>User Details</h2>
+      <button class="modal-close" onclick="closeModal('user-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="user-modal-body">Loading…</div>
+  </div>
+</div>
+
+<!-- Create Promo Modal -->
+<div class="modal-overlay" id="promo-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-head">
+      <h2>Create Promo Code</h2>
+      <button class="modal-close" onclick="closeModal('promo-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group"><label>Code</label><input type="text" id="pm-code" placeholder="RELI-XXXX" style="width:100%"></div>
+      <div class="field-group"><label>Plan</label>
+        <select id="pm-plan" style="width:100%">
+          <option value="pro_demo">Pro Demo</option>
+          <option value="starter">Professional</option>
+          <option value="pro">Expert</option>
+        </select>
+      </div>
+      <div class="field-group"><label>API Budget (USD)</label><input type="number" id="pm-budget" value="3" step="0.5" style="width:100%"></div>
+      <div class="field-group"><label>Max Uses</label><input type="number" id="pm-uses" value="1" min="1" style="width:100%"></div>
+      <div class="field-group"><label>Expires At (optional)</label><input type="date" id="pm-expires" style="width:100%"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="createPromo()">Create Code</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── State ────────────────────────────────────────────────────────────────────
+const state = {
+  admin: null,
+  currentTab: 'overview',
+  charts: {},
+  usersPage: 1,
+  usersSearch: '',
+  usersPlan: '',
+  auditPage: 1,
+  moderationPage: 1,
+  billingPage: 1,
+};
+
+const PLAN_COLORS = {
+  free: '#888', pro_demo: '#d4a017', starter: '#4dabf7',
+  pro: '#cf7d4e', enterprise: '#4caf72',
+};
+const PROVIDER_COLORS = ['#cf7d4e','#4dabf7','#4caf72','#a78bfa','#f06595','#74c0fc','#63e6be','#ffa94d'];
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const r = await api('GET', '/api/auth/me');
+    if (!r.user || (r.user.role !== 'admin' && r.user.role !== 'superadmin')) {
+      location.href = '/analyze';
+      return;
+    }
+    state.admin = r.user;
+    document.getElementById('admin-name').textContent = r.user.username;
+    if (r.impersonating?.active) showImpersonationBanner();
+    nav('overview');
+    startLive();
+  } catch {
+    location.href = '/analyze';
+  }
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function nav(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('onclick') === `nav('${tab}')`);
+  });
+  const titles = {
+    overview:'Overview', users:'Users', revenue:'Revenue', analytics:'Analytics',
+    models:'Models', promos:'Promo Codes', moderation:'Moderation', system:'System Health', audit:'Audit Log',
+  };
+  document.getElementById('page-title').textContent = titles[tab] || tab;
+  destroyCharts();
+  const renders = { overview, users, revenue, analytics, models, promos, moderation, system, audit };
+  if (renders[tab]) renders[tab]();
+}
+
+function destroyCharts() {
+  for (const [k, c] of Object.entries(state.charts)) { try { c.destroy(); } catch {} }
+  state.charts = {};
+}
+
+// ── API helper ───────────────────────────────────────────────────────────────
+async function api(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error || `HTTP ${r.status}`);
+  }
+  return r.json();
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const html = s => s; // passthrough for tagged template clarity
+const fmt = n => Number(n||0).toLocaleString();
+const fmtUSD = n => '$' + Number(n||0).toFixed(2);
+const fmtMini = n => Number(n||0) >= 1e6 ? (n/1e6).toFixed(1)+'M' : Number(n||0) >= 1000 ? (n/1000).toFixed(1)+'K' : String(n||0);
+const timeSince = d => { const s = Math.floor((Date.now()-new Date(d))/1000); return s < 60 ? 'just now' : s < 3600 ? Math.floor(s/60)+'m ago' : s < 86400 ? Math.floor(s/3600)+'h ago' : Math.floor(s/86400)+'d ago'; };
+const planBadge = p => `<span class="badge badge-${p}">${p}</span>`;
+const statusBadge = paused => paused ? `<span class="badge badge-paused">Paused</span>` : `<span class="badge badge-active">Active</span>`;
+
+function setContent(html) { document.getElementById('content').innerHTML = html; }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function makeChart(canvasId, config) {
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if (!ctx) return;
+  if (state.charts[canvasId]) state.charts[canvasId].destroy();
+  state.charts[canvasId] = new Chart(ctx, config);
+  return state.charts[canvasId];
+}
+
+const CHART_DEFAULTS = {
+  color: '#e8e8e8',
+  grid: 'rgba(255,255,255,0.06)',
+  tick: '#888',
+};
+
+function lineChartConfig(labels, datasets, opts = {}) {
+  return {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CHART_DEFAULTS.color, boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: CHART_DEFAULTS.tick, maxTicksLimit: 8, font: { size: 10 } }, grid: { color: CHART_DEFAULTS.grid } },
+        y: { ticks: { color: CHART_DEFAULTS.tick, font: { size: 10 } }, grid: { color: CHART_DEFAULTS.grid }, beginAtZero: true, ...opts.y },
+      },
+    },
+  };
+}
+
+function barChartConfig(labels, datasets, opts = {}) {
+  return {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: opts.horizontal ? 'y' : 'x',
+      plugins: { legend: { display: opts.legend ?? false, labels: { color: CHART_DEFAULTS.color, font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: CHART_DEFAULTS.tick, font: { size: 10 } }, grid: { color: CHART_DEFAULTS.grid } },
+        y: { ticks: { color: CHART_DEFAULTS.tick, font: { size: 10 }, maxTicksLimit: 8 }, grid: { color: CHART_DEFAULTS.grid }, beginAtZero: true },
+      },
+    },
+  };
+}
+
+function doughnutConfig(labels, data, colors) {
+  return {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: CHART_DEFAULTS.color, boxWidth: 12, font: { size: 11 } } } },
+    },
+  };
+}
+
+// ── Overview ─────────────────────────────────────────────────────────────────
+async function overview() {
+  setContent('<div class="loading">Loading…</div>');
+  const [kpis, signups, revenue, costs] = await Promise.all([
+    api('GET', '/api/admin/dashboard/kpis'),
+    api('GET', '/api/admin/dashboard/signups?days=30'),
+    api('GET', '/api/admin/dashboard/revenue?days=30'),
+    api('GET', '/api/admin/dashboard/cost-breakdown?days=30'),
+  ]);
+
+  setContent(`
+    <div class="kpi-grid">
+      <div class="kpi-card success">
+        <div class="kpi-label">Total Users</div>
+        <div class="kpi-value">${fmt(kpis.users.total)}</div>
+        <div class="kpi-sub">+${fmt(kpis.users.signupsToday)} today · +${fmt(kpis.users.signupsWeek)} this week</div>
+      </div>
+      <div class="kpi-card accent">
+        <div class="kpi-label">MRR</div>
+        <div class="kpi-value">${fmtUSD(kpis.mrr)}</div>
+        <div class="kpi-sub">Monthly recurring revenue</div>
+      </div>
+      <div class="kpi-card info">
+        <div class="kpi-label">Queries Today</div>
+        <div class="kpi-value">${fmt(kpis.queries.today)}</div>
+        <div class="kpi-sub">${fmt(kpis.queries.week)} this week · ${fmt(kpis.queries.month)} this month</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">API Cost Today</div>
+        <div class="kpi-value">${fmtUSD(kpis.cost.today)}</div>
+        <div class="kpi-sub">${fmtUSD(kpis.cost.month)} this month</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active (7d)</div>
+        <div class="kpi-value">${fmt(kpis.users.activeWeek)}</div>
+        <div class="kpi-sub">${fmt(kpis.users.paused)} accounts paused</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card" style="grid-column: span 2">
+        <h3>Signups (30d)</h3>
+        <div class="chart-wrap"><canvas id="chart-signups"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>API Cost by Provider (30d)</h3>
+        <div class="chart-wrap"><canvas id="chart-costs"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header"><h3>Plan Distribution</h3></div>
+      <table>
+        <thead><tr><th>Plan</th><th>Users</th><th>%</th></tr></thead>
+        <tbody>
+          ${kpis.planDistribution.map(r => `
+            <tr>
+              <td>${planBadge(r.plan)}</td>
+              <td>${fmt(r.cnt)}</td>
+              <td>${kpis.users.total ? ((r.cnt/kpis.users.total)*100).toFixed(1) : 0}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  // Signups chart
+  makeChart('chart-signups', lineChartConfig(
+    signups.map(r => r.date),
+    [{ label: 'Signups', data: signups.map(r => r.count), borderColor: '#4caf72', backgroundColor: 'rgba(76,175,114,.1)', tension: .3, fill: true }]
+  ));
+
+  // Cost breakdown doughnut
+  const costColors = costs.map((_, i) => PROVIDER_COLORS[i % PROVIDER_COLORS.length]);
+  makeChart('chart-costs', doughnutConfig(
+    costs.map(r => r.provider),
+    costs.map(r => +r.cost.toFixed(4)),
+    costColors
+  ));
+}
+
+// ── Users ────────────────────────────────────────────────────────────────────
+async function users() {
+  setContent(`
+    <div class="flex gap-2 mb-3" style="flex-wrap:wrap">
+      <input type="search" id="u-search" placeholder="Search username or email…" style="width:240px" value="${state.usersSearch}" oninput="state.usersSearch=this.value" onkeydown="if(event.key==='Enter')loadUsers()">
+      <select id="u-plan" onchange="state.usersPlan=this.value;state.usersPage=1;loadUsers()">
+        <option value="">All plans</option>
+        <option value="free">Free</option>
+        <option value="pro_demo">Pro Demo</option>
+        <option value="starter">Professional</option>
+        <option value="pro">Expert</option>
+        <option value="enterprise">Team</option>
+      </select>
+      <button class="btn btn-primary" onclick="state.usersPage=1;loadUsers()">Search</button>
+    </div>
+    <div id="users-table-wrap"><div class="loading">Loading…</div></div>
+  `);
+  loadUsers();
+}
+
+async function loadUsers() {
+  const wrap = document.getElementById('users-table-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="loading">Loading…</div>';
+  const params = new URLSearchParams({
+    search: state.usersSearch, plan: state.usersPlan,
+    page: state.usersPage, limit: 50,
+  });
+  const data = await api('GET', '/api/admin/users?' + params).catch(e => ({ users: [], total: 0 }));
+  const totalPages = Math.ceil(data.total / 50);
+
+  wrap.innerHTML = `
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Users <span class="text-muted" style="font-weight:normal;font-size:12px">(${fmt(data.total)} total)</span></h3>
+      </div>
+      <table>
+        <thead><tr><th>User</th><th>Plan</th><th>Role</th><th>Monthly Cost</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${data.users.map(u => `
+            <tr>
+              <td>
+                <div style="font-weight:500">${u.username}</div>
+                <div class="stat-mini">${u.email}</div>
+              </td>
+              <td>${planBadge(u.plan)}</td>
+              <td>${u.role !== 'user' ? `<span class="badge badge-${u.role}">${u.role}</span>` : '<span class="text-muted">user</span>'}</td>
+              <td>${fmtUSD(u.monthly_cost_usd)}</td>
+              <td>${statusBadge(u.paused)}</td>
+              <td><span class="text-muted">${timeSince(u.created_at)}</span></td>
+              <td>
+                <button class="btn btn-sm" onclick="viewUser(${u.id})">View</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button class="btn btn-sm" onclick="state.usersPage--;loadUsers()" ${state.usersPage<=1?'disabled':''}>←</button>
+        <span>Page ${state.usersPage} of ${totalPages||1}</span>
+        <button class="btn btn-sm" onclick="state.usersPage++;loadUsers()" ${state.usersPage>=totalPages?'disabled':''}>→</button>
+      </div>
+    </div>
+  `;
+}
+
+async function viewUser(id) {
+  document.getElementById('user-modal-body').innerHTML = '<div class="loading">Loading…</div>';
+  openModal('user-modal');
+  const u = await api('GET', `/api/admin/users/${id}`);
+  const q = u.queryStats;
+  document.getElementById('user-modal-body').innerHTML = `
+    <div class="flex gap-3 mb-3" style="flex-wrap:wrap">
+      ${planBadge(u.plan)} ${statusBadge(u.paused)}
+      ${u.role !== 'user' ? `<span class="badge badge-${u.role}">${u.role}</span>` : ''}
+    </div>
+
+    <div class="field-row"><label>Username</label><div class="val"><strong>${u.username}</strong></div></div>
+    <div class="field-row"><label>Email</label><div class="val">${u.email}</div></div>
+    <div class="field-row"><label>Joined</label><div class="val">${new Date(u.created_at).toLocaleDateString()}</div></div>
+    <div class="field-row"><label>Country / City</label><div class="val">${u.country||'—'} / ${u.city||'—'}</div></div>
+    <div class="field-row"><label>Promo Code</label><div class="val">${u.promo_code||'—'}</div></div>
+    <div class="field-row"><label>Total Queries</label><div class="val">${fmt(q?.total_queries)}</div></div>
+    <div class="field-row"><label>Total API Cost</label><div class="val">${fmtUSD(q?.total_cost)}</div></div>
+    <div class="field-row"><label>Monthly Cost</label><div class="val">${fmtUSD(u.monthly_cost_usd)}</div></div>
+    <div class="field-row"><label>Stripe Sub</label><div class="val">${u.stripe_subscription_id||'—'}</div></div>
+
+    <hr style="border-color:var(--border);margin:16px 0">
+    <div class="section-title">Quick Actions</div>
+    <div class="flex gap-2 mb-3" style="flex-wrap:wrap">
+      <select id="modal-plan-select">
+        <option value="free" ${u.plan==='free'?'selected':''}>Explorer (Free)</option>
+        <option value="pro_demo" ${u.plan==='pro_demo'?'selected':''}>Pro Demo</option>
+        <option value="starter" ${u.plan==='starter'?'selected':''}>Professional ($29)</option>
+        <option value="pro" ${u.plan==='pro'?'selected':''}>Expert ($59)</option>
+        <option value="enterprise" ${u.plan==='enterprise'?'selected':''}>Team ($49/u)</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="changePlan(${u.id})">Change Plan</button>
+    </div>
+    <div class="flex gap-2 mb-3" style="flex-wrap:wrap">
+      <button class="btn btn-sm ${u.paused?'btn-success':'btn-danger'}" onclick="togglePause(${u.id},${u.paused?0:1})">
+        ${u.paused ? 'Unpause Account' : 'Pause Account'}
+      </button>
+      <button class="btn btn-sm" onclick="impersonateUser(${u.id},'${u.username}')">Impersonate</button>
+      ${state.admin?.role==='superadmin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Delete User</button>` : ''}
+    </div>
+
+    <hr style="border-color:var(--border);margin:16px 0">
+    <div class="section-title">Recent Queries</div>
+    <table style="width:100%;font-size:12px">
+      <thead><tr><th>When</th><th>Model</th><th>Cost</th><th>Prompt</th></tr></thead>
+      <tbody>
+        ${(u.recentQueries||[]).map(q => `
+          <tr>
+            <td class="text-muted">${timeSince(q.created_at)}</td>
+            <td>${q.model_id}</td>
+            <td>${fmtUSD(q.cost_usd)}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.prompt_preview}</td>
+          </tr>
+        `).join('') || '<tr><td colspan="4" class="empty">No queries</td></tr>'}
+      </tbody>
+    </table>
+  `;
+}
+
+async function changePlan(userId) {
+  const plan = document.getElementById('modal-plan-select').value;
+  await api('PUT', `/api/admin/users/${userId}/plan`, { plan, reason: 'Admin manual change' });
+  closeModal('user-modal');
+  loadUsers();
+  alert(`Plan changed to ${plan}`);
+}
+
+async function togglePause(userId, paused) {
+  await api('PUT', `/api/admin/users/${userId}/pause`, { paused: !!paused });
+  closeModal('user-modal');
+  loadUsers();
+}
+
+async function impersonateUser(id, username) {
+  await api('POST', `/api/admin/users/${id}/impersonate`);
+  closeModal('user-modal');
+  document.getElementById('impersonate-name').textContent = username;
+  showImpersonationBanner();
+}
+
+function showImpersonationBanner() {
+  const b = document.getElementById('impersonation-banner');
+  b.style.display = 'flex';
+}
+
+async function stopImpersonate() {
+  await api('POST', '/api/admin/impersonate/stop');
+  document.getElementById('impersonation-banner').style.display = 'none';
+}
+
+async function deleteUser(id) {
+  if (!confirm('Permanently delete this user and all their data?')) return;
+  await api('DELETE', `/api/admin/users/${id}`);
+  closeModal('user-modal');
+  loadUsers();
+}
+
+// ── Revenue ──────────────────────────────────────────────────────────────────
+async function revenue() {
+  setContent('<div class="loading">Loading…</div>');
+  const [mrr, events, economics] = await Promise.all([
+    api('GET', '/api/admin/billing/mrr'),
+    api('GET', '/api/admin/billing/events?limit=30'),
+    api('GET', '/api/admin/billing/user-economics?limit=20'),
+  ]);
+
+  setContent(`
+    <div class="kpi-grid mb-3">
+      <div class="kpi-card accent">
+        <div class="kpi-label">MRR</div>
+        <div class="kpi-value">${fmtUSD(mrr.mrr)}</div>
+        <div class="kpi-sub">Monthly recurring revenue</div>
+      </div>
+      ${mrr.breakdown.map(b => `
+        <div class="kpi-card">
+          <div class="kpi-label">${b.plan}</div>
+          <div class="kpi-value">${b.users}</div>
+          <div class="kpi-sub">${fmtUSD(b.mrr)}/mo</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="chart-grid mb-3">
+      <div class="chart-card">
+        <h3>MRR by Plan</h3>
+        <div class="chart-wrap"><canvas id="chart-mrr"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Cost vs Revenue (Top 20 Users)</h3>
+        <div class="chart-wrap"><canvas id="chart-economics"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header"><h3>Recent Billing Events</h3></div>
+      <table>
+        <thead><tr><th>Date</th><th>User</th><th>Type</th><th>Amount</th><th>Description</th></tr></thead>
+        <tbody>
+          ${events.events.map(e => `
+            <tr>
+              <td class="text-muted">${timeSince(e.created_at)}</td>
+              <td>${e.username}<div class="stat-mini">${planBadge(e.plan)}</div></td>
+              <td><span class="pill" style="background:rgba(77,171,247,.12);color:var(--info)">${e.type}</span></td>
+              <td>${e.amount_usd ? fmtUSD(e.amount_usd) : '—'}</td>
+              <td class="text-muted" style="font-size:12px">${e.description||'—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  // MRR by plan bar
+  makeChart('chart-mrr', barChartConfig(
+    mrr.breakdown.map(b => b.plan),
+    [{
+      label: 'MRR', data: mrr.breakdown.map(b => b.mrr),
+      backgroundColor: mrr.breakdown.map(b => PLAN_COLORS[b.plan] || '#888'),
+    }]
+  ));
+
+  // Economics scatter-like bar
+  makeChart('chart-economics', {
+    type: 'bar',
+    data: {
+      labels: economics.map(u => u.username),
+      datasets: [
+        { label: 'Plan Price', data: economics.map(u => u.plan_price), backgroundColor: 'rgba(76,175,114,.6)' },
+        { label: 'API Cost', data: economics.map(u => +u.api_cost.toFixed(3)), backgroundColor: 'rgba(229,83,75,.6)' },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: CHART_DEFAULTS.color, font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: CHART_DEFAULTS.tick, font: { size: 9 }, maxRotation: 45 }, grid: { color: CHART_DEFAULTS.grid } },
+        y: { ticks: { color: CHART_DEFAULTS.tick, font: { size: 10 } }, grid: { color: CHART_DEFAULTS.grid }, beginAtZero: true },
+      },
+    },
+  });
+}
+
+// ── Analytics ────────────────────────────────────────────────────────────────
+async function analytics() {
+  setContent('<div class="loading">Loading…</div>');
+  const [queries, models, providers, topUsers, peaks, modes] = await Promise.all([
+    api('GET', '/api/admin/analytics/queries?days=30'),
+    api('GET', '/api/admin/analytics/models?days=30'),
+    api('GET', '/api/admin/analytics/providers?days=30'),
+    api('GET', '/api/admin/analytics/top-users?limit=15&days=30'),
+    api('GET', '/api/admin/analytics/peak-hours'),
+    api('GET', '/api/admin/analytics/modes?days=30'),
+  ]);
+
+  setContent(`
+    <div class="kpi-grid mb-3">
+      <div class="kpi-card info">
+        <div class="kpi-label">Integrator (Synthesis)</div>
+        <div class="kpi-value">${fmt(modes.integrator)}</div>
+        <div class="kpi-sub">Last 30 days</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Debate</div>
+        <div class="kpi-value">${fmt(modes.debate)}</div>
+        <div class="kpi-sub">Model debate rounds</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Regular Queries</div>
+        <div class="kpi-value">${fmt(modes.regular)}</div>
+        <div class="kpi-sub">Direct model calls</div>
+      </div>
+    </div>
+
+    <div class="chart-grid mb-3">
+      <div class="chart-card" style="grid-column:span 2">
+        <h3>Query Volume (30d)</h3>
+        <div class="chart-wrap"><canvas id="chart-queries"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Cost by Provider (30d)</h3>
+        <div class="chart-wrap"><canvas id="chart-providers"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-grid mb-3">
+      <div class="chart-card">
+        <h3>Top Models by Usage (30d)</h3>
+        <div class="chart-wrap" style="height:240px"><canvas id="chart-models"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Peak Hours (Last 30d)</h3>
+        <div class="chart-wrap"><canvas id="chart-peaks"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header"><h3>Top Users (30d)</h3></div>
+      <table>
+        <thead><tr><th>User</th><th>Plan</th><th>Queries</th><th>API Cost</th><th>Last Query</th></tr></thead>
+        <tbody>
+          ${topUsers.map(u => `
+            <tr>
+              <td><div style="font-weight:500">${u.username}</div><div class="stat-mini">${u.email}</div></td>
+              <td>${planBadge(u.plan)}</td>
+              <td>${fmt(u.queries)}</td>
+              <td>${fmtUSD(u.cost)}</td>
+              <td class="text-muted">${timeSince(u.last_query)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  makeChart('chart-queries', lineChartConfig(
+    queries.map(r => r.date),
+    [{
+      label: 'Queries', data: queries.map(r => r.queries),
+      borderColor: '#4dabf7', backgroundColor: 'rgba(77,171,247,.1)', tension: .3, fill: true,
+    }]
+  ));
+
+  makeChart('chart-providers', doughnutConfig(
+    providers.map(r => r.provider),
+    providers.map(r => +r.cost.toFixed(4)),
+    providers.map((_, i) => PROVIDER_COLORS[i % PROVIDER_COLORS.length])
+  ));
+
+  const topModels = models.slice(0, 10);
+  makeChart('chart-models', barChartConfig(
+    topModels.map(m => m.model_id.length > 20 ? m.model_id.slice(0, 20) + '…' : m.model_id),
+    [{ label: 'Queries', data: topModels.map(m => m.queries), backgroundColor: '#cf7d4e' }],
+    { horizontal: true }
+  ));
+
+  const hoursArr = Array.from({length: 24}, (_, i) => peaks.find(p => p.hour === i)?.queries || 0);
+  makeChart('chart-peaks', barChartConfig(
+    Array.from({length: 24}, (_, i) => `${i}:00`),
+    [{ label: 'Queries', data: hoursArr, backgroundColor: 'rgba(77,171,247,.5)' }]
+  ));
+}
+
+// ── Models ───────────────────────────────────────────────────────────────────
+async function models() {
+  setContent('<div class="loading">Loading…</div>');
+  const data = await api('GET', '/api/admin/models');
+  const grouped = {};
+  for (const m of data) {
+    if (!grouped[m.provider]) grouped[m.provider] = [];
+    grouped[m.provider].push(m);
+  }
+
+  setContent(`
+    <div class="flex gap-2 mb-3">
+      <button class="btn btn-sm" onclick="api('GET','/api/admin/models/sync').then(()=>models())">Sync Models</button>
+    </div>
+    ${Object.entries(grouped).map(([provider, ms]) => `
+      <div class="table-card mb-3">
+        <div class="table-header"><h3>${provider}</h3></div>
+        <table>
+          <thead><tr><th>Model ID</th><th>Enabled</th><th>Price In ($/1M)</th><th>Price Out ($/1M)</th><th>Queries (30d)</th><th>Cost (30d)</th><th>Last Used</th></tr></thead>
+          <tbody>
+            ${ms.map(m => `
+              <tr>
+                <td style="font-family:monospace;font-size:12px">${m.model_id}</td>
+                <td>
+                  <label class="toggle">
+                    <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="toggleModel('${m.model_id}',this.checked)">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+                <td class="text-muted">${m.price_input ?? '—'}</td>
+                <td class="text-muted">${m.price_output ?? '—'}</td>
+                <td>${fmt(m.queries)}</td>
+                <td>${m.cost ? fmtUSD(m.cost) : '—'}</td>
+                <td class="text-muted">${m.last_used ? timeSince(m.last_used) : '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `).join('')}
+  `);
+}
+
+async function toggleModel(modelId, enabled) {
+  await api('PUT', `/api/admin/models/${encodeURIComponent(modelId)}`, { enabled });
+}
+
+// ── Promo Codes ──────────────────────────────────────────────────────────────
+async function promos() {
+  setContent('<div class="loading">Loading…</div>');
+  const data = await api('GET', '/api/admin/promos');
+  setContent(`
+    <div class="flex gap-2 mb-3">
+      <button class="btn btn-primary" onclick="openModal('promo-modal')">+ Create Promo Code</button>
+    </div>
+    <div class="table-card">
+      <div class="table-header"><h3>Promo Codes <span class="text-muted" style="font-size:12px">(${data.length})</span></h3></div>
+      <table>
+        <thead><tr><th>Code</th><th>Plan</th><th>Budget</th><th>Uses</th><th>Expires</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${data.map(p => {
+            const used = p.times_used >= p.max_uses;
+            const expired = p.expires_at && new Date(p.expires_at) < new Date();
+            return `
+              <tr>
+                <td style="font-family:monospace;font-weight:500">${p.code}</td>
+                <td>${planBadge(p.plan)}</td>
+                <td>${fmtUSD(p.budget_usd)}</td>
+                <td>
+                  <span class="${used ? 'text-danger' : 'text-success'}">${p.times_used}/${p.max_uses}</span>
+                </td>
+                <td class="${expired ? 'text-danger' : 'text-muted'}">${p.expires_at ? p.expires_at.slice(0,10) : 'Never'}</td>
+                <td>
+                  ${state.admin?.role === 'superadmin' ? `<button class="btn btn-danger btn-sm" onclick="deletePromo('${p.code}')">Delete</button>` : ''}
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+async function createPromo() {
+  const code = document.getElementById('pm-code').value.trim();
+  const plan = document.getElementById('pm-plan').value;
+  const budget_usd = parseFloat(document.getElementById('pm-budget').value);
+  const max_uses = parseInt(document.getElementById('pm-uses').value);
+  const expires_at = document.getElementById('pm-expires').value || null;
+  if (!code) { alert('Enter a code'); return; }
+  await api('POST', '/api/admin/promos', { code, plan, budget_usd, max_uses, expires_at });
+  closeModal('promo-modal');
+  promos();
+}
+
+async function deletePromo(code) {
+  if (!confirm(`Delete promo code ${code}?`)) return;
+  await api('DELETE', `/api/admin/promos/${code}`);
+  promos();
+}
+
+// ── Moderation ───────────────────────────────────────────────────────────────
+async function moderation() {
+  setContent('<div class="loading">Loading…</div>');
+  loadModeration();
+}
+
+async function loadModeration() {
+  const wrap = document.getElementById('content');
+  const params = new URLSearchParams({ page: state.moderationPage, limit: 50 });
+  const data = await api('GET', '/api/admin/moderation/queries?' + params).catch(() => ({ rows: [], total: 0 }));
+  const totalPages = Math.ceil(data.total / 50);
+
+  wrap.innerHTML = `
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Recent Queries <span class="text-muted" style="font-size:12px">(${fmt(data.total)} total)</span></h3>
+      </div>
+      <table>
+        <thead><tr><th>When</th><th>User</th><th>Model</th><th>Cost</th><th>Prompt Preview</th><th>Action</th></tr></thead>
+        <tbody>
+          ${data.rows.map(r => `
+            <tr>
+              <td class="text-muted">${timeSince(r.created_at)}</td>
+              <td><div>${r.username}</div><div class="stat-mini">${planBadge(r.plan)}</div></td>
+              <td style="font-size:11px;font-family:monospace">${r.model_id}</td>
+              <td>${fmtUSD(r.cost_usd)}</td>
+              <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted)">${r.prompt_preview}</td>
+              <td><button class="btn btn-sm" onclick="viewQuery(${r.id})">View</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button class="btn btn-sm" onclick="state.moderationPage--;loadModeration()" ${state.moderationPage<=1?'disabled':''}>←</button>
+        <span>Page ${state.moderationPage} of ${totalPages||1}</span>
+        <button class="btn btn-sm" onclick="state.moderationPage++;loadModeration()" ${state.moderationPage>=totalPages?'disabled':''}>→</button>
+      </div>
+    </div>
+  `;
+}
+
+async function viewQuery(id) {
+  const q = await api('GET', `/api/admin/moderation/queries/${id}`);
+  alert(`USER: ${q.username}\nMODEL: ${q.model_id}\nCOST: $${q.cost_usd}\n\nPROMPT:\n${q.prompt?.slice(0,500)}\n\nRESPONSE:\n${q.response?.slice(0,500)}`);
+}
+
+// ── System Health ────────────────────────────────────────────────────────────
+async function system() {
+  setContent('<div class="loading">Loading…</div>');
+  const [health, errors, times] = await Promise.all([
+    api('GET', '/api/admin/health'),
+    api('GET', '/api/admin/health/errors?days=7'),
+    api('GET', '/api/admin/health/response-times?days=7'),
+  ]);
+
+  const memPct = Math.round((health.memory.heap / health.memory.heapTotal) * 100);
+
+  setContent(`
+    <div class="kpi-grid mb-3">
+      <div class="kpi-card success">
+        <div class="kpi-label">Uptime</div>
+        <div class="kpi-value">${health.uptimeHuman}</div>
+        <div class="kpi-sub">${health.nodeVersion}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Memory (Heap)</div>
+        <div class="kpi-value">${health.memory.heap} MB</div>
+        <div class="kpi-sub">${memPct}% of ${health.memory.heapTotal} MB</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Database</div>
+        <div class="kpi-value">${health.db.sizeMb ?? '—'} MB</div>
+        <div class="kpi-sub">${fmt(health.db.userCount)} users · ${fmt(health.db.histCount)} queries</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active Sessions</div>
+        <div class="kpi-value">${fmt(health.sessions)}</div>
+        <div class="kpi-sub">express-session / SQLite</div>
+      </div>
+    </div>
+
+    <div class="chart-grid mb-3">
+      <div class="chart-card">
+        <h3>Avg Response Time by Provider (7d)</h3>
+        <div class="chart-wrap"><canvas id="chart-times"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Errors (7d) — ${errors.length} events</h3>
+        <div class="chart-wrap" style="overflow-y:auto;height:200px">
+          <table style="width:100%;font-size:12px">
+            <thead><tr><th>When</th><th>Provider</th><th>Model</th><th>Detail</th></tr></thead>
+            <tbody>
+              ${errors.length ? errors.slice(0,20).map(e => `
+                <tr>
+                  <td class="text-muted">${timeSince(e.created_at)}</td>
+                  <td>${e.provider||'—'}</td>
+                  <td style="font-family:monospace;font-size:11px">${e.model_id||'—'}</td>
+                  <td class="text-danger" style="font-size:11px">${e.details?.slice(0,60)||'—'}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="4" class="empty">No errors</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `);
+
+  if (times.length) {
+    makeChart('chart-times', barChartConfig(
+      times.map(t => t.model_id || t.provider),
+      [{ label: 'Avg ms', data: times.map(t => Math.round(t.avg_ms)), backgroundColor: '#4dabf7' }],
+      { horizontal: true }
+    ));
+  }
+}
+
+// ── Audit Log ────────────────────────────────────────────────────────────────
+async function audit() {
+  setContent('<div class="loading">Loading…</div>');
+  loadAudit();
+}
+
+async function loadAudit() {
+  const params = new URLSearchParams({ page: state.auditPage, limit: 50 });
+  const data = await api('GET', '/api/admin/audit?' + params).catch(() => ({ rows: [], total: 0 }));
+  const totalPages = Math.ceil(data.total / 50);
+
+  document.getElementById('content').innerHTML = `
+    <div class="table-card">
+      <div class="table-header"><h3>Admin Audit Log <span class="text-muted" style="font-size:12px">(${fmt(data.total)})</span></h3></div>
+      <table>
+        <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target ID</th><th>IP</th><th>Details</th></tr></thead>
+        <tbody>
+          ${data.rows.map(r => `
+            <tr>
+              <td class="text-muted">${timeSince(r.created_at)}</td>
+              <td><strong>${r.admin_username}</strong></td>
+              <td><span class="pill" style="background:rgba(207,125,78,.12);color:var(--accent2)">${r.action}</span></td>
+              <td class="text-muted">${r.target_id ?? '—'}</td>
+              <td class="text-muted" style="font-size:11px">${r.ip_address||'—'}</td>
+              <td class="text-muted" style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${r.details||'—'}</td>
+            </tr>
+          `).join('') || '<tr><td colspan="6" class="empty">No audit entries</td></tr>'}
+        </tbody>
+      </table>
+      <div class="pagination">
+        <button class="btn btn-sm" onclick="state.auditPage--;loadAudit()" ${state.auditPage<=1?'disabled':''}>←</button>
+        <span>Page ${state.auditPage} of ${totalPages||1}</span>
+        <button class="btn btn-sm" onclick="state.auditPage++;loadAudit()" ${state.auditPage>=totalPages?'disabled':''}>→</button>
+      </div>
+    </div>
+  `;
+}
+
+// ── Live SSE ─────────────────────────────────────────────────────────────────
+function startLive() {
+  const es = new EventSource('/api/admin/live');
+  es.addEventListener('queries', e => {
+    const items = JSON.parse(e.data);
+    // Could update live counters — for now just a soft refresh indicator
+    if (state.currentTab === 'overview') {
+      // optional: update a "live" indicator
+    }
+  });
+  es.addEventListener('signups', e => {
+    const items = JSON.parse(e.data);
+    if (items.length && state.currentTab === 'overview') overview();
+  });
+  es.onerror = () => {};
+}
+
+// ── Logout ───────────────────────────────────────────────────────────────────
+async function logout() {
+  await api('POST', '/api/auth/logout');
+  location.href = '/';
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

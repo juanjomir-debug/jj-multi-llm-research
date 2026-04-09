@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reliableaiprueba</title>
+  <meta name="description" content="ReliableAI security practices, data privacy, GDPR compliance and data residency information.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://reliableai.net/security">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#1c1c1c; --bg2:#282828; --bg3:#313131; --border:#484848; --text:#ececec; --muted:#9e9e9e; --accent:#cf7d4e; --green:#4caf72; --font:'Inter',system-ui,sans-serif; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+    nav { position: sticky; top: 0; background: rgba(28,28,28,.95); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; z-index: 100; backdrop-filter: blur(8px); }
+    .nav-logo { font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--text); }
+    .nav-logo span { color: var(--accent); }
+    .nav-cta { background: var(--accent); color: #000; font-weight: 700; font-size: .85rem; padding: 8px 18px; border-radius: 8px; text-decoration: none; }
+    .container { max-width: 780px; margin: 0 auto; padding: 60px 24px 80px; }
+    .eyebrow { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; margin-bottom: 16px; }
+    .intro { font-size: 1rem; color: var(--muted); line-height: 1.75; margin-bottom: 48px; max-width: 620px; }
+    .badges-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 48px; }
+    .badge { display: flex; align-items: center; gap: 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: .82rem; font-weight: 600; }
+    .badge-icon { font-size: 1.2rem; }
+    .section { margin-bottom: 40px; }
+    .section h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .section h2 span { font-size: 1.1rem; }
+    .section p, .section li { font-size: .9rem; color: var(--muted); line-height: 1.75; }
+    .section ul { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .section ul li::marker { color: var(--accent); }
+    .highlight-box { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 16px 0; font-size: .88rem; color: var(--muted); line-height: 1.7; }
+    .green-text { color: var(--green); font-weight: 700; }
+    .contact-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; margin-top: 48px; }
+    .contact-box h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .contact-box p { font-size: .88rem; color: var(--muted); margin-bottom: 16px; }
+    .contact-box a { color: var(--accent); font-weight: 700; text-decoration: none; }
+    .contact-box a:hover { text-decoration: underline; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: .85rem; }
+    th { text-align: left; padding: 10px 14px; background: var(--bg3); color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+    td:first-child { color: var(--text); font-weight: 600; }
+    .yes { color: var(--green); font-weight: 700; }
+    .partial { color: #d4a017; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Reliable<span>AI</span></a>
+  <a href="/analyze" class="nav-cta">Try free →</a>
+</nav>
+
+<div class="container">
+  <div class="eyebrow">Trust & Security</div>
+  <h1>Security & Privacy</h1>
+  <p class="intro">ReliableAI is designed for high-stakes professional work. Here is a complete, honest account of how your data is handled, what security measures are in place, and what rights you have.</p>
+
+  <div class="badges-row">
+    <div class="badge"><span class="badge-icon">🔒</span> HTTPS everywhere</div>
+    <div class="badge"><span class="badge-icon">🇪🇺</span> EU operated</div>
+    <div class="badge"><span class="badge-icon">🚫</span> No model training</div>
+    <div class="badge"><span class="badge-icon">📋</span> GDPR compliant</div>
+    <div class="badge"><span class="badge-icon">🗑️</span> Deletion on request</div>
+    <div class="badge"><span class="badge-icon">🔑</span> Encrypted sessions</div>
+  </div>
+
+  <!-- Data flow -->
+  <div class="section">
+    <h2><span>📡</span> How your data flows</h2>
+    <p>When you submit a query, ReliableAI routes it to the selected AI model APIs (Anthropic, OpenAI, Google, xAI, Moonshot, Alibaba) over HTTPS. The request is made server-side from our infrastructure — your IP is never exposed to model providers.</p>
+    <div class="highlight-box">
+      <strong>What is sent to model providers:</strong> your question text and conversation history for the current session. Nothing else. No account information, no email, no metadata about you as a user is transmitted to AI providers.
+    </div>
+    <ul>
+      <li>All API connections use TLS 1.2+ with certificate validation</li>
+      <li>Responses are streamed directly to your session — not stored in transit</li>
+      <li>Model providers process requests under their standard API terms, which <strong>prohibit training on API inputs</strong></li>
+    </ul>
+  </div>
+
+  <!-- What we store -->
+  <div class="section">
+    <h2><span>🗄️</span> What we store</h2>
+    <table>
+      <thead><tr><th>Data type</th><th>Where stored</th><th>Retention</th><th>Your control</th></tr></thead>
+      <tbody>
+        <tr><td>Account (email, username, hashed password)</td><td>SQLite DB on our server</td><td>Until deletion requested</td><td>Delete via email</td></tr>
+        <tr><td>Query history</td><td>SQLite DB, encrypted at rest</td><td>30 days (Pro) / 365 days (Expert/Team) / 0 (Explorer)</td><td>Delete from app</td></tr>
+        <tr><td>Session cookie</td><td>Browser only (HttpOnly, Secure)</td><td>30 days</td><td>Clear browser data</td></tr>
+        <tr><td>Uploaded files (PDF/images)</td><td>SQLite as base64, associated with project</td><td>Until project deleted</td><td>Delete project</td></tr>
+        <tr><td>Billing info</td><td>Stripe (PCI-compliant)</td><td>Per Stripe policy</td><td>Via billing portal</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Authentication -->
+  <div class="section">
+    <h2><span>🔑</span> Authentication & sessions</h2>
+    <ul>
+      <li>Passwords are hashed with <strong>bcrypt (12 rounds)</strong> — never stored in plaintext</li>
+      <li>Session cookies are <strong>HttpOnly</strong> (no JavaScript access), <strong>Secure</strong> (HTTPS only), <strong>SameSite: Lax</strong></li>
+      <li>Sessions are stored server-side in SQLite — not in the cookie payload</li>
+      <li>Email verification required to unlock full features</li>
+      <li>Password reset via time-limited tokens (1-hour expiry)</li>
+      <li>Rate limiting: 20 auth attempts per 15 minutes per IP</li>
+    </ul>
+  </div>
+
+  <!-- GDPR -->
+  <div class="section">
+    <h2><span>🇪🇺</span> GDPR & your rights</h2>
+    <p>ReliableAI is operated from the EU and designed to comply with GDPR. As a user you have the following rights:</p>
+    <ul>
+      <li><strong>Right of access:</strong> request a copy of all data we hold about you</li>
+      <li><strong>Right to erasure:</strong> request full account and data deletion</li>
+      <li><strong>Right to portability:</strong> export your query history from the app</li>
+      <li><strong>Right to object:</strong> opt out of any non-essential processing</li>
+      <li><strong>Right to rectification:</strong> correct inaccurate personal data</li>
+    </ul>
+    <div class="highlight-box">
+      To exercise any of these rights, email <strong>info@reliableai.net</strong> with subject "GDPR request". We respond within 72 hours. Data deletion is completed within 30 days.
+    </div>
+    <p>A <strong>Data Processing Agreement (DPA)</strong> is available for Team plan customers on request.</p>
+  </div>
+
+  <!-- Infrastructure -->
+  <div class="section">
+    <h2><span>🖥️</span> Infrastructure security</h2>
+    <ul>
+      <li>Hosted on Hostinger VPS in the EU region</li>
+      <li>HTTPS enforced via Let's Encrypt (auto-renewing)</li>
+      <li>All database queries use parameterized statements (no SQL injection risk)</li>
+      <li>Helmet.js HTTP security headers (XSS protection, HSTS, etc.)</li>
+      <li>Input sanitization on all user-supplied data</li>
+      <li>Rate limiting on all API endpoints</li>
+      <li>Admin access protected by role-based session authentication with full audit log</li>
+    </ul>
+  </div>
+
+  <!-- Model providers -->
+  <div class="section">
+    <h2><span>🤖</span> AI model provider policies</h2>
+    <p>The following providers process query text via their APIs. Each prohibits using API inputs for model training:</p>
+    <table>
+      <thead><tr><th>Provider</th><th>No training on API data</th><th>Data residency</th><th>Privacy policy</th></tr></thead>
+      <tbody>
+        <tr><td>Anthropic (Claude)</td><td class="yes">✓ Confirmed</td><td>US</td><td><a href="https://www.anthropic.com/privacy" target="_blank" style="color:var(--accent)">anthropic.com/privacy</a></td></tr>
+        <tr><td>OpenAI (GPT)</td><td class="yes">✓ API opt-out default</td><td>US</td><td><a href="https://openai.com/policies/privacy-policy" target="_blank" style="color:var(--accent)">openai.com/privacy</a></td></tr>
+        <tr><td>Google (Gemini)</td><td class="yes">✓ Confirmed</td><td>US/EU</td><td><a href="https://ai.google.dev/gemini-api/terms" target="_blank" style="color:var(--accent)">ai.google.dev/terms</a></td></tr>
+        <tr><td>xAI (Grok)</td><td class="yes">✓ Confirmed</td><td>US</td><td><a href="https://x.ai/legal/privacy-policy" target="_blank" style="color:var(--accent)">x.ai/privacy</a></td></tr>
+        <tr><td>Moonshot (Kimi)</td><td class="partial">⚠ Review recommended</td><td>CN</td><td><a href="https://www.moonshot.cn" target="_blank" style="color:var(--accent)">moonshot.cn</a></td></tr>
+        <tr><td>Alibaba (Qwen)</td><td class="partial">⚠ Review recommended</td><td>CN</td><td><a href="https://www.alibabacloud.com/help/en/model-studio" target="_blank" style="color:var(--accent)">alibabacloud.com</a></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:10px;font-size:.8rem;color:var(--muted)">⚠ For work involving sensitive or regulated data, we recommend disabling Kimi and Qwen (CN-based providers) in your model selection.</p>
+  </div>
+
+  <!-- Incident response -->
+  <div class="section">
+    <h2><span>🚨</span> Incident response</h2>
+    <p>In the event of a security incident affecting user data:</p>
+    <ul>
+      <li>Affected users will be notified by email within 72 hours</li>
+      <li>A public incident report will be published within 7 days</li>
+      <li>Regulatory notification to the relevant EU supervisory authority if required under GDPR Article 33</li>
+    </ul>
+    <p style="margin-top:10px">To report a security vulnerability, email <strong>info@reliableai.net</strong> with subject "Security disclosure". We aim to respond within 24 hours.</p>
+  </div>
+
+  <div class="contact-box">
+    <h3>Questions about security or privacy?</h3>
+    <p>We're happy to answer detailed questions from enterprise customers, legal teams and compliance officers.</p>
+    <a href="mailto:info@reliableai.net">info@reliableai.net →</a>
+  </div>
+
+  <p style="margin-top:32px;font-size:.75rem;color:var(--muted);text-align:center">Last updated: April 2026 · <a href="/" style="color:var(--accent)">← Back to home</a></p>
+</div>
+
+</body>
+</html>
