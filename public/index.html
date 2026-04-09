@@ -895,8 +895,13 @@
     .right-sidebar {
       grid-column: 3; grid-row: 1 / 2;
       border-left: 1px solid var(--border);
-      display: flex; flex-direction: column; overflow-y: auto;
+      display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
       background: var(--surface);
+      height: 100%;
+      min-height: 0;
+    }
+    .rsb-scrollable {
+      flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
     }
     /* ── Right sidebar topbar ── */
     .rsb-topbar {
@@ -1362,6 +1367,7 @@
       <span class="rsb-topbar-title">Settings</span>
     </div>
 
+    <div class="rsb-scrollable">
     <!-- Answer Length -->
     <div class="config-block">
       <div class="config-block-label">Answer Length</div>
@@ -1384,13 +1390,22 @@
       </div>
     </div>
 
+    <!-- Reasoning -->
+    <div class="config-block">
+      <div class="config-block-row">
+        <span class="config-block-label" style="flex:1">⚡ Reasoning</span>
+        <button class="rsb-toggle-btn" id="globalReasoningBtn" onclick="toggleGlobalReasoning()">OFF</button>
+      </div>
+      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Claude Opus 4.6 &amp; GPT o-series</div>
+    </div>
+
     <!-- Web Search -->
     <div class="config-block">
       <div class="config-block-row">
         <span class="config-block-label" style="flex:1">Web Search</span>
         <button class="rsb-toggle-btn" id="globalWebSearchBtn" onclick="toggleGlobalWebSearch()">OFF</button>
       </div>
-      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Google &amp; Grok only</div>
+      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Claude, ChatGPT, Google &amp; Grok</div>
     </div>
 
     <!-- Temperature -->
@@ -1484,6 +1499,7 @@
         <div class="rsb-budget-fill" id="rsbBudgetFill" style="width:0%"></div>
       </div>
     </div>
+    </div><!-- /rsb-scrollable -->
   </aside>
 
   <!-- HISTORY SIDEBAR: History & Projects -->
@@ -1720,6 +1736,9 @@ const PROVIDERS = {
       { id: 'gpt-5.3',     label: 'GPT-5.3' },
       { id: 'gpt-5',       label: 'GPT-5' },
       { id: 'gpt-5-mini',  label: 'GPT-5 Mini' },
+      // Reasoning
+      { id: 'o4-mini',     label: 'o4-mini (Reasoning)' },
+      { id: 'o3-mini',     label: 'o3-mini (Reasoning)' },
     ],
     defaultModel: 'gpt-5-mini',
   },
@@ -5211,6 +5230,13 @@ const MODEL_LEVELS = {
   medium: { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'models/gemini-3-flash-preview', xai: 'grok-4-1-fast-non-reasoning', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
   fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'models/gemini-3.1-flash-lite-preview', xai: 'grok-4-1-fast-non-reasoning', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
 };
+// Integrator model per level (anthropic preferred)
+const INTEGRATOR_LEVELS = {
+  high:   { provider: 'anthropic', modelId: 'claude-opus-4-6' },
+  medium: { provider: 'anthropic', modelId: 'claude-sonnet-4-6' },
+  fast:   { provider: 'anthropic', modelId: 'claude-haiku-4-5-20251001' },
+};
+
 function setModelLevel(level) {
   const map = MODEL_LEVELS[level];
   if (!map) return;
@@ -5220,9 +5246,58 @@ function setModelLevel(level) {
       m.modelId = modelId;
       const sel = document.getElementById(`sel-${m.provider}`);
       if (sel) sel.value = modelId;
+      // Update thinking/search row visibility for Claude
+      if (m.provider === 'anthropic') {
+        const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
+        if (thinkRow) thinkRow.style.display = (modelId === 'claude-opus-4-6') ? '' : 'none';
+        const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
+        if (thinkBtn) thinkBtn.className = 'websearch-toggle';
+      }
     }
   });
+  // Update integrator
+  const intLevel = INTEGRATOR_LEVELS[level];
+  if (intLevel) {
+    const intProv = document.getElementById('intProvider');
+    const intMod = document.getElementById('intModel');
+    if (intProv) { intProv.value = intLevel.provider; onIntProviderChange(); }
+    if (intMod) intMod.value = intLevel.modelId;
+  }
   document.querySelectorAll('.rsb-level-btn').forEach(b => b.classList.toggle('active', b.dataset.level === level));
+  updateEstimate();
+}
+
+function toggleGlobalReasoning() {
+  const btn = document.getElementById('globalReasoningBtn');
+  const isOn = btn.classList.toggle('on');
+  btn.textContent = isOn ? 'ON' : 'OFF';
+  state.models.forEach((m, idx) => {
+    if (m.provider === 'anthropic') {
+      // Claude: toggle Opus thinking
+      if (isOn) {
+        m._preReasoningModel = m.modelId;
+        m.modelId = 'claude-opus-4-6-thinking';
+      } else {
+        m.modelId = m._preReasoningModel || 'claude-sonnet-4-6';
+      }
+      const sel = document.getElementById(`sel-${m.provider}`);
+      if (sel) sel.value = m.modelId;
+      const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
+      if (thinkBtn) thinkBtn.className = `websearch-toggle ${isOn ? 'on' : ''}`;
+      const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
+      if (thinkRow) thinkRow.style.display = (isOn || m.modelId === 'claude-opus-4-6') ? '' : 'none';
+    } else if (m.provider === 'openai') {
+      // OpenAI: toggle o4-mini (reasoning)
+      if (isOn) {
+        m._preReasoningModel = m.modelId;
+        m.modelId = 'o4-mini';
+      } else {
+        m.modelId = m._preReasoningModel || 'gpt-5-mini';
+      }
+      const sel = document.getElementById(`sel-${m.provider}`);
+      if (sel) sel.value = m.modelId;
+    }
+  });
   updateEstimate();
 }
 
@@ -5232,10 +5307,33 @@ function toggleGlobalWebSearch() {
   const isOn = btn.classList.toggle('on');
   btn.textContent = isOn ? 'ON' : 'OFF';
   state.models.forEach((m, i) => {
-    if (WEB_SEARCH_PROVIDERS.has(m.provider)) {
-      m.webSearch = isOn;
-      const wsBtn = document.getElementById(`wsToggle-${m.provider}`);
-      if (wsBtn) wsBtn.className = `websearch-toggle${isOn ? ' on' : ''}`;
+    if (!WEB_SEARCH_PROVIDERS.has(m.provider)) return;
+    m.webSearch = isOn;
+    const wsBtn = document.getElementById(`wsToggle-${m.provider}`);
+    if (wsBtn) wsBtn.className = `websearch-toggle${isOn ? ' on' : ''}`;
+    // Auto-switch Claude model variant
+    if (m.provider === 'anthropic') {
+      if (isOn) {
+        m._searchPreBase = m.modelId;
+        m.modelId = CLAUDE_SEARCH_AUTO[m.modelId] || 'claude-sonnet-4-6-search';
+      } else {
+        m.modelId = CLAUDE_SEARCH_BASE[m.modelId] || m._searchPreBase || 'claude-sonnet-4-6';
+      }
+      const sel = document.getElementById(`sel-${m.provider}`);
+      if (sel) sel.value = m.modelId;
+      const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
+      if (thinkRow) thinkRow.style.display = (!isOn && (m.modelId === 'claude-opus-4-6')) ? '' : 'none';
+    }
+    // Auto-switch OpenAI model variant
+    if (m.provider === 'openai') {
+      if (isOn) {
+        m._searchPreBase = m.modelId;
+        m.modelId = 'gpt-5.2';
+      } else {
+        m.modelId = m._searchPreBase || 'gpt-5-mini';
+      }
+      const sel = document.getElementById(`sel-${m.provider}`);
+      if (sel) sel.value = m.modelId;
     }
   });
   updateEstimate();

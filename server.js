@@ -427,9 +427,29 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
   }
 
   const isOSeries = /^o\d/.test(modelId);
-  const isGpt5Family = modelId.startsWith('gpt-5') || modelId === 'gpt-5.2';
-  const useMaxCompletionTokens = isOSeries || isGpt5Family;
-  const effectiveMaxTokens = (isOSeries || isGpt5Family) ? Math.max(maxTokens, 4096) : maxTokens;
+  const isGpt5Family = modelId.startsWith('gpt-5');
+  const isSearchModel = modelId === 'gpt-5.2'; // search via Responses API
+  const useMaxCompletionTokens = isOSeries || isGpt5Family || isSearchModel;
+  const effectiveMaxTokens = (isOSeries || isGpt5Family || isSearchModel) ? Math.max(maxTokens, 4096) : maxTokens;
+
+  // gpt-5.2 uses Responses API with web_search tool
+  if (isSearchModel) {
+    const resp = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({
+        model: 'gpt-4o-search-preview', // actual OpenAI search model
+        input: messages,
+        tools: [{ type: 'web_search_preview' }],
+        max_output_tokens: effectiveMaxTokens,
+      }),
+    });
+    if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(`OpenAI search ${resp.status}: ${JSON.stringify(err)}`); }
+    const data = await resp.json();
+    const text = (data.output || []).filter(item => item.type === 'message').flatMap(item => item.content || [])
+      .filter(c => c.type === 'output_text').map(c => c.text).join('');
+    return { text: text || 'No response', inputTokens: data.usage?.input_tokens || 0, outputTokens: data.usage?.output_tokens || 0 };
+  }
 
   const completionOpts = {
     model: modelId,
