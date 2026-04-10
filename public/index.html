@@ -956,17 +956,10 @@
     .config-block-collapsible.collapsed .config-block-arrow { transform: rotate(-90deg); }
     /* ── Result tabs bar ── */
     .result-tabs-bar {
-      display: flex; overflow-x: auto; padding: 0 12px;
-      background: var(--surface1); border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      display: flex; overflow-x: auto; padding: 0 8px;
+      background: var(--surface1); border-bottom: 2px solid rgba(99,102,241,0.25);
+      flex-shrink: 0; gap: 4px;
     }
-    .result-tab {
-      padding: 8px 14px; border: none; background: none;
-      border-bottom: 2px solid transparent; color: var(--text-muted);
-      font-size: .8rem; cursor: pointer; white-space: nowrap;
-      transition: color .15s, border-color .15s;
-    }
-    .result-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
     /* ── Answers area ── */
     .answers-area {
       flex: 1; overflow-y: auto; min-height: 0;
@@ -974,22 +967,25 @@
     /* Tab panels: only the active one is shown */
     .tab-panel { display: none; padding: 14px; }
     .tab-panel.tab-panel-active { display: block; }
-    /* Result tabs with proper tab border look */
-    .result-tabs-bar {
-      border-bottom: 2px solid var(--border) !important;
-      padding-bottom: 0 !important;
-    }
+    /* Result tabs */
     .result-tab {
-      border: 1px solid transparent;
+      padding: 7px 13px;
+      border: 1px solid rgba(99,102,241,0.25);
       border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
+      background: rgba(99,102,241,0.07);
       border-radius: 6px 6px 0 0;
+      margin-bottom: -2px;
+      color: var(--text-muted);
+      font-size: .8rem; cursor: pointer; white-space: nowrap;
+      transition: color .15s, border-color .15s, background .15s;
     }
+    .result-tab:hover { background: rgba(99,102,241,0.13); color: var(--text); }
     .result-tab.active {
-      border-color: var(--border);
-      border-bottom-color: var(--surface) !important;
-      background: var(--surface);
-      color: var(--text) !important;
+      border-color: var(--accent) !important;
+      border-bottom-color: var(--surface1) !important;
+      background: var(--surface2) !important;
+      color: var(--accent) !important;
+      font-weight: 600;
     }
     /* ── Action row ── */
     .action-row {
