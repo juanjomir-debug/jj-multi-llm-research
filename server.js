@@ -2229,6 +2229,20 @@ app.post('/api/admin/billing/plans', (req, res) => {
   res.json({ ok: true, results });
 });
 
+// ── Admin bootstrap: promote logged-in user to superadmin ────────────────────
+// Usage (browser console while logged in):
+//   fetch('/api/admin/bootstrap', {method:'POST',headers:{'Content-Type':'application/json'},
+//     body:JSON.stringify({token:'<ADMIN_TOKEN>'})}).then(r=>r.json()).then(console.log)
+app.post('/api/admin/bootstrap', (req, res) => {
+  const { token } = req.body || {};
+  if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  db.prepare(`UPDATE users SET role = 'superadmin' WHERE id = ?`).run(req.session.userId);
+  res.json({ ok: true, message: 'Promoted to superadmin — refresh the page' });
+});
+
 // ─── DB Migration import (temporary, protected by token) ─────────────────────
 const MIGRATE_TOKEN = process.env.MIGRATE_TOKEN || 'mig_change_me_in_env';
 app.post('/api/migrate-import', express.json({ limit: '50mb' }), (req, res) => {
