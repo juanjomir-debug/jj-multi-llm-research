@@ -1063,6 +1063,7 @@
     .tab-status.done.normal { color: var(--warn); }
     .tab-status.done.slow { color: var(--danger); }
     .tab-status.error { color: var(--danger); }
+    .tab-model-ver { font-size: .68rem; opacity: .7; margin-left: 3px; font-weight: 400; letter-spacing: -.01em; }
     .tab-spinner { display: inline-block; width: 9px; height: 9px;
       border: 1.5px solid var(--border); border-top-color: var(--accent);
       border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
@@ -4464,6 +4465,7 @@ async function recoverSession(sid) {
       `</div>` +
       `<div class="result-footer" id="rfoot-${r.provider}" data-provider="${r.provider}" data-modelid="${r.model_id}">` +
         `<button class="copy-btn" onclick="copyFromBuf('${safeId}', this)">Copy</button>` +
+        `<button class="export-btn" onclick="exportToWord('${safeId}','${r.model_id}',this)" title="Export to Word (.docx)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Word</button>` +
       `</div>`;
 
     _copyBuf[safeId] = r.response;
@@ -4492,7 +4494,9 @@ async function recoverSession(sid) {
         `${fmtCost(intRow.cost_usd)}</div></div>` +
         `<div class="integrator-result-body" id="intBody"><div class="md-content">${colorizeConsensus(renderMarkdown(intRow.response))}</div></div>` +
         `<div class="integrator-result-footer" id="intFoot">` +
-        `<button class="copy-btn" onclick="copyFromBuf('integrator',this)">Copy synthesis</button></div></div>`;
+        `<button class="copy-btn" onclick="copyFromBuf('integrator',this)">Copy synthesis</button>` +
+        `<button class="export-btn" onclick="exportToWord('integrator','Synthesis',this)" title="Export synthesis to Word (.docx)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Word</button>` +
+        `</div></div>`;
       _copyBuf['integrator'] = intRow.response;
     }
   }
@@ -5134,11 +5138,16 @@ function _ensureModelTab(provider) {
   const bar = document.getElementById('resultTabsBar');
   if (!bar || bar.querySelector(`[data-tab="model-${provider}"]`)) return;
   const prov = PROVIDERS[provider];
+  const m = state.models.find(x => x.provider === provider);
+  const modelObj = prov.models.find(x => x.id === m?.modelId);
+  const verFull = modelObj?.label || m?.modelId || '';
+  // Strip provider prefix (e.g. "Claude Sonnet 4.6" → "Sonnet 4.6")
+  const ver = verFull.replace(new RegExp('^' + prov.label + '[\\s-]+', 'i'), '').trim();
   const btn = document.createElement('button');
   btn.className = 'result-tab';
   btn.dataset.tab = `model-${provider}`;
   btn.onclick = () => switchResultTab(`model-${provider}`);
-  btn.innerHTML = `${prov.icon || ''} ${prov.label}<span class="tab-status" id="tabStatus-${provider}"></span>`;
+  btn.innerHTML = `${prov.icon || ''} ${prov.label}${ver ? `<span class="tab-model-ver">${ver}</span>` : ''}<span class="tab-status" id="tabStatus-${provider}"></span>`;
   bar.appendChild(btn);
 }
 
