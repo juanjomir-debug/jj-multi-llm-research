@@ -439,13 +439,22 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
       body: JSON.stringify({
         model: 'gpt-4o-search-preview',
+        web_search_options: {},   // explicitly enable web search
         messages,
         max_tokens: effectiveMaxTokens,
       }),
     });
     if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(`OpenAI search ${resp.status}: ${JSON.stringify(err)}`); }
     const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || 'No response';
+    // Extract text + any inline URL annotations
+    const msg = data.choices?.[0]?.message;
+    let text = msg?.content || 'No response';
+    // Append URL citations if present as annotations
+    const annotations = msg?.annotations || [];
+    const urls = annotations.filter(a => a.type === 'url_citation').map(a => a.url_citation);
+    if (urls.length) {
+      text += '\n\n---\n**Sources:**\n' + urls.map(u => `- [${u.title || u.url}](${u.url})`).join('\n');
+    }
     if (onChunk) onChunk(text);
     return { text, inputTokens: data.usage?.prompt_tokens || 0, outputTokens: data.usage?.completion_tokens || 0 };
   }
