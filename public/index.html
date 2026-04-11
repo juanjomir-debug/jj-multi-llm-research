@@ -1056,6 +1056,13 @@
       display: none; align-items: center; padding: 6px 14px; gap: 8px;
       border-bottom: 1px solid var(--border); background: var(--surface1);
     }
+    /* ── Turn history ───────────────────────────────────────────── */
+    .past-turn { margin-bottom: 8px; padding-bottom: 16px; border-bottom: 2px solid var(--border); opacity: .82; }
+    .past-turn-q { font-size: .84rem; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; padding: 7px 12px; background: var(--surface2); border-radius: 6px; border-left: 3px solid var(--accent); }
+    .current-turn-q { font-size: .84rem; font-weight: 600; color: var(--text); margin-bottom: 10px; padding: 7px 12px; background: var(--surface2); border-radius: 6px; border-left: 3px solid var(--accent); }
+    .chat-question-bubble { display:flex; justify-content:flex-end; padding: 8px 12px 4px; }
+    .chat-question-bubble span { background: var(--accent); color: #fff; padding: 7px 13px; border-radius: 16px 16px 4px 16px; font-size: .84rem; max-width: 80%; word-break: break-word; line-height: 1.4; }
+    .past-model-turn { opacity: .78; padding-bottom: 14px; margin-bottom: 4px; border-bottom: 2px solid var(--border); }
     .run-btn-row { display: flex; align-items: stretch; gap: 5px; }
     .cfg-temp-slider { width: 100%; height: 3px; accent-color: var(--accent); cursor: pointer; }
     .cfg-temp-val { font-size: .72rem; font-family: monospace; color: var(--text-muted); min-width: 28px; }
@@ -1303,6 +1310,9 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
       </button>
       <div style="flex:1"></div>
+      <button class="mob-sidebar-btn" onclick="clearConversation()" title="New Conversation" style="color:var(--accent)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
       <button class="mob-sidebar-btn mob-cfg-btn" onclick="toggleRightSidebar()" title="Settings">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -1355,14 +1365,20 @@
     <div class="answers-area" id="answersArea">
       <div class="tab-panel" id="tabPanel-integration" style="display:none">
         <div id="debateResultArea"></div>
-        <div id="integratorRow"><div id="integratorResultArea"></div></div>
-        <div id="bottomAnalysisRow" style="margin-top:12px">
-          <div id="reliabilityIndexArea"></div>
-          <div id="consensusPanelArea" style="display:none"></div>
+        <div id="turnHistoryArea"></div>
+        <div id="integratorRow">
+          <div id="integratorStaticHeader" style="display:none;padding:7px 12px;background:var(--surface2);border-bottom:1px solid var(--border);border-radius:4px 4px 0 0;font-size:.9rem;font-weight:700">🔗 Integrated Synthesis</div>
+          <div id="integratorResultArea"></div>
         </div>
-        <div id="hallucinationArea"></div>
         <div class="results-section" id="resultsSection" style="padding:0"></div>
         <div id="followUpArea" style="display:none"></div>
+        <div id="bottomAnalysisRow" style="margin-top:12px">
+          <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:0"><div id="reliabilityIndexArea"></div></div>
+            <div id="hallucinationArea" style="flex-shrink:0"></div>
+          </div>
+          <div id="consensusPanelArea" style="display:none;margin-top:10px"></div>
+        </div>
       </div>
     </div>
 
@@ -1591,7 +1607,6 @@
     <div id="bottomConfidence" style="flex:1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.76rem;color:var(--text-muted)">
       <span id="bottomConfidenceLabel">Confidence data</span>
     </div>
-    <button class="int-action-btn secondary" id="hallucAuditBtn" onclick="runHallucinationAudit()" style="flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Hallucination Check</button>
   </div>
 
 </div><!-- /app-layout -->
@@ -2427,10 +2442,34 @@ function updateConvIndicator() {
   }
 }
 
+function archiveTurn() {
+  const intArea = document.getElementById('integratorResultArea');
+  const histArea = document.getElementById('turnHistoryArea');
+  if (!intArea || !histArea) return;
+  // Move completed integrator card into chat history, stripping conflicting IDs
+  while (intArea.firstChild) {
+    const node = intArea.firstChild;
+    if (node.nodeType === 1) {
+      // Remove footer and meta from archived turns
+      node.querySelector('#intFoot')?.remove();
+      node.querySelector('#intMeta')?.remove();
+      node.querySelector('#intStopBtn')?.remove();
+      // Strip conflicting IDs
+      ['intBody','intScoreBadges','intResultCard'].forEach(id => {
+        const el = node.id === id ? node : node.querySelector('#' + id);
+        if (el) el.removeAttribute('id');
+      });
+    }
+    histArea.appendChild(node);
+  }
+}
+
 function clearConversation() {
   state.conversationHistory = []; _lastIntegratorText = null;
   state.lastSessionId = null; state.lastResults = [];
   state.lastDebateVotes = null; state.lastDebateResponses = [];
+  document.getElementById('turnHistoryArea').innerHTML = '';
+  Object.keys(_tabHistory).forEach(k => delete _tabHistory[k]);
   document.getElementById('resultsSection').innerHTML = '';
   document.getElementById('integratorResultArea').innerHTML = '';
   document.getElementById('consensusPanelArea').innerHTML = '';
@@ -2561,7 +2600,7 @@ function retryModelFromCard(provider) {
 }
 
 // Creates (or replaces) an inline result area inside the model card
-function prepareInlineResultArea(provider, modelId) {
+function prepareInlineResultArea(provider, modelId, questionOverride) {
   // Also clean the card in sidebar (remove old result area if any)
   const card = document.getElementById(`card-${provider}`);
   if (card) card.querySelector('.imc-result-area')?.remove();
@@ -2583,10 +2622,15 @@ function prepareInlineResultArea(provider, modelId) {
   tabPanel.innerHTML = '';
 
   const prov = PROVIDERS[provider];
+  const currentQ = questionOverride || (document.getElementById('questionInput')?.value || '').trim();
+  const qBubble = currentQ ? `<div class="chat-question-bubble"><span>${currentQ.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span></div>` : '';
+  const histHtml = _tabHistory[provider] || '';
   tabPanel.innerHTML =
-    `<div style="padding:7px 12px;display:flex;align-items:center;gap:8px;background:var(--surface2);border-bottom:1px solid var(--border);border-radius:4px 4px 0 0">` +
+    `<div style="padding:5px 12px;display:flex;align-items:center;gap:8px;background:var(--surface2);border-bottom:1px solid var(--border);border-radius:4px 4px 0 0">` +
     `<span style="color:${prov.dotColor};font-weight:700;font-size:.9rem">${prov.icon || ''} ${prov.label}</span>` +
     `</div>` +
+    histHtml +
+    qBubble +
     `<div class="result-body" id="rbody-${safeId}">` +
       `<div class="loading-row"><div class="spinner"></div> Waiting…</div></div>` +
     `<div style="display:flex;align-items:center;gap:10px;padding:4px 12px;font-size:.72rem;color:var(--text-muted);flex-wrap:wrap;border-top:1px solid var(--border)" id="rmeta-${safeId}"></div>` +
@@ -2874,16 +2918,31 @@ async function runResearch(withIntegrator = false) {
   document.getElementById('runBtnLabel').textContent = 'Researching...';
   document.getElementById('stopBtn').classList.add('visible');
 
-  // Remove previous model tab panels and reset tab bar
-  document.querySelectorAll('.tab-panel[id^="tabPanel-"]:not(#tabPanel-integration)').forEach(el => el.remove());
+  // 1. Archive integrator of previous turn (moves DOM to turnHistoryArea)
+  archiveTurn();
+  // 2. Always add current question bubble to chat history
+  { const qEl = document.createElement('div'); qEl.className = 'chat-question-bubble';
+    qEl.innerHTML = `<span>${question.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
+    document.getElementById('turnHistoryArea').appendChild(qEl); }
+  // 3. Save model tab content as history (skip first child = header bar), then remove panels
+  document.querySelectorAll('.tab-panel[id^="tabPanel-"]:not(#tabPanel-integration)').forEach(el => {
+    const provider = el.id.replace('tabPanel-', '');
+    // Skip first child (header bar) to avoid duplicate headers
+    const children = Array.from(el.children).slice(1);
+    // Strip IDs and remove meta/footer from archived turns (only show on last response)
+    const innerHtml = children
+      .filter(c => !c.id.startsWith('rmeta-') && !c.id.startsWith('rfoot-'))
+      .map(c => c.outerHTML).join('')
+      .replace(/ id="rbody-[^"]+"/g, '');
+    if (innerHtml.trim()) { _tabHistory[provider] = (_tabHistory[provider] || '') + `<div class="past-model-turn">${innerHtml}</div>`; }
+    el.remove();
+  });
   const _rbar = document.getElementById('resultTabsBar');
   if (_rbar) { _rbar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); _rbar.style.display = 'none'; }
   const _intP = document.getElementById('tabPanel-integration'); if (_intP) _intP.style.display = 'none';
-
-  // Prepare inline result areas for each enabled model
-  enabledModels.forEach(m => prepareInlineResultArea(m.provider, m.modelId));
-
-  // Clear consensus / debate areas from previous run
+  // 4. Prepare inline result areas for each enabled model (prepends history)
+  enabledModels.forEach(m => prepareInlineResultArea(m.provider, m.modelId, question));
+  // 5. Clear debate/results areas
   document.getElementById('resultsSection').innerHTML = '';
   document.getElementById('debateResultArea').innerHTML = '';
   document.getElementById('integratorResultArea').innerHTML = '';
@@ -2945,6 +3004,7 @@ async function runResearch(withIntegrator = false) {
 
 // Streaming text buffers per model
 const _streamBuf = {};
+const _tabHistory = {}; // provider → accumulated past-turn HTML
 
 function handleSSEEvent(event, data) {
   switch (event) {
@@ -3253,15 +3313,14 @@ function buildIntegratorCard(status) {
   const intMod = document.getElementById('intModel').value;
   const prov = PROVIDERS[intProv]; const modLabel = prov?.models.find(x => x.id === intMod)?.label || intMod;
   const div = document.createElement('div'); div.className = 'integrator-result-card'; div.id = 'intResultCard';
-  div.innerHTML = `
-    <div class="integrator-result-header">
-      <h3>Integrated Synthesis</h3>
-      <span style="font-size:.75rem;color:var(--text-muted)">${prov?.icon || ''} ${prov?.label || ''} — ${modLabel}</span>
-      <div id="intScoreBadges" style="display:flex;gap:6px;align-items:center;margin-left:8px"></div>
-      <div id="intMeta" style="font-size:.75rem;color:var(--text-muted);margin-left:auto"></div>
-      <button id="intStopBtn" onclick="stopIntegration()" title="Stop synthesis" style="display:none;margin-left:8px;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:2px 9px;font-size:.75rem;cursor:pointer;transition:all .15s;display:none;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Stop</button>
-    </div>
-    <div class="integrator-result-body" id="intBody"><div class="loading-row"><div class="spinner"></div> Waiting for results...</div></div>
+  // Update static header with current model info
+  const staticHdr = document.getElementById('integratorStaticHeader');
+  if (staticHdr) {
+    staticHdr.style.display = '';
+    staticHdr.innerHTML = `<span style="font-weight:700">🔗 Integrated Synthesis</span><span style="font-size:.75rem;color:var(--text-muted);margin-left:10px">${prov?.icon||''} ${prov?.label||''} — ${modLabel}</span><div id="intScoreBadges" style="display:flex;gap:6px;align-items:center;margin-left:8px"></div><div id="intMeta" style="font-size:.75rem;color:var(--text-muted);margin-left:auto"></div><button id="intStopBtn" onclick="stopIntegration()" title="Stop" style="display:none;margin-left:8px;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:2px 9px;font-size:.75rem;cursor:pointer"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Stop</button>`;
+  }
+  div.innerHTML =
+    `<div class="integrator-result-body" id="intBody"><div class="loading-row"><div class="spinner"></div> Waiting for results...</div></div>
     <div class="integrator-result-footer" id="intFoot"></div>`;
   return div;
 }
@@ -3461,13 +3520,7 @@ function renderHallucinationLoading() {
 
 function renderHallucinationEmpty() {
   const area = document.getElementById('hallucinationArea'); if (!area) return;
-  area.innerHTML = `<div class="hallucination-panel">
-    <div class="hallucination-header"><h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Hallucination Audit</h4></div>
-    <div class="hall-empty">
-      <span style="flex:1;font-size:.8rem;color:var(--text-muted)">Verify facts with web search across all model responses.</span>
-      <button class="hall-run-btn" onclick="runHallucinationAudit()">Run Audit</button>
-    </div>
-  </div>`;
+  area.innerHTML = `<button class="hall-run-btn" onclick="runHallucinationAudit()" style="margin-top:4px" title="Verify facts with web search across all model responses">🛡 Run Audit</button>`;
 }
 
 function renderHallucinationError(err) {
@@ -3636,6 +3689,12 @@ async function runFollowUpIntegratorOnly(q) {
 
   // Push the new question into conversationHistory
   state.conversationHistory.push({ role: 'user', content: q });
+
+  // Archive previous integrator turn, add new question bubble
+  archiveTurn();
+  { const qEl = document.createElement('div'); qEl.className = 'chat-question-bubble';
+    qEl.innerHTML = `<span>${q.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
+    document.getElementById('turnHistoryArea').appendChild(qEl); }
 
   // Prepare integrator area
   const intArea = document.getElementById('integratorResultArea');
