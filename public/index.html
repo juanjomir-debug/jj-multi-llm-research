@@ -1471,7 +1471,7 @@
       <div class="config-block-body" id="inlineIntegratorSection">
         <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px">
           <select id="intProvider" onchange="onIntProviderChange()" style="padding:5px 8px;font-size:.82rem;border-radius:var(--radius);width:100%;box-sizing:border-box">
-            <option value="anthropic">Claude</option><option value="openai">OpenAI</option>
+            <option value="anthropic">Claude</option><option value="openai" selected>OpenAI</option>
             <option value="google">Gemini</option><option value="xai">Grok</option>
           </select>
           <select id="intModel" onchange="updateEstimate()" style="padding:5px 8px;font-size:.82rem;border-radius:var(--radius);width:100%;box-sizing:border-box"></select>
@@ -2695,9 +2695,9 @@ function updateEnabledBadge() { const n = state.models.filter(m => m.enabled).le
 }
 function populateIntegratorDropdowns() {
   onIntProviderChange();
-  // Default integrator: Claude Haiku 4.5
+  // Default integrator: GPT-5 Mini
   const intMod = document.getElementById('intModel');
-  if (intMod) intMod.value = 'claude-haiku-4-5-20251001';
+  if (intMod) intMod.value = 'gpt-5-mini';
 }
 function onIntProviderChange() {
   const provKey = document.getElementById('intProvider').value;
