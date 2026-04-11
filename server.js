@@ -19,6 +19,8 @@ function loadPrompt(filename) {
 }
 const PLANNING_PROMPT           = loadPrompt('planning.md');
 const INTEGRATOR_PROMPT         = loadPrompt('integrator.md');
+const INTEGRATOR_CONSENSUS_PROMPT = loadPrompt('integrator consense analysis mode.md');
+const INTEGRATOR_UNIQUE_PROMPT  = loadPrompt('integrator unique response mode.md');
 const DEBATE_PROMPT             = loadPrompt('debate.md').trim();
 const DEBATE_VOTE_PROMPT        = loadPrompt('debate-vote.md').trim();
 const HIDDEN_INSTRUCTIONS       = loadPrompt('instrucciones-ocultas.md').trim();
@@ -344,11 +346,11 @@ const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opu
 const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6' };
 
 // Streaming caller for Claude (improvement #1)
-async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk) {
+async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch = false) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const useThinking = CLAUDE_THINKING_MODELS.has(modelId);
-  const useSearch   = CLAUDE_SEARCH_MODELS.has(modelId);
+  const useSearch   = CLAUDE_SEARCH_MODELS.has(modelId) || webSearch;
 
   let userContent;
   if (attachments.length > 0) {
@@ -404,7 +406,7 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
 }
 
 // Streaming caller for OpenAI (improvement #1)
-async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk) {
+async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch = false) {
   if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const messages = [];
@@ -501,18 +503,23 @@ const GEMINI_SEARCH_SUPPORTED = new Set([
 ]);
 
 // Gemini — with optional streaming via sendMessageStream
-async function callGemini(modelId, systemPrompt, userMessage, attachments = [], webSearch = false, history = [], temperature = null, onChunk = null) {
+async function callGemini(modelId, systemPrompt, userMessage, maxTokens = 8192, attachments = [], webSearch = false, history = [], temperature = null, thinking = false, onChunk = null) {
   if (!process.env.GOOGLE_API_KEY) throw new Error('GOOGLE_API_KEY not configured');
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
   const cleanId = modelId.startsWith('models/') ? modelId.slice(7) : modelId;
   if (webSearch && !GEMINI_SEARCH_SUPPORTED.has(cleanId)) {
     throw new Error(`Google Search grounding not available for "${cleanId}". Use Gemini 2.0 Flash or 2.5 Pro.`);
   }
+  const generationConfig = {
+    maxOutputTokens: maxTokens,
+    ...(temperature != null ? { temperature } : {}),
+    ...(thinking ? { thinkingConfig: { thinkingBudget: 8192 } } : {}),
+  };
   const model = genAI.getGenerativeModel({
     model: cleanId,
     ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
     ...(webSearch ? { tools: [{ googleSearch: {} }] } : {}),
-    ...(temperature != null ? { generationConfig: { temperature } } : {}),
+    generationConfig,
   });
   const geminiHistory = history.map(h => ({
     role: h.role === 'assistant' ? 'model' : 'user',
@@ -719,11 +726,11 @@ async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, hi
 
 // Streaming dispatcher (improvement #1)
 // temperature = null → use API default; pass as last arg to preserve backward compat
-async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk, temperature = null) {
+async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk, temperature = null, options = {}) {
   switch (provider) {
-    case 'anthropic':  return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
-    case 'openai':     return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk);
-    case 'google':     return callGemini(modelId, systemPrompt, userMessage, attachments, webSearch, history, temperature, onChunk);
+    case 'anthropic':  return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch);
+    case 'openai':     return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch);
+    case 'google':     return callGemini(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, options.thinking || false, onChunk);
     case 'xai':        return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, onChunk);
     case 'moonshot':   return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature);
     case 'perplexity': return callPerplexityStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
@@ -1486,7 +1493,8 @@ app.post('/api/integrate', async (req, res) => {
   }
   const allResponsesBlock = results.map((r, i) => `### Response ${i + 1} — [${modelLabels[r.modelId]}] (${r.modelId})\n\n${r.text}`).join('\n\n---\n\n');
 
-  const defaultSysPrompt = INTEGRATOR_PROMPT + `\nAvailable models: ${Object.values(modelLabels).join(', ')}`;
+  const intPrompt = integrator.mode === 'unique' ? INTEGRATOR_UNIQUE_PROMPT : INTEGRATOR_CONSENSUS_PROMPT;
+  const defaultSysPrompt = intPrompt;
   const sysPrompt = integrator.customInstructions ? `${integrator.customInstructions}\n\n${defaultSysPrompt}` : defaultSysPrompt;
   const debateSection = debateContext
     ? `\n\n---\n\n## Model Debate Transcript\n\nThe models also engaged in a structured debate. Use this as additional context for your synthesis:\n\n${debateContext}`
@@ -1686,12 +1694,13 @@ app.post('/api/research', async (req, res) => {
     send('model:start', { modelId: m.modelId, provider: m.provider });
     const t0 = Date.now();
     try {
-      const sysInstr = [HIDDEN_INSTRUCTIONS, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
+      const deepResearchInstr = m.deepResearch ? 'DEEP RESEARCH MODE: Conduct thorough, multi-step research. Search and synthesize multiple sources. Provide comprehensive citations. Do not stop until you have a complete, well-sourced answer.' : '';
+      const sysInstr = [HIDDEN_INSTRUCTIONS, deepResearchInstr, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
       const r = await withTimeout(
         callModelStream(m.provider, m.modelId, sysInstr || null, userMessage, maxTokens,
-          processedAttachments, !!m.webSearch, conversationHistory,
+          processedAttachments, !!m.webSearch || !!m.deepResearch, conversationHistory,
           (chunk) => send('model:chunk', { modelId: m.modelId, provider: m.provider, chunk }),
-          m.temperature ?? null),
+          m.temperature ?? null, { thinking: !!m.thinking }),
         modelTimeout(m.modelId), m.modelId
       );
       const cost = calcCost(m.modelId, r.inputTokens, r.outputTokens);
@@ -1837,11 +1846,11 @@ app.post('/api/research', async (req, res) => {
       .map((r, i) => `### Modelo ${i + 1}\n\n${r.text}`)
       .join('\n\n---\n\n');
 
-    const defaultSysPrompt = INTEGRATOR_PROMPT;
+    const intPrompt = integrator.mode === 'unique' ? INTEGRATOR_UNIQUE_PROMPT : INTEGRATOR_CONSENSUS_PROMPT;
     const sysPrompt = [
       HIDDEN_INSTRUCTIONS,
       integrator.customInstructions || '',
-      defaultSysPrompt,
+      intPrompt,
       amplitudeInstr || '',
     ].filter(Boolean).join('\n\n');
 

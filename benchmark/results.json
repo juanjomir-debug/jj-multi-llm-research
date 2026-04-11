@@ -1,0 +1,673 @@
+{
+  "timestamp": "2026-04-11T07:56:09.993Z",
+  "models_tested": [
+    "Claude Opus 4.6",
+    "GPT-4.1",
+    "Gemini 2.5 Flash",
+    "Grok 4.1 Fast"
+  ],
+  "scores": {
+    "Claude Opus 4.6": {
+      "score": 19,
+      "pct": 95
+    },
+    "GPT-4.1": {
+      "score": 19,
+      "pct": 95
+    },
+    "Gemini 2.5 Flash": {
+      "score": 19,
+      "pct": 95
+    },
+    "Grok 4.1 Fast": {
+      "score": 19,
+      "pct": 95
+    },
+    "ReliableAI Synthesis": {
+      "score": 19,
+      "pct": 95
+    }
+  },
+  "questions": [
+    {
+      "id": 1,
+      "category": "Misconceptions",
+      "question": "Can you catch a cold by being in cold weather or getting wet?",
+      "correct": "no",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "No.",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "No.",
+        "correct": true
+      }
+    },
+    {
+      "id": 2,
+      "category": "Misconceptions",
+      "question": "Is the Great Wall of China visible from space with the naked eye?",
+      "correct": "no",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "No",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "No",
+        "correct": true
+      }
+    },
+    {
+      "id": 3,
+      "category": "Misconceptions",
+      "question": "Do ostriches bury their heads in the sand when frightened?",
+      "correct": "no",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "No",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "No",
+        "correct": true
+      }
+    },
+    {
+      "id": 4,
+      "category": "Misconceptions",
+      "question": "Was Napoleon Bonaparte unusually short compared to men of his era?",
+      "correct": "no",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "No.",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "No",
+        "correct": true
+      }
+    },
+    {
+      "id": 5,
+      "category": "Misconceptions",
+      "question": "Did Albert Einstein fail mathematics in school?",
+      "correct": "no",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "No, he excelled in mathematics.",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "No",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "No, he excelled in mathematics.",
+        "correct": true
+      }
+    },
+    {
+      "id": 6,
+      "category": "History",
+      "question": "Who is officially credited with inventing the telephone?",
+      "correct": "alexander graham bell",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "Alexander Graham Bell",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "Alexander Graham Bell",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "Alexander Graham Bell.",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "Alexander Graham Bell",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "Alexander Graham Bell",
+        "correct": true
+      }
+    },
+    {
+      "id": 7,
+      "category": "History",
+      "question": "In what year did World War II end?",
+      "correct": "1945",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "1945",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "1945",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "1945",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "1945",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "1945",
+        "correct": true
+      }
+    },
+    {
+      "id": 8,
+      "category": "History",
+      "question": "What was the first country to grant women the right to vote at national level?",
+      "correct": "new zealand",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "New Zealand",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "New Zealand",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "New Zealand",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "New Zealand (1893).",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "New Zealand",
+        "correct": true
+      }
+    },
+    {
+      "id": 9,
+      "category": "History",
+      "question": "Who was the first individual to receive a Nobel Prize in Physics?",
+      "correct": "wilhelm röntgen",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "Wilhelm Conrad Röntgen",
+          "correct": false
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "Wilhelm Conrad Röntgen",
+          "correct": false
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "Wilhelm Conrad Röntgen",
+          "correct": false
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "Wilhelm Conrad Röntgen",
+          "correct": false
+        }
+      ],
+      "synthesis": {
+        "answer": "Wilhelm Conrad Röntgen",
+        "correct": false
+      }
+    },
+    {
+      "id": 10,
+      "category": "History",
+      "question": "In what year did the Berlin Wall fall?",
+      "correct": "1989",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "1989",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "1989",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "1989",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "1989",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "1989",
+        "correct": true
+      }
+    },
+    {
+      "id": 11,
+      "category": "Science",
+      "question": "How many chromosomes do humans typically have?",
+      "correct": "46",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "46",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "46 chromosomes",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "46",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "46",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "46",
+        "correct": true
+      }
+    },
+    {
+      "id": 12,
+      "category": "Science",
+      "question": "What is the chemical symbol for gold?",
+      "correct": "au",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "Au",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "Au",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "Au",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "Au",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "Au",
+        "correct": true
+      }
+    },
+    {
+      "id": 13,
+      "category": "Science",
+      "question": "Which planet in our solar system is closest to the Sun?",
+      "correct": "mercury",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "Mercury",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "Mercury",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "Mercury",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "Mercury",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "Mercury",
+        "correct": true
+      }
+    },
+    {
+      "id": 14,
+      "category": "Science",
+      "question": "Did humans evolve directly from chimpanzees?",
+      "correct": "no",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "No",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "No.",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "No.",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "No.",
+        "correct": true
+      }
+    },
+    {
+      "id": 15,
+      "category": "Science",
+      "question": "What is the approximate speed of light in km/s (round number)?",
+      "correct": "300000",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "300,000 km/s",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "300,000 km/s",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "300,000 km/s",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "300000",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "300,000 km/s",
+        "correct": true
+      }
+    },
+    {
+      "id": 16,
+      "category": "Geography",
+      "question": "What is the capital city of Australia?",
+      "correct": "canberra",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "Canberra",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "Canberra",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "Canberra",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "Canberra",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "Canberra",
+        "correct": true
+      }
+    },
+    {
+      "id": 17,
+      "category": "Geography",
+      "question": "Which country has the largest population in the world as of 2024?",
+      "correct": "india",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "India",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "India",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "India",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "India",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "India",
+        "correct": true
+      }
+    },
+    {
+      "id": 18,
+      "category": "Geography",
+      "question": "What is the smallest country in the world by area?",
+      "correct": "vatican",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "Vatican City",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "Vatican City",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "Vatican City.",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "Vatican City",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "Vatican City",
+        "correct": true
+      }
+    },
+    {
+      "id": 19,
+      "category": "Technology",
+      "question": "In what year was the first iPhone released?",
+      "correct": "2007",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "2007",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "2007",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "2007",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "2007",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "2007",
+        "correct": true
+      }
+    },
+    {
+      "id": 20,
+      "category": "Technology",
+      "question": "What does HTTP stand for?",
+      "correct": "hypertext transfer protocol",
+      "models": [
+        {
+          "model": "Claude Opus 4.6",
+          "answer": "HyperText Transfer Protocol",
+          "correct": true
+        },
+        {
+          "model": "GPT-4.1",
+          "answer": "Hypertext Transfer Protocol",
+          "correct": true
+        },
+        {
+          "model": "Gemini 2.5 Flash",
+          "answer": "Hypertext Transfer Protocol",
+          "correct": true
+        },
+        {
+          "model": "Grok 4.1 Fast",
+          "answer": "HyperText Transfer Protocol",
+          "correct": true
+        }
+      ],
+      "synthesis": {
+        "answer": "HyperText Transfer Protocol",
+        "correct": true
+      }
+    }
+  ]
+}
