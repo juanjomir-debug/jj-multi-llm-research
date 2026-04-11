@@ -2698,6 +2698,8 @@ function populateIntegratorDropdowns() {
   // Default integrator: GPT-5 Mini
   const intMod = document.getElementById('intModel');
   if (intMod) intMod.value = 'gpt-5-mini';
+  // Sync integrator length to answer length on init
+  syncAmplitudeToInt();
 }
 function onIntProviderChange() {
   const provKey = document.getElementById('intProvider').value;
