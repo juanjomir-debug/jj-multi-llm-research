@@ -1834,13 +1834,16 @@ app.post('/api/research', async (req, res) => {
     }
 
     const allResponsesBlock = results
-      .map((r, i) => `### Respuesta ${i + 1} — [${modelLabels[r.modelId]}] (${r.modelId})\n\n${r.text}`)
+      .map((r, i) => `### Modelo ${i + 1}\n\n${r.text}`)
       .join('\n\n---\n\n');
 
-    const defaultSysPrompt = INTEGRATOR_PROMPT + `\nAvailable models: ${Object.values(modelLabels).join(', ')}`;
-    const sysPrompt = integrator.customInstructions
-      ? `${HIDDEN_INSTRUCTIONS}\n\n${integrator.customInstructions}\n\n${defaultSysPrompt}`
-      : `${HIDDEN_INSTRUCTIONS}\n\n${defaultSysPrompt}`;
+    const defaultSysPrompt = INTEGRATOR_PROMPT;
+    const sysPrompt = [
+      HIDDEN_INSTRUCTIONS,
+      integrator.customInstructions || '',
+      defaultSysPrompt,
+      amplitudeInstr || '',
+    ].filter(Boolean).join('\n\n');
 
     const userMsg = `Pregunta original: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}`;
 

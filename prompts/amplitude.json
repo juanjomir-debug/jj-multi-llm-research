@@ -1,5 +1,5 @@
 {
-  "superconcise": "Longitud aproximada de la respuesta 1 pagina 1 párrafo",
+  "superconcise": "Respuesta muy breve: máximo 1 párrafo corto.",
   "concise":      "Longitud aproximada de la respuesta media pagina",
   "normal":       "Longitud aproximada de la respuesta 1 pagina",
   "detailed":     "Longitud aproximada de la respuesta 2-3 paginas",
