@@ -2945,6 +2945,7 @@ function updateResultCard(modelId, status, data) {
       <span class="duration-badge ${durationClass(data.durationMs)}" title="Duration">${dur}s</span>
       <span title="Tokens">${data.inputTokens}&#8593; ${data.outputTokens}&#8595;</span>
       <span style="color:var(--${costClass(data.cost) === 'cheap' ? 'success' : costClass(data.cost) === 'medium' ? 'warn' : 'danger'})">${fmtCost(data.cost)}</span>
+      ${data.webSearched ? '<span style="color:var(--accent)" title="Web search used">🔍 Web</span>' : ''}
       ${data.cached ? '<span style="color:var(--accent)" title="Cached response">&#9889;cached</span>' : ''}`;
     _copyBuf[safeId] = data.text;
 

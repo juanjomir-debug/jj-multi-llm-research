@@ -434,18 +434,27 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
 
   // gpt-5.2 = gpt-4o-search-preview via Chat Completions (search-enabled model)
   if (isSearchModel) {
+    // gpt-4o-search-preview does not support system messages — strip them
+    const searchMessages = messages.filter(m => m.role !== 'system');
+    const payload = {
+      model: 'gpt-4o-search-preview',
+      web_search_options: {},
+      messages: searchMessages,
+      max_tokens: effectiveMaxTokens,
+    };
+    console.log('[search] payload messages count:', searchMessages.length, '| max_tokens:', effectiveMaxTokens);
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: JSON.stringify({
-        model: 'gpt-4o-search-preview',
-        web_search_options: {},   // explicitly enable web search
-        messages,
-        max_tokens: effectiveMaxTokens,
-      }),
+      body: JSON.stringify(payload),
     });
-    if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(`OpenAI search ${resp.status}: ${JSON.stringify(err)}`); }
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      console.error('[search] API error:', resp.status, JSON.stringify(err));
+      throw new Error(`OpenAI search ${resp.status}: ${JSON.stringify(err)}`);
+    }
     const data = await resp.json();
+    console.log('[search] annotations:', data.choices?.[0]?.message?.annotations?.length || 0);
     // Extract text + any inline URL annotations
     const msg = data.choices?.[0]?.message;
     let text = msg?.content || 'No response';
@@ -456,7 +465,7 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
       text += '\n\n---\n**Sources:**\n' + urls.map(u => `- [${u.title || u.url}](${u.url})`).join('\n');
     }
     if (onChunk) onChunk(text);
-    return { text, inputTokens: data.usage?.prompt_tokens || 0, outputTokens: data.usage?.completion_tokens || 0 };
+    return { text, inputTokens: data.usage?.prompt_tokens || 0, outputTokens: data.usage?.completion_tokens || 0, webSearched: true };
   }
 
   const completionOpts = {
@@ -1652,10 +1661,12 @@ app.post('/api/research', async (req, res) => {
   try { processedAttachments = await processAttachments(attachments); } catch { processedAttachments = []; }
 
   let enabledModels = models.filter(m => m.enabled);
+  console.log('[research] models received:', enabledModels.map(m => `${m.provider}:${m.modelId}`).join(', '));
 
   // Free plan: filter to allowed models only
   if (userPlanId === 'free') {
     enabledModels = enabledModels.filter(m => FREE_MODELS.has(m.modelId));
+    console.log('[research] after free filter:', enabledModels.map(m => m.modelId).join(', '));
   }
   const results = [];
   const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[effectiveAmplitude] || '';

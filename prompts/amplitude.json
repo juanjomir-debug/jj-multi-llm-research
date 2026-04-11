@@ -1,7 +1,7 @@
 {
-  "superconcise": "Respuesta ULTRACORTA. Máximo 1 párrafo o 3 bullets. Ve al grano sin contexto ni introducción.",
-  "concise":      "Respuesta MUY CONCISA. Máximo 2-3 párrafos. Sin listas largas.",
-  "normal":       "",
-  "detailed":     "Proporciona una respuesta detallada y bien estructurada con ejemplos.",
-  "exhaustive":   "Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad."
+  "superconcise": "Longitud aproximada de la respuesta 1 pagina 1 párrafo",
+  "concise":      "Longitud aproximada de la respuesta media pagina",
+  "normal":       "Longitud aproximada de la respuesta 1 pagina",
+  "detailed":     "Longitud aproximada de la respuesta 2-3 paginas",
+  "exhaustive":   "Longitud aproximada de la respuesta 5 paginas Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad."
 }
