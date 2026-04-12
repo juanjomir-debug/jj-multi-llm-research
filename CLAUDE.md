@@ -5,6 +5,7 @@
 - **Frontend:** HTML/CSS/JS vanilla — `public/index.html` (~7,000 líneas JS inline, ~249KB)
 - **DB:** SQLite via `better-sqlite3` (`db.js`), migrations idempotentes al arrancar
 - **Hosting prod:** VPS Hostinger `187.124.184.177`, `/var/www/reliableai`, PM2 proceso `reliableai` (id 0)
+- **Hosting anterior:** Railway (ya no se usa)
 - **Blog:** blog.reliableai.net (WordPress + mu-plugins dark theme)
 
 ## Paths
@@ -23,10 +24,15 @@
 
 ## Deploy
 ```bash
-# VPS
+# VPS Hostinger (producción)
 git push origin main
 ssh user@187.124.184.177 "cd /var/www/reliableai && git reset --hard origin/main && npm install --omit=dev && pm2 restart reliableai"
 ```
+
+## Entorno local
+- Desarrollo en `C:\Users\juanj\OneDrive\Desktop\ReliableAi\`
+- Servidor local: `npm run dev` → http://localhost:3000
+- DB local: `data/data.db` (o `data.db` en raíz)
 
 ## Proveedores activos
 | Proveedor | Env var | SDK |

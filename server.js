@@ -510,8 +510,11 @@ async function callGemini(modelId, systemPrompt, userMessage, maxTokens = 8192, 
   if (webSearch && !GEMINI_SEARCH_SUPPORTED.has(cleanId)) {
     throw new Error(`Google Search grounding not available for "${cleanId}". Use Gemini 2.0 Flash or 2.5 Pro.`);
   }
+  // Pro models support up to 65536 output tokens — enforce a sensible minimum
+  const isProModel = cleanId.includes('pro');
+  const effectiveMaxTokens = isProModel ? Math.max(maxTokens, 8192) : maxTokens;
   const generationConfig = {
-    maxOutputTokens: maxTokens,
+    maxOutputTokens: effectiveMaxTokens,
     ...(temperature != null ? { temperature } : {}),
     ...(thinking ? { thinkingConfig: { thinkingBudget: 8192 } } : {}),
   };
@@ -727,12 +730,17 @@ async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, hi
 // Streaming dispatcher (improvement #1)
 // temperature = null → use API default; pass as last arg to preserve backward compat
 async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk, temperature = null, options = {}) {
+  // Qwen and Zhipu (GLM) do not support vision — strip image attachments
+  const NO_VISION_PROVIDERS = new Set(['qwen', 'zhipu']);
+  const effectiveAttachments = NO_VISION_PROVIDERS.has(provider)
+    ? attachments.filter(a => !a.type?.startsWith('image/'))
+    : attachments;
   switch (provider) {
-    case 'anthropic':  return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch);
-    case 'openai':     return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch);
-    case 'google':     return callGemini(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, options.thinking || false, onChunk);
-    case 'xai':        return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, temperature, onChunk);
-    case 'moonshot':   return callKimi(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature);
+    case 'anthropic':  return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, history, temperature, onChunk, webSearch);
+    case 'openai':     return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, history, temperature, onChunk, webSearch);
+    case 'google':     return callGemini(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, webSearch, history, temperature, options.thinking || false, onChunk);
+    case 'xai':        return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, webSearch, history, temperature, onChunk);
+    case 'moonshot':   return callKimi(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, history, temperature);
     case 'perplexity': return callPerplexityStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
     case 'qwen':       return callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
     case 'zhipu':      return callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
@@ -1354,6 +1362,7 @@ app.get('/api/hallucination-config', (req, res) => {
 
 // ─── LLM-based hallucination analysis ────────────────────────────────────────
 app.post('/api/analyze-hallucination', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
   const { text } = req.body;
   if (!text || typeof text !== 'string' || text.trim().length < 20) {
     return res.status(400).json({ error: 'text is required (min 20 chars)' });
@@ -1440,6 +1449,7 @@ app.post('/api/estimate', (req, res) => {
 
 // ─── Retry individual model (improvement #14) ─────────────────────────────────
 app.post('/api/retry', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
   const { provider, modelId, question, customInstructions, maxTokens, amplitude, webSearch, conversationHistory, attachments, temperature } = req.body;
   if (!provider || !modelId || !question) return res.status(400).json({ error: 'Missing params' });
 
@@ -1472,6 +1482,7 @@ app.post('/api/retry', async (req, res) => {
 
 // ─── Standalone integrate endpoint ─────────────────────────────────────────
 app.post('/api/integrate', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
   const { question, results = [], integrator = {}, maxTokensIntegrator = 4096,
           attachments = [], conversationHistory = [], debateContext = null } = req.body;
   if (!integrator.modelId || results.length === 0) return res.status(400).json({ error: 'Missing integrator or results' });
@@ -1639,7 +1650,8 @@ app.post('/api/research', async (req, res) => {
   const { question, models = [], integrator = {}, maxTokens = 2048, maxTokensIntegrator = 4096,
           attachments = [], amplitude = 'normal', conversationHistory = [],
           debateEnabled = false, debateRounds = 1,
-          cascadeEnabled = false, cascadeOrder = [] } = req.body;
+          cascadeEnabled = false, cascadeOrder = [],
+          temporaryChat = false } = req.body;
   const userId = req.session.userId || null;
   const sessionId = crypto.randomUUID();
 
@@ -1713,7 +1725,7 @@ app.post('/api/research', async (req, res) => {
       results.push(payload);
       send('model:done', payload);
       if (userMessage === question) setCache(m.modelId, question, amplitude, payload);
-      if (userId) {
+      if (userId && !temporaryChat) {
         db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
           .run(userId, sessionId, m.provider, m.modelId, question, cleanText, r.inputTokens, r.outputTokens, cost, durationMs);
       }
@@ -1867,7 +1879,7 @@ app.post('/api/research', async (req, res) => {
       const durationMs = Date.now() - t0;
       send('integrator:done', { text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs });
 
-      if (userId) {
+      if (userId && !temporaryChat) {
         db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
           .run(userId, sessionId, integrator.provider, integrator.modelId, question, r.text, r.inputTokens, r.outputTokens, cost, durationMs);
         const allCosts = results.reduce((s, x) => s + x.cost, 0) + cost;
@@ -2245,10 +2257,10 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), asyn
 
 // ── Admin: configure Stripe Price IDs ──────────────────────────────────────
 // POST /api/admin/billing/plans  body: { token, plans: [{id:'starter', stripe_price_id:'price_xxx'}, ...] }
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin_change_me';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 app.post('/api/admin/billing/plans', (req, res) => {
   const { token, plans } = req.body || {};
-  if (token !== ADMIN_TOKEN) return res.status(403).json({ error: 'Forbidden' });
+  if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) return res.status(403).json({ error: 'Forbidden' });
   if (!Array.isArray(plans)) return res.status(400).json({ error: 'plans must be an array' });
   const stmt = db.prepare('UPDATE plans SET stripe_price_id = ? WHERE id = ?');
   const results = [];

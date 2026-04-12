@@ -186,6 +186,8 @@ const userBillingCols = [
   `ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE users ADD COLUMN verification_token TEXT DEFAULT NULL`,
   `ALTER TABLE users ADD COLUMN verification_sent_at TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN reset_token TEXT DEFAULT NULL`,
+  `ALTER TABLE users ADD COLUMN reset_token_expires TEXT DEFAULT NULL`,
 ];
 for (const sql of userBillingCols) {
   try {
