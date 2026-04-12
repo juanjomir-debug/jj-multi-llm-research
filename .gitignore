@@ -11,6 +11,9 @@ github-deploy.js
 railway-deploy.js
 probe-upload.js
 
+# GitHub Actions workflows (PAT lacks workflow scope)
+.github/workflows/
+
 # iOS / Capacitor
 ios/App/Pods/
 ios/App/App.xcworkspace/xcuserdata/
