@@ -12,7 +12,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [2/2] Deploying to VPS...
-ssh root@187.124.184.177 "cd /var/www/reliableai && git reset --hard origin/master && npm install --omit=dev && pm2 restart reliableai && pm2 status"
+ssh -i "%USERPROFILE%\.ssh\id_rsa" root@187.124.184.177 "cd /var/www/reliableai && git reset --hard origin/master && npm install --omit=dev && pm2 restart reliableai && pm2 status"
 if %errorlevel% neq 0 (
     echo ERROR: SSH deploy failed
     pause
