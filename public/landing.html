@@ -156,9 +156,30 @@
     .nav-links { display: flex; align-items: center; gap: 32px; }
     .nav-links a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .2s; }
     .nav-links a:hover { color: var(--text); }
+    .nav-links a.nav-active { color: var(--blue); font-weight: 600; }
     .nav-cta { background: var(--blue); color: #fff !important; padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: .88rem; transition: opacity .2s !important; }
     .nav-cta:hover { opacity: .85; }
-    @media (max-width: 700px) { .nav-links { display: none; } nav { padding: 0 20px; } }
+    /* Hamburger */
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; background: none; border: none; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: all .25s; }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    @media (max-width: 700px) {
+      nav { padding: 0 20px; }
+      .nav-hamburger { display: flex; }
+      .nav-links {
+        display: none; flex-direction: column; gap: 0;
+        position: fixed; top: 64px; left: 0; right: 0;
+        background: rgba(28,28,28,.97); backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 0; z-index: 99;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 12px 24px; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,.04); }
+      .nav-links a:last-child { border-bottom: none; }
+      .nav-cta { margin: 8px 24px; border-radius: 8px; text-align: center; }
+    }
 
     /* ── HERO ── */
     .hero {
@@ -493,7 +514,10 @@
 <!-- ═══ NAV ═══ -->
 <nav>
   <a href="/" class="nav-logo">Reliable<span>AI</span></a>
-  <div class="nav-links">
+  <button class="nav-hamburger" id="navHamburger" aria-label="Menu" onclick="toggleMobileNav()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="nav-links" id="navLinks">
     <a href="#how-it-works">How it works</a>
     <a href="#features">Features</a>
     <a href="#verticals">Use cases</a>
@@ -1050,6 +1074,41 @@
   window.addEventListener('scroll', () => {
     document.querySelector('nav').style.background =
       window.scrollY > 40 ? 'rgba(28,28,28,.97)' : 'rgba(28,28,28,.85)';
+  });
+
+  // ── Scroll spy — resalta el link activo según sección visible ──
+  const navSections = [
+    { id: 'how-it-works', href: '#how-it-works' },
+    { id: 'features',     href: '#features' },
+    { id: 'verticals',    href: '#verticals' },
+    { id: 'pricing',      href: '#pricing' },
+  ];
+  const spyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      const link = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
+      if (!link) return;
+      if (e.isIntersecting) link.classList.add('nav-active');
+      else link.classList.remove('nav-active');
+    });
+  }, { rootMargin: '-20% 0px -60% 0px' });
+  navSections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el) spyObserver.observe(el);
+  });
+
+  // ── Hamburger menu ──
+  function toggleMobileNav() {
+    const btn = document.getElementById('navHamburger');
+    const links = document.getElementById('navLinks');
+    btn.classList.toggle('open');
+    links.classList.toggle('open');
+  }
+  // Cerrar al clicar un link
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', () => {
+      document.getElementById('navHamburger').classList.remove('open');
+      document.getElementById('navLinks').classList.remove('open');
+    });
   });
 
   // ── Counter animation ──
