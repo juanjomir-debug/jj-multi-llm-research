@@ -483,7 +483,7 @@
     .hall-run-btn:disabled { opacity: .45; cursor: not-allowed; }
     .hall-empty { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
     /* ── Reliability Index ──────────────────────────────────────────────────── */
-    .reliability-index { border-top: 1px solid rgba(167,139,250,.25); padding: 14px 16px; background: rgba(167,139,250,.04); max-width: 480px; }
+    .reliability-index { border-top: 1px solid rgba(167,139,250,.25); padding: 14px 16px; background: rgba(167,139,250,.04); }
     .reliability-index h4 { font-size: .8rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--grok); margin-bottom: 12px; }
     .ri-global { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding: 10px 14px; background: rgba(167,139,250,.1); border-radius: 8px; border: 1px solid rgba(167,139,250,.25); }
     .ri-global-label { font-size: .8rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
@@ -531,7 +531,13 @@
     .empty-state .emo { font-size: 2.5rem; } .empty-state p { font-size: .85rem; max-width: 340px; line-height: 1.5; }
 
     @media (max-width: 900px) {
-      .main { overflow: visible; } body { overflow-y: auto; } .results-grid { grid-template-columns: 1fr !important; }
+      .main { overflow: visible; } body { overflow-y: auto; overflow-x: hidden; } .results-grid { grid-template-columns: 1fr !important; }
+      .answers-area, .tab-panel, #tabPanel-integration, #turnHistoryArea,
+      #integratorResultArea, #resultsSection, .integrator-result-card,
+      .result-body, .integrator-result-body, .hallucination-panel {
+        max-width: 100vw; overflow-x: hidden; box-sizing: border-box;
+      }
+      .md-content pre { overflow-x: auto; max-width: 100%; }
     }
     @media (min-width: 901px) { .layout { height: calc(100vh - 78px); } .main { height: 100%; overflow-y: auto; } .mobile-toggle-btn { display: none; } }
 
@@ -5184,6 +5190,10 @@ async function submitForgotPassword() {
 function openRefinePanel() {
   document.getElementById('planningModalOverlay').classList.remove('hidden');
   if (typeof updatePlanModels === 'function') updatePlanModels();
+  // Copy current question into research objective
+  const q = document.getElementById('questionInput')?.value.trim();
+  const planObj = document.getElementById('planObjective');
+  if (q && planObj && !planObj.value.trim()) planObj.value = q;
 }
 function closePlanningModal(e) {
   if (!e || e.target === document.getElementById('planningModalOverlay'))
