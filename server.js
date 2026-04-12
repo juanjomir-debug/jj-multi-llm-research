@@ -1,10 +1,6 @@
-// En producción (NODE_ENV=production) no cargar .env — las vars vienen de Railway.
-// En local sí se carga para desarrollo.
-if (process.env.NODE_ENV !== 'production') {
-  // override:true para que las vars del .env sobreescriban variables de entorno
-  // del sistema Windows que puedan tener valores vacíos/incorrectos
-  require('dotenv').config({ path: require('path').join(__dirname, '.env'), override: true });
-}
+// Cargar .env siempre (VPS + local). override:true para que las vars del .env
+// sobreescriban variables de entorno del sistema que puedan tener valores vacíos.
+require('dotenv').config({ path: require('path').join(__dirname, '.env'), override: true });
 const crypto        = require('crypto');
 const express       = require('express');
 const path          = require('path');
@@ -89,6 +85,9 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing.
 app.get('/demo', (req, res) => res.sendFile(path.join(__dirname, 'public', 'demo.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'public', 'security.html')));
 app.use(express.static(path.join(__dirname, 'public')));
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  console.error('[FATAL] SESSION_SECRET must be set in production'); process.exit(1);
+}
 app.use(session({
   secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave: false,
@@ -315,20 +314,20 @@ async function processAttachments(attachments = []) {
 const responseCache = new Map();
 const CACHE_TTL = 30 * 60 * 1000; // 30 min
 
-function getCacheKey(modelId, question, amplitude) {
-  return `${modelId}:${amplitude}:${crypto.createHash('md5').update(question).digest('hex')}`;
+function getCacheKey(modelId, question, amplitude, userId) {
+  return `${userId||'anon'}:${modelId}:${amplitude}:${crypto.createHash('md5').update(question).digest('hex')}`;
 }
 
-function getCached(modelId, question, amplitude) {
-  const key = getCacheKey(modelId, question, amplitude);
+function getCached(modelId, question, amplitude, userId) {
+  const key = getCacheKey(modelId, question, amplitude, userId);
   const entry = responseCache.get(key);
   if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.data;
   if (entry) responseCache.delete(key);
   return null;
 }
 
-function setCache(modelId, question, amplitude, data) {
-  const key = getCacheKey(modelId, question, amplitude);
+function setCache(modelId, question, amplitude, data, userId) {
+  const key = getCacheKey(modelId, question, amplitude, userId);
   responseCache.set(key, { ts: Date.now(), data });
   // Keep cache under 200 entries
   if (responseCache.size > 200) {
@@ -799,7 +798,7 @@ function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function createMailTransport() {
   const host = process.env.SMTP_HOST;
   if (!host) return null;
-  const tlsOpts = { rejectUnauthorized: false };
+  const tlsOpts = {};
   if (process.env.SMTP_CIPHERS) tlsOpts.ciphers = process.env.SMTP_CIPHERS;
   return nodemailer.createTransport({
     host,
@@ -876,7 +875,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   if (user) {
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 3600_000).toISOString(); // 1 hour
-    db.prepare('UPDATE users SET verification_token = ?, verification_sent_at = ? WHERE id = ?')
+    db.prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?')
       .run(token, expires, user.id);
     const appUrl = process.env.APP_URL || 'https://reliableai.net';
     const resetLink = `${appUrl}/analyze?reset_token=${token}`;
@@ -899,13 +898,13 @@ app.post('/api/auth/reset-password', async (req, res) => {
   const password = typeof req.body.password === 'string' ? req.body.password : '';
   if (!token || password.length < 8)
     return res.status(400).json({ error: 'Token y contraseña (mín. 8 chars) requeridos' });
-  const user = db.prepare('SELECT id, verification_sent_at FROM users WHERE verification_token = ?').get(token);
+  const user = db.prepare('SELECT id, reset_token_expires FROM users WHERE reset_token = ?').get(token);
   if (!user) return res.status(400).json({ error: 'Token inválido o expirado' });
-  const expires = user.verification_sent_at ? new Date(user.verification_sent_at) : null;
+  const expires = user.reset_token_expires ? new Date(user.reset_token_expires) : null;
   if (!expires || Date.now() > expires.getTime())
     return res.status(400).json({ error: 'Token expirado — solicita uno nuevo' });
   const hash = await bcrypt.hash(password, 12);
-  db.prepare('UPDATE users SET password_hash = ?, verification_token = NULL, verification_sent_at = NULL WHERE id = ?')
+  db.prepare('UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?')
     .run(hash, user.id);
   res.json({ ok: true, message: 'Password updated — you can now log in.' });
 });
@@ -1660,17 +1659,30 @@ app.post('/api/research', async (req, res) => {
   const userPlan = PLANS[(userRow?.plan) || 'free'] || PLANS.free;
   const userPlanId = (userRow?.plan) || 'free';
 
-  // Daily query limit check
+  // Daily query limit check (counter incremented later after models validated)
   if (userRow) {
     resetDailyIfNeeded(userRow);
     if (userPlan.dailyQueries && userRow.daily_queries >= userPlan.dailyQueries) {
       return res.status(429).json({ error: 'daily_limit', message: `Daily limit of ${userPlan.dailyQueries} queries reached.` });
     }
-    incrementDailyQueries(userId);
   }
 
   // Amplitude restriction for free plan
   const effectiveAmplitude = (userPlanId === 'free') ? 'concise' : amplitude;
+
+  // Validate enabled models before opening SSE stream
+  let enabledModels = models.filter(m => m.enabled);
+  console.log('[research] models received:', enabledModels.map(m => `${m.provider}:${m.modelId}`).join(', '));
+
+  // Free plan: filter to allowed models only
+  if (userPlanId === 'free') {
+    enabledModels = enabledModels.filter(m => FREE_MODELS.has(m.modelId));
+    console.log('[research] after free filter:', enabledModels.map(m => m.modelId).join(', '));
+  }
+  if (enabledModels.length === 0) return res.status(400).json({ error: 'No enabled models' });
+
+  // Increment daily counter only after models are validated
+  if (userRow) incrementDailyQueries(userId);
 
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
   const send = (event, data) => { if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
@@ -1680,14 +1692,6 @@ app.post('/api/research', async (req, res) => {
   let processedAttachments = [];
   try { processedAttachments = await processAttachments(attachments); } catch { processedAttachments = []; }
 
-  let enabledModels = models.filter(m => m.enabled);
-  console.log('[research] models received:', enabledModels.map(m => `${m.provider}:${m.modelId}`).join(', '));
-
-  // Free plan: filter to allowed models only
-  if (userPlanId === 'free') {
-    enabledModels = enabledModels.filter(m => FREE_MODELS.has(m.modelId));
-    console.log('[research] after free filter:', enabledModels.map(m => m.modelId).join(', '));
-  }
   const results = [];
   const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[effectiveAmplitude] || '';
 
@@ -1696,7 +1700,7 @@ app.post('/api/research', async (req, res) => {
 
   async function runOneModel(m, userMessage) {
     const cached = processedAttachments.length === 0 && conversationHistory.length === 0 && userMessage === question
-      ? getCached(m.modelId, question, amplitude) : null;
+      ? getCached(m.modelId, question, amplitude, userId) : null;
     if (cached) {
       send('model:start', { modelId: m.modelId, provider: m.provider });
       results.push({ ...cached, cached: true });
@@ -1724,7 +1728,7 @@ app.post('/api/research', async (req, res) => {
       const payload = { modelId: m.modelId, provider: m.provider, text: cleanText, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs, selfScore };
       results.push(payload);
       send('model:done', payload);
-      if (userMessage === question) setCache(m.modelId, question, amplitude, payload);
+      if (userMessage === question) setCache(m.modelId, question, amplitude, payload, userId);
       if (userId && !temporaryChat) {
         db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
           .run(userId, sessionId, m.provider, m.modelId, question, cleanText, r.inputTokens, r.outputTokens, cost, durationMs);
@@ -2287,9 +2291,9 @@ app.post('/api/admin/bootstrap', (req, res) => {
 });
 
 // ─── DB Migration import (temporary, protected by token) ─────────────────────
-const MIGRATE_TOKEN = process.env.MIGRATE_TOKEN || 'mig_change_me_in_env';
+const MIGRATE_TOKEN = process.env.MIGRATE_TOKEN;
 app.post('/api/migrate-import', express.json({ limit: '50mb' }), (req, res) => {
-  if (req.headers['x-migrate-token'] !== MIGRATE_TOKEN) return res.status(403).json({ error: 'forbidden' });
+  if (!MIGRATE_TOKEN || req.headers['x-migrate-token'] !== MIGRATE_TOKEN) return res.status(403).json({ error: 'forbidden' });
   const { users: srcUsers = [], history: srcHistory = [], debate_responses: srcDebate = [],
           debate_votes: srcVotes = [], projects: srcProjects = [], project_sessions: srcPS = [] } = req.body;
   let inserted = { users: 0, history: 0, debate_responses: 0, debate_votes: 0, projects: 0, project_sessions: 0 };
