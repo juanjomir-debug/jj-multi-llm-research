@@ -2533,6 +2533,8 @@ function clearConversation() {
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
   document.getElementById('convBar').style.display = 'none';
+  const convTurns = document.getElementById('convTurns');
+  if (convTurns) convTurns.textContent = '';
   // Reset Research Planning
   const planObj = document.getElementById('planObjective');
   if (planObj) planObj.value = '';
@@ -2541,6 +2543,7 @@ function clearConversation() {
   const planBody = document.getElementById('planResultBody');
   if (planBody) planBody.innerHTML = '';
   _lastPlan = null;
+  updateConvIndicator();
 }
 
 function onTempChatToggle(enabled) {
