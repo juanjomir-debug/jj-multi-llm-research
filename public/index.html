@@ -1857,22 +1857,23 @@ const PROVIDERS = {
   qwen: {
     label: 'Qwen', icon: '&#128200;', color: 'var(--qwen, #6550d4)', dotColor: '#6550d4',
     models: [
-      { id: 'qwq-32b',     label: 'QwQ 32B (Reasoning)' },
-      { id: 'qwen-max',    label: 'Qwen Max' },
-      { id: 'qwen-plus',   label: 'Qwen Plus (Qwen3)' },
-      { id: 'qwen-turbo',  label: 'Qwen Turbo' },
+      { id: 'qwen-max-thinking', label: 'Qwen Max (Thinking) 🧠' },
+      { id: 'qwen-max',          label: 'Qwen Max' },
+      { id: 'qwen-plus',         label: 'Qwen Plus (Qwen3)' },
+      { id: 'qwen-turbo',        label: 'Qwen Turbo' },
     ],
     defaultModel: 'qwen-plus',
   },
   zhipu: {
     label: 'GLM', icon: '&#127979;', color: 'var(--zhipu, #ff6b6b)', dotColor: '#ff6b6b',
     models: [
-      { id: 'glm-5-turbo',   label: 'GLM 5 Turbo' },
-      { id: 'glm-5',         label: 'GLM 5' },
-      { id: 'glm-4.7',       label: 'GLM 4.7' },
-      { id: 'glm-4.6',       label: 'GLM 4.6' },
-      { id: 'glm-4.5',       label: 'GLM 4.5' },
-      { id: 'glm-4.5-air',   label: 'GLM 4.5 Air' },
+      { id: 'glm-5-turbo',        label: 'GLM 5 Turbo' },
+      { id: 'glm-5-turbo-search', label: 'GLM 5 Turbo 🔍' },
+      { id: 'glm-5',              label: 'GLM 5' },
+      { id: 'glm-4.7',            label: 'GLM 4.7' },
+      { id: 'glm-4.6',            label: 'GLM 4.6' },
+      { id: 'glm-4.5',            label: 'GLM 4.5' },
+      { id: 'glm-4.5-air',        label: 'GLM 4.5 Air' },
     ],
     defaultModel: 'glm-5-turbo',
   },
@@ -1912,18 +1913,19 @@ const PRICING = {
   'grok-4-1-fast-reasoning':      { i: 0.2,  o: 0.5  },
   'grok-4-1-fast-non-reasoning':  { i: 0.2,  o: 0.5  },
   // Qwen
-  'qwq-32b':    { i: 0.6,  o: 2.4  },
+  'qwen-max-thinking': { i: 1.6,  o: 6.4  },
   'qwen-max':   { i: 1.6,  o: 6.4  },
   'qwen-plus':  { i: 0.4,  o: 1.2  },
   'qwen-turbo': { i: 0.05, o: 0.15 },
   // Zhipu (GLM)
-  'glm-5.1':       { i: 0.5,  o: 2.0  },
-  'glm-5-turbo':   { i: 0.1,  o: 0.4  },
-  'glm-5':         { i: 0.3,  o: 1.2  },
-  'glm-4.7':       { i: 0.25, o: 1.0  },
-  'glm-4.6':       { i: 0.2,  o: 0.8  },
-  'glm-4.5':       { i: 0.15, o: 0.6  },
-  'glm-4.5-air':   { i: 0.05, o: 0.2  },
+  'glm-5.1':          { i: 0.5,  o: 2.0  },
+  'glm-5-turbo':      { i: 0.1,  o: 0.4  },
+  'glm-5-turbo-search':{ i: 0.1, o: 0.4  },
+  'glm-5':            { i: 0.3,  o: 1.2  },
+  'glm-4.7':          { i: 0.25, o: 1.0  },
+  'glm-4.6':          { i: 0.2,  o: 0.8  },
+  'glm-4.5':          { i: 0.15, o: 0.6  },
+  'glm-4.5-air':      { i: 0.05, o: 0.2  },
 };
 
 function calcCost(id,i,o){const p=PRICING[id];return p?(i/1e6)*p.i+(o/1e6)*p.o:0;}
@@ -1934,7 +1936,7 @@ const _copyBuf = {};
 const AMPLITUDE_TOKENS     = { superconcise: 170,  concise: 512,  normal: 2048, detailed: 4096, exhaustive: 8192 };
 // Actual API ceiling: high enough to finish a brief response cleanly, not cut mid-sentence
 const AMPLITUDE_MAX_TOKENS = { superconcise: 600,  concise: 1200, normal: 2048, detailed: 4096, exhaustive: 8192 };
-const WEB_SEARCH_PROVIDERS = new Set(['anthropic', 'openai', 'google', 'xai']);
+const WEB_SEARCH_PROVIDERS = new Set(['anthropic', 'openai', 'google', 'xai', 'qwen', 'zhipu']);
 const ALWAYS_SEARCH_PROVIDERS = new Set([]); // reserved for providers that always search
 
 // Claude: base model → search variant (and reverse)
@@ -2813,6 +2815,20 @@ function toggleWebSearch(idx) {
       m.modelId = 'gpt-5.2';
     } else {
       m.modelId = m._searchPreBase || 'gpt-5-mini';
+    }
+    if (sel) sel.value = m.modelId;
+    updateEstimate();
+  }
+
+  // Qwen: enable_search via extra_body — no model switch needed, just flag
+  // GLM: auto-switch to/from glm-5-turbo-search
+  if (m.provider === 'zhipu') {
+    const sel = document.getElementById(`sel-${m.provider}`);
+    if (m.webSearch) {
+      m._searchPreBase = m.modelId;
+      m.modelId = 'glm-5-turbo-search';
+    } else {
+      m.modelId = m._searchPreBase || 'glm-5-turbo';
     }
     if (sel) sel.value = m.modelId;
     updateEstimate();
@@ -5490,7 +5506,8 @@ const REASONING_ON = {
   anthropic: 'claude-opus-4-6-thinking',
   openai:    'o4-mini',
   xai:       null, // determined dynamically from current model
-  qwen:      'qwq-32b',
+  qwen:      'qwen-max-thinking',
+  zhipu:     'glm-5-turbo', // GLM no tiene reasoning dedicado, usa el mismo modelo
 };
 
 function toggleGlobalReasoning() {
@@ -5523,9 +5540,11 @@ function toggleGlobalReasoning() {
       }
       if (sel) sel.value = m.modelId;
     } else if (m.provider === 'qwen') {
-      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'qwq-32b'; }
+      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'qwen-max-thinking'; }
       else { m.modelId = m._preReasoningModel || 'qwen-plus'; }
       if (sel) sel.value = m.modelId;
+    } else if (m.provider === 'zhipu') {
+      // GLM no tiene modelo reasoning dedicado — no cambia
     }
   });
   updateEstimate();
@@ -5583,6 +5602,18 @@ function toggleGlobalWebSearch() {
       const sel = document.getElementById(`sel-${m.provider}`);
       if (sel) sel.value = m.modelId;
     }
+    // GLM: auto-switch to search model
+    if (m.provider === 'zhipu') {
+      if (isOn) {
+        m._searchPreBase = m.modelId;
+        m.modelId = 'glm-5-turbo-search';
+      } else {
+        m.modelId = m._searchPreBase || 'glm-5-turbo';
+      }
+      const sel = document.getElementById(`sel-${m.provider}`);
+      if (sel) sel.value = m.modelId;
+    }
+    // Qwen: just flag webSearch, no model switch needed
   });
   updateEnabledBadge();
   updateEstimate();

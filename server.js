@@ -676,19 +676,22 @@ async function callPerplexityStream(modelId, systemPrompt, userMessage, maxToken
 }
 
 // Qwen (Alibaba DashScope) — OpenAI-compatible API
-async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk) {
+async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, webSearch = false) {
   if (!process.env.QWEN_API_KEY) throw new Error('QWEN_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.QWEN_API_KEY, baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' });
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
   messages.push(...history);
   messages.push({ role: 'user', content: userMessage });
-  const isReasoning = modelId === 'qwq-32b';
+  const isThinking = modelId === 'qwen-max-thinking';
+  const baseModelId = isThinking ? 'qwen-max' : modelId;
   const opts = {
-    model: modelId, messages, stream: true,
+    model: baseModelId, messages, stream: true,
     stream_options: { include_usage: true },
-    ...(isReasoning ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens }),
-    ...(!isReasoning && temperature != null ? { temperature } : {}),
+    max_tokens: maxTokens,
+    ...(!isThinking && temperature != null ? { temperature } : {}),
+    ...(isThinking ? { extra_body: { enable_thinking: true } } : {}),
+    ...(webSearch ? { extra_body: { ...( isThinking ? { enable_thinking: true } : {}), enable_search: true } } : {}),
   };
   let text = '', inputTokens = 0, outputTokens = 0;
   const stream = await client.chat.completions.create(opts);
@@ -702,18 +705,22 @@ async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, his
 }
 
 // Zhipu AI (GLM) — OpenAI-compatible API
-async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk) {
+async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, webSearch = false) {
   if (!process.env.ZHIPU_API_KEY) throw new Error('ZHIPU_API_KEY not configured');
   const client = new OpenAI({ apiKey: process.env.ZHIPU_API_KEY, baseURL: 'https://open.bigmodel.cn/api/paas/v4' });
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
   messages.push(...history);
   messages.push({ role: 'user', content: userMessage });
+  // glm-5-turbo-search es el modelo con búsqueda integrada
+  const isSearchModel = modelId === 'glm-5-turbo-search';
+  const baseModelId = isSearchModel ? 'glm-5-turbo' : modelId;
   const opts = {
-    model: modelId, messages, stream: true,
+    model: baseModelId, messages, stream: true,
     stream_options: { include_usage: true },
     max_tokens: maxTokens,
     ...(temperature != null ? { temperature } : {}),
+    ...((webSearch || isSearchModel) ? { tools: [{ type: 'web_search', web_search: { enable: true } }] } : {}),
   };
   let text = '', inputTokens = 0, outputTokens = 0;
   const stream = await client.chat.completions.create(opts);
@@ -741,8 +748,8 @@ async function callModelStream(provider, modelId, systemPrompt, userMessage, max
     case 'xai':        return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, webSearch, history, temperature, onChunk);
     case 'moonshot':   return callKimi(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, history, temperature);
     case 'perplexity': return callPerplexityStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
-    case 'qwen':       return callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
-    case 'zhipu':      return callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
+    case 'qwen':       return callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, !!webSearch);
+    case 'zhipu':      return callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, !!webSearch);
     default: throw new Error(`Unknown provider: ${provider}`);
   }
 }
