@@ -2534,7 +2534,9 @@ function clearConversation() {
   const intP = document.getElementById('tabPanel-integration'); if (intP) intP.style.display = 'none';
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
-  document.getElementById('convBar').style.display = 'none';
+  // Force hide convBar and clear turns text
+  const convBar = document.getElementById('convBar');
+  if (convBar) convBar.style.display = 'none';
   const convTurns = document.getElementById('convTurns');
   if (convTurns) convTurns.textContent = '';
   // Reset Research Planning
@@ -2545,7 +2547,6 @@ function clearConversation() {
   const planBody = document.getElementById('planResultBody');
   if (planBody) planBody.innerHTML = '';
   _lastPlan = null;
-  updateConvIndicator();
 }
 
 function onTempChatToggle(enabled) {
