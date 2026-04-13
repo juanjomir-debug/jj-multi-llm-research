@@ -442,7 +442,7 @@
     .integrator-result-footer .tval { font-family: monospace; font-weight: 600; font-size: .8rem; }
 
     /* ── Hallucination Audit Panel ──────────────────────────────────────────── */
-    .hallucination-panel { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+    .hallucination-panel { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; max-width: 100%; box-sizing: border-box; }
     .hallucination-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
     .hallucination-header h4 { font-size: .82rem; font-weight: 700; flex: 1; margin: 0; }
     .hallucination-header .hall-global-badge { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
@@ -1402,7 +1402,7 @@
         <div id="bottomAnalysisRow" style="margin-top:12px">
           <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
             <div style="flex:1;min-width:0"><div id="reliabilityIndexArea"></div></div>
-            <div id="hallucinationArea" style="flex-shrink:0"></div>
+            <div id="hallucinationArea" style="flex-shrink:0;min-width:0;max-width:100%;overflow:hidden"></div>
           </div>
           <div id="consensusPanelArea" style="display:none;margin-top:10px"></div>
         </div>
@@ -5416,9 +5416,12 @@ function switchResultTab(tabId) {
 
 function showIntegrationPanel() {
   // Ensure the integration tab bar is visible, then switch to it
+  // Only auto-switch if user is not already viewing a model tab
   const bar = document.getElementById('resultTabsBar');
   if (bar) bar.style.display = 'flex';
-  switchResultTab('integration');
+  if (_activeResultTab === 'integration' || !_activeResultTab.startsWith('model-')) {
+    switchResultTab('integration');
+  }
 }
 
 // Config panel toggle (right sidebar collapsibles)

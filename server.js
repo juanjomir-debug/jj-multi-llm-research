@@ -720,7 +720,7 @@ async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, hi
     stream_options: { include_usage: true },
     max_tokens: maxTokens,
     ...(temperature != null ? { temperature } : {}),
-    ...((webSearch || isSearchModel) ? { tools: [{ type: 'web_search', web_search: { enable: true } }] } : {}),
+    ...((webSearch || isSearchModel) ? { extra_body: { web_search: { enable: true, search_result: true } } } : {}),
   };
   let text = '', inputTokens = 0, outputTokens = 0;
   const stream = await client.chat.completions.create(opts);
