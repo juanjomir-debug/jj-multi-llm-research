@@ -771,8 +771,10 @@ function modelTimeout(modelId) {
   const isThinking = CLAUDE_THINKING_MODELS.has(modelId) ||
     /thinking|reasoning|o3|o4/.test(modelId);
   if (isThinking) return 300_000; // 5 min for thinking
+  const isGeminiPro = /gemini.*pro/.test(modelId);
+  if (isGeminiPro) return 360_000; // 6 min for Gemini Pro preview (very slow)
   const isGemini = /gemini/.test(modelId);
-  if (isGemini) return 240_000; // 4 min for Gemini (web search is slow)
+  if (isGemini) return 240_000; // 4 min for Gemini Flash
   return 120_000; // 2 min default
 }
 
