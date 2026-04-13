@@ -679,7 +679,7 @@ async function callPerplexityStream(modelId, systemPrompt, userMessage, maxToken
 async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, webSearch = false) {
   if (!process.env.QWEN_API_KEY) throw new Error('QWEN_API_KEY not configured');
   const isThinking = modelId === 'qwen-max-thinking';
-  const baseModelId = isThinking ? 'qwen-max' : modelId;
+  const baseModelId = isThinking ? 'qwen3-235b-a22b' : modelId; // qwen3-235b supports thinking
 
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
@@ -694,7 +694,7 @@ async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, his
     stream_options: { include_usage: true },
     max_tokens: maxTokens,
     ...(!isThinking && temperature != null ? { temperature } : {}),
-    ...(isThinking ? { enable_thinking: true } : {}),
+    ...(isThinking ? { enable_thinking: true, thinking_budget: 8192 } : {}),
     ...(webSearch ? { enable_search: true } : {}),
   };
 
@@ -728,6 +728,8 @@ async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, his
       try {
         const chunk = JSON.parse(raw);
         const delta = chunk.choices?.[0]?.delta?.content;
+        const thinking = chunk.choices?.[0]?.delta?.reasoning_content;
+        // Skip reasoning_content chunks (internal thinking), only stream final content
         if (delta) { text += delta; if (onChunk) onChunk(delta); }
         if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens || 0; outputTokens = chunk.usage.completion_tokens || 0; }
       } catch {}

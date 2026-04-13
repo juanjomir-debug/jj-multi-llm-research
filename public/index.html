@@ -1857,7 +1857,7 @@ const PROVIDERS = {
   qwen: {
     label: 'Qwen', icon: '&#128200;', color: 'var(--qwen, #6550d4)', dotColor: '#6550d4',
     models: [
-      { id: 'qwen-max-thinking', label: 'Qwen Max (Thinking) 🧠' },
+      { id: 'qwen-max-thinking', label: 'Qwen3 235B (Thinking) 🧠' },
       { id: 'qwen-max',          label: 'Qwen Max' },
       { id: 'qwen-plus',         label: 'Qwen Plus (Qwen3)' },
       { id: 'qwen-turbo',        label: 'Qwen Turbo' },
@@ -3129,9 +3129,9 @@ function handleSSEEvent(event, data) {
       if (state.currentUser && data.monthly_cost_usd !== undefined) { state.currentUser.monthly_cost_usd = data.monthly_cost_usd; state.currentUser.budget = data.budget; updateQuotaUI(state.currentUser); }
       break;
     case 'complete':
-      if (data.sessionId) { state.lastSessionId = data.sessionId; updateConvIndicator(); }
+      if (data.sessionId && !_sessionCleared) { state.lastSessionId = data.sessionId; updateConvIndicator(); }
       // Show hallucination button if audit didn't run automatically (no results sent to integrator flow)
-      if (state.lastResults.length > 0) {
+      if (state.lastResults.length > 0 && !_sessionCleared) {
         const ha = document.getElementById('hallucinationArea');
         if (ha && !ha.innerHTML.trim()) renderHallucinationEmpty();
         showFollowUpBar();
