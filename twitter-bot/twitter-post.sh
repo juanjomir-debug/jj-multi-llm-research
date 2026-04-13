@@ -1,5 +1,5 @@
 #!/bin/bash
-# twitter-post.sh — Genera y publica posts desde múltiples cuentas
+# twitter-post.sh — Genera y publica posts desde múltiples cuentas via Playwright
 # Cron: 0 9 * * 1-5 /root/scripts/twitter-post.sh >> /root/scripts/twitter-post.log 2>&1
 
 set -uo pipefail
@@ -8,14 +8,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG="$SCRIPT_DIR/twitter-post.log"
 ANTHROPIC_KEY="${ANTHROPIC_API_KEY:-}"
 
-# Formato: "handle|auth_token|ct0|persona"
 ACCOUNTS=(
-  "juanjomir|5b257722557b2504f8aaad1194e44b6472aca5cb||Eres @juanjomir, experto en comparativas de modelos de IA y creador de reliableai.net. Escribe en español."
-  "martinkarsel|f3076850ae503c6f68ba70c78158bc83d6c30553|faf6f09dfa26f8e0e806515db7ea242ce9b258132835202f5674fc0d68ff52614ba2c9d6bc6e935602729103a0d15ecbecdf3ed956aefa9c43ddd2d2ef2189c8b62fbf4a3c6ce61a814b1a5586f0d024|Eres @martinkarsel, investigador de IA. Escribe en español sobre comparativas de LLMs."
-  "reliableai|2cf5beff434fe792b8f540380daa628742c426d0|8a04959a72368239d03e0413f89c34913d77b23fcf5196ad894f001351c3121a03f6ebdb3f9a8342f53953b134a5e06d9039359d5e2396da3a0dd2a79f2478c1eab251e513cf1b60c1260e5b538d4eb0|Eres la cuenta oficial de @reliableai, plataforma multi-LLM. Escribe en español e inglés."
+  "juanjomir|Eres @juanjomir, experto en comparativas de modelos de IA y creador de reliableai.net. Escribe en español."
+  "martinkarsel|Eres @martinkarsel, investigador de IA. Escribe en español sobre comparativas de LLMs."
+  "reliableai|Eres la cuenta oficial de @reliableai, plataforma multi-LLM. Escribe en español e inglés."
 )
-
-echo "=== $(date '+%Y-%m-%d %H:%M:%S') ===" | tee -a "$LOG"
 
 TOPICS=(
   "comparativa de rendimiento entre Claude, GPT-5 y Gemini en tareas de codigo"
@@ -29,11 +26,11 @@ TOPICS=(
   "benchmarks recientes: que modelo lidera en razonamiento, codigo y analisis"
 )
 
+echo "=== $(date '+%Y-%m-%d %H:%M:%S') ===" | tee -a "$LOG"
+
 for ACCOUNT in "${ACCOUNTS[@]}"; do
   HANDLE=$(echo "$ACCOUNT" | cut -d'|' -f1)
-  TOKEN=$(echo "$ACCOUNT" | cut -d'|' -f2)
-  CT0=$(echo "$ACCOUNT" | cut -d'|' -f3)
-  PERSONA=$(echo "$ACCOUNT" | cut -d'|' -f4)
+  PERSONA=$(echo "$ACCOUNT" | cut -d'|' -f2)
 
   echo "[account] @$HANDLE" | tee -a "$LOG"
 
@@ -91,18 +88,13 @@ PYEOF
 
   echo "[post] @$HANDLE: $POST" | tee -a "$LOG"
 
-  if [ -n "$CT0" ]; then
-    RESULT=$(AUTH_TOKEN="$TOKEN" CT0="$CT0" bird tweet "$POST" 2>&1)
-  else
-    RESULT=$(AUTH_TOKEN="$TOKEN" bird tweet "$POST" 2>&1)
-  fi
-  echo "[bird] $RESULT" | tee -a "$LOG"
+  RESULT=$(cd /root/scripts && node tweet-playwright.js --account "$HANDLE" --text "$POST" 2>&1)
+  echo "[playwright] $RESULT" | tee -a "$LOG"
 
   if echo "$RESULT" | grep -q "successfully"; then
-    URL=$(echo "$RESULT" | grep -o 'https://x.com/[^ ]*' || echo "")
-    echo "[done] @$HANDLE published: $URL" | tee -a "$LOG"
+    echo "[done] @$HANDLE published" | tee -a "$LOG"
   else
-    echo "[error] @$HANDLE failed to publish" | tee -a "$LOG"
+    echo "[error] @$HANDLE failed" | tee -a "$LOG"
   fi
 
   sleep $((30 + RANDOM % 60))
