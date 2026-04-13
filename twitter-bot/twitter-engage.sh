@@ -12,7 +12,7 @@ XAI_KEY="${XAI_API_KEY:-}"
 # ── Cuentas configuradas ──────────────────────────────────────────────────────
 ACCOUNTS=(
   "juanjomir|5b257722557b2504f8aaad1194e44b6472aca5cb|Eres @juanjomir, experto en comparativas de modelos de IA y creador de reliableai.net. Responde en español."
-  "martinkarsel|5b257722557b2504f8aaad1194e44b6472aca5cb|Eres @martinkarsel, investigador de IA. Responde en español sobre comparativas de LLMs."
+  "martinkarsel|f3076850ae503c6f68ba70c78158bc83d6c30553|Eres @martinkarsel, investigador de IA. Responde en español sobre comparativas de LLMs."
   "reliableai|8c61a495cd3e3b1fd9fed9c3b215ae60c67f2d42|Eres la cuenta oficial de @reliableai. Responde en español o inglés según el tweet."
 )
 
