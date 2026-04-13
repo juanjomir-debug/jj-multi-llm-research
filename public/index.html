@@ -1983,6 +1983,7 @@ const state = {
 
 let _lastIntegratorText = null;
 let _abortController = null;
+let _sessionCleared = false; // flag to skip history push if user cleared mid-run
 let _intAbortController = null;
 
 // ── Free plan model whitelist ───────────────────────────────────────────────
@@ -2477,7 +2478,10 @@ function updateConvIndicator() {
   const turns = Math.floor(state.conversationHistory.length / 2);
   const bar = document.getElementById('convBar');
   const hasSession = !!state.lastSessionId;
-  if (turns === 0 && !hasSession) { bar.style.display = 'none'; } else {
+  if (turns === 0 && !hasSession) {
+    bar.style.display = 'none';
+    document.getElementById('convTurns').textContent = '';
+  } else {
     bar.style.display = 'flex';
     document.getElementById('convTurns').textContent = turns > 0 ? `${turns} context turn${turns !== 1 ? 's' : ''} active` : '';
     if (hasSession) updateSessionProjTags();
@@ -2509,6 +2513,7 @@ function archiveTurn() {
 function clearConversation() {
   state.conversationHistory = []; _lastIntegratorText = null;
   state.lastSessionId = null; state.lastResults = [];
+  _sessionCleared = true; // prevent post-run history push from re-adding turns
   // Clear prompt textarea
   const promptEl = document.getElementById('questionInput');
   if (promptEl) promptEl.value = '';
@@ -3060,9 +3065,13 @@ async function runResearch(withIntegrator = false) {
   } catch (err) { if (err.name !== 'AbortError') toast('Connection error: ' + err.message, 'error'); }
 
   _abortController = null;
-  state.conversationHistory.push({ role: 'user', content: question });
-  const combined = enabledModels.map(m => _copyBuf[m.modelId.replace(/[^a-z0-9]/gi, '-')]).filter(Boolean).join('\n\n---\n\n');
-  if (combined) state.conversationHistory.push({ role: 'assistant', content: combined });
+  // Only push to history if the session wasn't cleared mid-run
+  if (!_sessionCleared) {
+    state.conversationHistory.push({ role: 'user', content: question });
+    const combined = enabledModels.map(m => _copyBuf[m.modelId.replace(/[^a-z0-9]/gi, '-')]).filter(Boolean).join('\n\n---\n\n');
+    if (combined) state.conversationHistory.push({ role: 'assistant', content: combined });
+  }
+  _sessionCleared = false;
   updateConvIndicator();
 
   state.isRunning = false; runBtn.classList.remove('running');

@@ -678,27 +678,60 @@ async function callPerplexityStream(modelId, systemPrompt, userMessage, maxToken
 // Qwen (Alibaba DashScope) — OpenAI-compatible API
 async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, webSearch = false) {
   if (!process.env.QWEN_API_KEY) throw new Error('QWEN_API_KEY not configured');
-  const client = new OpenAI({ apiKey: process.env.QWEN_API_KEY, baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1' });
+  const isThinking = modelId === 'qwen-max-thinking';
+  const baseModelId = isThinking ? 'qwen-max' : modelId;
+
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
   messages.push(...history);
   messages.push({ role: 'user', content: userMessage });
-  const isThinking = modelId === 'qwen-max-thinking';
-  const baseModelId = isThinking ? 'qwen-max' : modelId;
-  const opts = {
-    model: baseModelId, messages, stream: true,
+
+  // Build request body manually to support DashScope-specific params
+  const body = {
+    model: baseModelId,
+    messages,
+    stream: true,
     stream_options: { include_usage: true },
     max_tokens: maxTokens,
     ...(!isThinking && temperature != null ? { temperature } : {}),
-    ...(isThinking ? { extra_body: { enable_thinking: true } } : {}),
-    ...(webSearch ? { extra_body: { ...( isThinking ? { enable_thinking: true } : {}), enable_search: true } } : {}),
+    ...(isThinking ? { enable_thinking: true } : {}),
+    ...(webSearch ? { enable_search: true } : {}),
   };
+
+  const resp = await fetch('https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.QWEN_API_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(`Qwen ${resp.status}: ${JSON.stringify(err)}`);
+  }
+
   let text = '', inputTokens = 0, outputTokens = 0;
-  const stream = await client.chat.completions.create(opts);
-  for await (const chunk of stream) {
-    const delta = chunk.choices?.[0]?.delta?.content;
-    if (delta) { text += delta; if (onChunk) onChunk(delta); }
-    if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens || 0; outputTokens = chunk.usage.completion_tokens || 0; }
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const raw = line.slice(6).trim();
+      if (raw === '[DONE]') continue;
+      try {
+        const chunk = JSON.parse(raw);
+        const delta = chunk.choices?.[0]?.delta?.content;
+        if (delta) { text += delta; if (onChunk) onChunk(delta); }
+        if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens || 0; outputTokens = chunk.usage.completion_tokens || 0; }
+      } catch {}
+    }
   }
   if (!text) throw new Error(`Respuesta vacía de ${modelId}.`);
   return { text, inputTokens, outputTokens };
