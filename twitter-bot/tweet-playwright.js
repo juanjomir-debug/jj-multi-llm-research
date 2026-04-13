@@ -10,7 +10,7 @@ const fs = require('fs');
 // ── Configuración de cuentas ──────────────────────────────────────────────────
 const ACCOUNTS = {
   juanjomir: {
-    auth_token: '5b257722557b2504f8aaad1194e44b6472aca5cb',
+    auth_token: '7d03ee0fecd4c19cff2c4bf6c12c233683858dad',
     ct0: '',
   },
   martinkarsel: {
