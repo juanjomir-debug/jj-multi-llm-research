@@ -1,0 +1,32 @@
+
+- url: "https://www.certicalia.com/usuarios/registro-profesional"
+  nombre: "Certicalia.com"
+  timestamp: "2026-04-14T08:21:31.986Z"
+  estado: "error"
+  cuenta_creada: false
+  backlink_activo: false
+  notas: "Has superado el limite de 3 intentos de registro. Podrás volver a intentarlo pasada una hora"
+
+- url: "https://www.toolify.ai/submit"
+  nombre: "Toolify.ai"
+  timestamp: "2026-04-14T08:21:46.196Z"
+  estado: "error"
+  cuenta_creada: false
+  backlink_activo: false
+  notas: "No se encontró botón submit"
+
+- url: "https://theresanaiforthat.com"
+  nombre: "There's An AI For That"
+  timestamp: "2026-04-14T08:22:37.229Z"
+  estado: "error"
+  cuenta_creada: false
+  backlink_activo: false
+  notas: "No se encontró link de submit"
+
+- url: "https://www.crunchbase.com"
+  nombre: "Crunchbase"
+  timestamp: "2026-04-14T08:22:45.583Z"
+  estado: "error"
+  cuenta_creada: false
+  backlink_activo: false
+  notas: "No se encontró opción para añadir empresa"

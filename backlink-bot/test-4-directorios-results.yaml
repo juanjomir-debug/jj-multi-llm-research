@@ -1,0 +1,39 @@
+
+- url: "https://aivalley.ai/submit"
+  nombre: "AI Valley"
+  timestamp: "2026-04-14T08:32:22.959Z"
+  estado: "pendiente_aprobacion"
+  cuenta_creada: true
+  backlink_activo: false
+  email_verificado: false
+  notas: ""
+
+- url: "https://www.futuretools.io/submit-a-tool"
+  nombre: "Future Tools"
+  timestamp: "2026-04-14T08:34:33.628Z"
+  estado: "pendiente_aprobacion"
+  cuenta_creada: true
+  backlink_activo: false
+  email_verificado: false
+  notas: ""
+
+- url: "https://www.habitissimo.es/registrar/empresa"
+  nombre: "Habitissimo"
+  timestamp: "2026-04-14T08:36:00.797Z"
+  estado: "error"
+  cuenta_creada: false
+  backlink_activo: false
+  email_verificado: false
+  notas: "page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+[2m  - waiting for locator('#company-name, input[name="company"]') to be visible[22m
+"
+
+- url: "https://www.paginasamarillas.es/profesionales/alta"
+  nombre: "Páginas Amarillas"
+  timestamp: "2026-04-14T08:37:57.758Z"
+  estado: "pendiente_aprobacion"
+  cuenta_creada: true
+  backlink_activo: false
+  email_verificado: false
+  notas: ""

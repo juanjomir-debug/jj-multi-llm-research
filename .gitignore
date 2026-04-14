@@ -11,6 +11,10 @@ github-deploy.js
 railway-deploy.js
 probe-upload.js
 
+# Gmail API credentials (NEVER commit these)
+backlink-bot/credentials.json
+backlink-bot/token.json
+
 # GitHub Actions workflows (PAT lacks workflow scope)
 .github/workflows/
 

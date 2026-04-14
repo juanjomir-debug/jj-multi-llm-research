@@ -67,6 +67,17 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_debate_votes_session ON debate_votes(session_id);
 
+  CREATE TABLE IF NOT EXISTS votes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL,
+    session_id TEXT NOT NULL,
+    model_id   TEXT NOT NULL,
+    vote       TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, session_id, model_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_votes_session ON votes(session_id);
+
   CREATE TABLE IF NOT EXISTS projects (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

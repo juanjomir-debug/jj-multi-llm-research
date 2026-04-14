@@ -24,6 +24,9 @@ const CONFIDENCE_INSTRUCTION    = '\n\n' + loadPrompt('confidence-instruction.md
 const DEBATE_USER_MSG_TPL       = loadPrompt('debate-user-message.md').trim();
 const DEBATE_VOTE_MSG_TPL       = loadPrompt('debate-vote-user-message.md').trim();
 const HALLUCINATION_DETECTOR    = loadPrompt('hallucination-detector.md').trim();
+const BLOGPOST_MODEL_PROMPT     = loadPrompt('promptnews.md').trim();
+const BLOGPOST_INTEGRATOR_PROMPT = loadPrompt('integratenews.md').trim();
+console.log('[blog] Prompts loaded — promptnews:', BLOGPOST_MODEL_PROMPT.length, 'chars | integratenews:', BLOGPOST_INTEGRATOR_PROMPT.length, 'chars');
 const AMPLITUDE_INSTRUCTIONS    = JSON.parse(fs.readFileSync(path.join(PROMPTS_DIR, 'amplitude.json'), 'utf-8'));
 
 // Helper: aplica {{placeholders}} en templates
@@ -1025,7 +1028,6 @@ app.post('/api/promo/redeem', (req, res) => {
 
   const promo = db.prepare('SELECT * FROM promo_codes WHERE code = ?').get(code);
   if (!promo) return res.status(404).json({ error: 'Invalid promo code' });
-  if (promo.times_used >= promo.max_uses) return res.status(410).json({ error: 'This promo code has already been used' });
   if (promo.expires_at && new Date(promo.expires_at) < new Date()) return res.status(410).json({ error: 'This promo code has expired' });
 
   // Check if user already redeemed a promo
@@ -1033,9 +1035,14 @@ app.post('/api/promo/redeem', (req, res) => {
   if (user.promo_code) return res.status(409).json({ error: 'You have already redeemed a promo code' });
   if (user.plan !== 'free') return res.status(409).json({ error: 'Promo codes are only for Free plan users' });
 
+  // Atomic: increment times_used only if still within max_uses (prevents TOCTOU race)
+  const updated = db.prepare(
+    'UPDATE promo_codes SET times_used = times_used + 1 WHERE code = ? AND times_used < max_uses'
+  ).run(code);
+  if (updated.changes === 0) return res.status(410).json({ error: 'This promo code has already been used' });
+
   // Activate promo
   db.prepare('UPDATE users SET plan = ?, promo_code = ?, monthly_cost_usd = 0, paused = 0 WHERE id = ?').run(promo.plan, code, req.session.userId);
-  db.prepare('UPDATE promo_codes SET times_used = times_used + 1 WHERE code = ?').run(code);
   db.prepare('INSERT INTO billing_events (user_id, type, amount_usd, description) VALUES (?,?,?,?)').run(
     req.session.userId, 'promo_redeemed', 0, `Promo code ${code} → ${promo.plan} ($${promo.budget_usd} budget)`
   );
@@ -1180,10 +1187,13 @@ app.get('/api/history', (req, res) => {
   if (histPlan.historyDays === 0) return res.json({ rows: [], total: 0, limit: 0, offset: 0, locked: true });
   const limit  = Math.min(parseInt(req.query.limit)  || 100, 500);
   const offset = parseInt(req.query.offset) || 0;
+  const dateFilter = histPlan.historyDays > 0
+    ? `AND created_at >= datetime('now', '-${histPlan.historyDays} days')`
+    : '';
   const rows  = db.prepare(`SELECT id, session_id, created_at, provider, model_id, model_label,
            prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator
-    FROM history WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(req.session.userId, limit, offset);
-  const total = db.prepare('SELECT COUNT(*) AS n FROM history WHERE user_id = ?').get(req.session.userId).n;
+    FROM history WHERE user_id = ? ${dateFilter} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(req.session.userId, limit, offset);
+  const total = db.prepare(`SELECT COUNT(*) AS n FROM history WHERE user_id = ? ${dateFilter}`).get(req.session.userId).n;
   res.json({ rows, total, limit, offset });
 });
 
@@ -1227,14 +1237,6 @@ app.post('/api/vote', (req, res) => {
   if (!sessionId || !modelId || !['up', 'down'].includes(vote))
     return res.status(400).json({ error: 'Invalid vote' });
 
-  // Create votes table if not exists
-  db.prepare(`CREATE TABLE IF NOT EXISTS votes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL, session_id TEXT NOT NULL, model_id TEXT NOT NULL,
-    vote TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, session_id, model_id)
-  )`).run();
-
   db.prepare(`INSERT OR REPLACE INTO votes (user_id, session_id, model_id, vote) VALUES (?, ?, ?, ?)`)
     .run(req.session.userId, sessionId, modelId, vote);
   res.json({ ok: true });
@@ -1242,12 +1244,6 @@ app.post('/api/vote', (req, res) => {
 
 app.get('/api/votes/stats', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
-  db.prepare(`CREATE TABLE IF NOT EXISTS votes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL, session_id TEXT NOT NULL, model_id TEXT NOT NULL,
-    vote TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, session_id, model_id)
-  )`).run();
   const stats = db.prepare(`SELECT model_id,
     SUM(CASE WHEN vote='up' THEN 1 ELSE 0 END) AS ups,
     SUM(CASE WHEN vote='down' THEN 1 ELSE 0 END) AS downs
@@ -1527,7 +1523,8 @@ app.post('/api/retry', async (req, res) => {
 app.post('/api/integrate', async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
   const { question, results = [], integrator = {}, maxTokensIntegrator = 4096,
-          attachments = [], conversationHistory = [], debateContext = null } = req.body;
+          attachments = [], conversationHistory = [], debateContext = null,
+          blogPostMode = false } = req.body;
   if (!integrator.modelId || results.length === 0) return res.status(400).json({ error: 'Missing integrator or results' });
 
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
@@ -1535,36 +1532,74 @@ app.post('/api/integrate', async (req, res) => {
   const userId = req.session.userId || null;
   const sessionId = req.body.sessionId || crypto.randomUUID();
 
+  // Blog Post Mode gate (same email check as /api/research)
+  console.log('[blog/integrate] received — blogPostMode:', blogPostMode, '| userId:', userId);
+  const BLOGPOST_ALLOWED_EMAILS = new Set(['juanjomir@gmail.com']);
+  let effectiveBlogMode = false;
+  if (blogPostMode && userId) {
+    const blogUser = db.prepare('SELECT email FROM users WHERE id = ?').get(userId);
+    effectiveBlogMode = !!(blogUser && BLOGPOST_ALLOWED_EMAILS.has((blogUser.email || '').toLowerCase()));
+    console.log('[blog/integrate] effectiveBlogMode:', effectiveBlogMode, '| email:', blogUser?.email);
+  }
+
   let processedAttachments = [];
   try { processedAttachments = await processAttachments(attachments || []); } catch {}
 
   send('integrator:start', { modelId: integrator.modelId, provider: integrator.provider });
 
   const modelLabels = {};
+  const provCfg = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi', qwen: 'Qwen' };
   for (const r of results) {
-    const provCfg = { anthropic: 'Claude', openai: 'OpenAI', google: 'Gemini', xai: 'Grok', moonshot: 'Kimi' };
     modelLabels[r.modelId] = provCfg[r.provider] || r.modelId;
   }
-  const allResponsesBlock = results.map((r, i) => `### Response ${i + 1} — [${modelLabels[r.modelId]}] (${r.modelId})\n\n${r.text}`).join('\n\n---\n\n');
+  const allResponsesBlock = results.map((r, i) => `### ${modelLabels[r.modelId] || `Modelo ${i+1}`} (${r.modelId})\n\n${r.text}`).join('\n\n---\n\n');
 
-  const intPrompt = integrator.mode === 'unique' ? INTEGRATOR_UNIQUE_PROMPT : INTEGRATOR_CONSENSUS_PROMPT;
-  const defaultSysPrompt = intPrompt;
-  const sysPrompt = integrator.customInstructions ? `${integrator.customInstructions}\n\n${defaultSysPrompt}` : defaultSysPrompt;
-  const debateSection = debateContext
-    ? `\n\n---\n\n## Model Debate Transcript\n\nThe models also engaged in a structured debate. Use this as additional context for your synthesis:\n\n${debateContext}`
-    : '';
-  const userMsg = `Original question: ${question}\n\nAll model responses:\n\n${allResponsesBlock}${debateSection}`;
+  let sysPrompt, userMsg, effectiveMaxTokens;
+  if (effectiveBlogMode) {
+    const modelListStr = results.map(r => `${modelLabels[r.modelId] || r.provider} — \`${r.modelId}\``).join(', ');
+    const todayStr = new Date().toISOString().slice(0, 10);
+    sysPrompt = [BLOGPOST_INTEGRATOR_PROMPT, integrator.customInstructions || ''].filter(Boolean).join('\n\n');
+    userMsg = `Pregunta original / Topic: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}\n\n---\nMETADATA FOR FOOTER:\n- {{ORIGINAL_PROMPT}} = ${question}\n- {{MODEL_LIST}} = ${modelListStr}\n- {{INTEGRATOR_MODEL}} = ${integrator.provider} — ${integrator.modelId}\n- {{DATE}} = ${todayStr}`;
+    effectiveMaxTokens = Math.max(maxTokensIntegrator, 8192);
+  } else {
+    const intPrompt = integrator.mode === 'unique' ? INTEGRATOR_UNIQUE_PROMPT : INTEGRATOR_CONSENSUS_PROMPT;
+    sysPrompt = integrator.customInstructions ? `${integrator.customInstructions}\n\n${intPrompt}` : intPrompt;
+    const debateSection = debateContext
+      ? `\n\n---\n\n## Model Debate Transcript\n\n${debateContext}`
+      : '';
+    userMsg = `Original question: ${question}\n\nAll model responses:\n\n${allResponsesBlock}${debateSection}`;
+    effectiveMaxTokens = maxTokensIntegrator;
+  }
 
   try {
     const t0 = Date.now();
     const r = await withRetry(() => withTimeout(
-      callModelStream(integrator.provider, integrator.modelId, sysPrompt, userMsg, maxTokensIntegrator, processedAttachments, false, conversationHistory,
+      callModelStream(integrator.provider, integrator.modelId, sysPrompt, userMsg,
+        effectiveMaxTokens, processedAttachments, false, conversationHistory,
         (chunk) => send('integrator:chunk', { chunk })),
-      modelTimeout(integrator.modelId), 'integrator'
+      effectiveBlogMode ? 180_000 : modelTimeout(integrator.modelId), 'integrator'
     ), 3, `integrator:${integrator.modelId}`);
     const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens);
     const durationMs = Date.now() - t0;
     send('integrator:done', { text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs });
+
+    // Blog mode: generate hero image via DALL-E
+    if (effectiveBlogMode && process.env.OPENAI_API_KEY) {
+      const heroMatch = r.text.match(/\[HERO_IMAGE:\s*([\s\S]*?)\]/);
+      if (heroMatch) {
+        try {
+          const imgClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+          const imgRes = await imgClient.images.generate({
+            model: 'dall-e-3',
+            prompt: heroMatch[1].trim() + ' -- Cinematic editorial illustration. Dark background. Professional, minimal. No text overlays.',
+            n: 1, size: '1792x1024', quality: 'standard',
+          });
+          send('blog:hero_image', { url: imgRes.data[0].url });
+        } catch (imgErr) {
+          send('blog:hero_image', { error: imgErr.message });
+        }
+      }
+    }
 
     if (userId) {
       db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
@@ -1694,9 +1729,20 @@ app.post('/api/research', async (req, res) => {
           attachments = [], amplitude = 'normal', conversationHistory = [],
           debateEnabled = false, debateRounds = 1,
           cascadeEnabled = false, cascadeOrder = [],
-          temporaryChat = false } = req.body;
+          temporaryChat = false, blogPostMode = false } = req.body;
   const userId = req.session.userId || null;
   const sessionId = crypto.randomUUID();
+
+  // ── Blog Post Mode: restricted to owner ──
+  const BLOGPOST_ALLOWED_EMAILS = new Set(['juanjomir@gmail.com']);
+  let effectiveBlogMode = false;
+  console.log('[blog] blogPostMode from client:', blogPostMode, '| userId:', userId);
+  if (blogPostMode && userId) {
+    const blogUser = db.prepare('SELECT email FROM users WHERE id = ?').get(userId);
+    console.log('[blog] user email:', blogUser?.email);
+    effectiveBlogMode = !!(blogUser && BLOGPOST_ALLOWED_EMAILS.has((blogUser.email || '').toLowerCase()));
+    console.log('[blog] effectiveBlogMode:', effectiveBlogMode);
+  }
 
   // ── Plan enforcement ──
   const userRow = userId ? db.prepare('SELECT plan, daily_queries, daily_queries_date FROM users WHERE id = ?').get(userId) : null;
@@ -1755,7 +1801,9 @@ app.post('/api/research', async (req, res) => {
     const t0 = Date.now();
     try {
       const deepResearchInstr = m.deepResearch ? 'DEEP RESEARCH MODE: Conduct thorough, multi-step research. Search and synthesize multiple sources. Provide comprehensive citations. Do not stop until you have a complete, well-sourced answer.' : '';
-      const sysInstr = [HIDDEN_INSTRUCTIONS, deepResearchInstr, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
+      const sysInstr = effectiveBlogMode
+        ? [BLOGPOST_MODEL_PROMPT, m.customInstructions].filter(Boolean).join('\n\n')
+        : [HIDDEN_INSTRUCTIONS, deepResearchInstr, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
       const r = await withTimeout(
         callModelStream(m.provider, m.modelId, sysInstr || null, userMessage, maxTokens,
           processedAttachments, !!m.webSearch || !!m.deepResearch, conversationHistory,
@@ -1903,29 +1951,66 @@ app.post('/api/research', async (req, res) => {
     }
 
     const allResponsesBlock = results
-      .map((r, i) => `### Modelo ${i + 1}\n\n${r.text}`)
+      .map((r, i) => {
+        const label = modelLabels[r.modelId] || `Modelo ${i + 1}`;
+        return `### ${label} (${r.modelId})\n\n${r.text}`;
+      })
       .join('\n\n---\n\n');
 
-    const intPrompt = integrator.mode === 'unique' ? INTEGRATOR_UNIQUE_PROMPT : INTEGRATOR_CONSENSUS_PROMPT;
-    const sysPrompt = [
-      HIDDEN_INSTRUCTIONS,
-      integrator.customInstructions || '',
-      intPrompt,
-      amplitudeInstr || '',
-    ].filter(Boolean).join('\n\n');
-
-    const userMsg = `Pregunta original: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}`;
+    let intPrompt, sysPrompt, userMsg;
+    console.log('[blog] integrator prompt selection — effectiveBlogMode:', effectiveBlogMode);
+    if (effectiveBlogMode) {
+      // Blog Post Mode: use editorial prompts and inject metadata placeholders
+      const modelListStr = results.map(r => `${modelLabels[r.modelId] || r.provider} — \`${r.modelId}\``).join(', ');
+      const todayStr = new Date().toISOString().slice(0, 10);
+      intPrompt = BLOGPOST_INTEGRATOR_PROMPT;
+      sysPrompt = [intPrompt, integrator.customInstructions || ''].filter(Boolean).join('\n\n');
+      userMsg = `Pregunta original / Topic: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}\n\n---\nMETADATA FOR FOOTER (replace placeholders):\n- {{ORIGINAL_PROMPT}} = ${question}\n- {{MODEL_LIST}} = ${modelListStr}\n- {{INTEGRATOR_MODEL}} = ${integrator.provider} — ${integrator.modelId}\n- {{DATE}} = ${todayStr}`;
+    } else {
+      intPrompt = integrator.mode === 'unique' ? INTEGRATOR_UNIQUE_PROMPT : INTEGRATOR_CONSENSUS_PROMPT;
+      sysPrompt = [
+        HIDDEN_INSTRUCTIONS,
+        integrator.customInstructions || '',
+        intPrompt,
+        amplitudeInstr || '',
+      ].filter(Boolean).join('\n\n');
+      userMsg = `Pregunta original: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}`;
+    }
 
     try {
       const t0 = Date.now();
       const r = await withTimeout(
-        callModelStream(integrator.provider, integrator.modelId, sysPrompt, userMsg, maxTokensIntegrator, processedAttachments, false, conversationHistory,
+        callModelStream(integrator.provider, integrator.modelId, sysPrompt, userMsg,
+          effectiveBlogMode ? Math.max(maxTokensIntegrator, 8192) : maxTokensIntegrator,
+          processedAttachments, false, conversationHistory,
           (chunk) => send('integrator:chunk', { chunk })),
-        120_000, 'integrator'
+        effectiveBlogMode ? 180_000 : 120_000, 'integrator'
       );
       const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens);
       const durationMs = Date.now() - t0;
       send('integrator:done', { text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs });
+
+      // ── Blog Post Mode: generate hero image via DALL-E ──
+      if (effectiveBlogMode && process.env.OPENAI_API_KEY) {
+        const heroMatch = r.text.match(/\[HERO_IMAGE:\s*([\s\S]*?)\]/);
+        if (heroMatch) {
+          try {
+            const heroPrompt = heroMatch[1].trim();
+            const imgClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const imgRes = await imgClient.images.generate({
+              model: 'dall-e-3',
+              prompt: heroPrompt + ' -- Cinematic editorial illustration. Dark background. Professional, minimal. No text overlays.',
+              n: 1,
+              size: '1792x1024',
+              quality: 'standard',
+            });
+            send('blog:hero_image', { url: imgRes.data[0].url, prompt: heroPrompt });
+          } catch (imgErr) {
+            console.error('[blog] DALL-E error:', imgErr.message);
+            send('blog:hero_image', { error: imgErr.message });
+          }
+        }
+      }
 
       if (userId && !temporaryChat) {
         db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
@@ -2398,7 +2483,7 @@ app.post('/api/migrate-import', express.json({ limit: '50mb' }), (req, res) => {
 
 // ─── Export to Word (.docx) ───────────────────────────────────────────────────
 app.post('/api/export-docx', async (req, res) => {
-  const { title = '', sections = [] } = req.body;
+  const { title = '', sections = [], images = [] } = req.body;
   if (!Array.isArray(sections) || sections.length === 0)
     return res.status(400).json({ error: 'sections[] required' });
 
@@ -2406,7 +2491,36 @@ app.post('/api/export-docx', async (req, res) => {
   try { docx = require('docx'); } catch {
     return res.status(503).json({ error: 'docx package not installed. Run: npm install docx' });
   }
-  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = docx;
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = docx;
+
+  // Convert data URL to Buffer for ImageRun
+  function dataUrlToBuffer(dataUrl) {
+    const base64 = dataUrl.replace(/^data:[^;]+;base64,/, '');
+    return Buffer.from(base64, 'base64');
+  }
+
+  // Detect image type from data URL
+  function imageType(dataUrl) {
+    if (dataUrl.startsWith('data:image/svg')) return 'svg';
+    if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) return 'jpg';
+    return 'png';
+  }
+
+  // Build an ImageRun paragraph from a data URL (max 500px wide)
+  function imageRunParagraph(dataUrl, altText = '') {
+    try {
+      const buf = dataUrlToBuffer(dataUrl);
+      const type = imageType(dataUrl);
+      return new Paragraph({
+        children: [new ImageRun({
+          data: buf,
+          transformation: { width: 500, height: 280 },
+          type,
+          altText: { title: altText, description: altText, name: altText },
+        })],
+      });
+    } catch (_) { return null; }
+  }
 
   function markdownToParagraphs(text) {
     const paras = [];
@@ -2451,6 +2565,13 @@ app.post('/api/export-docx', async (req, res) => {
   const children = [];
   if (title) children.push(new Paragraph({ text: title, heading: HeadingLevel.TITLE }));
 
+  // Hero image — insert right after title
+  const heroImg = (images || []).find(img => img.type === 'hero');
+  if (heroImg) {
+    const p = imageRunParagraph(heroImg.data, heroImg.alt || 'Hero image');
+    if (p) { children.push(p); children.push(new Paragraph({ text: '' })); }
+  }
+
   for (const sec of sections) {
     if (sec.label) {
       children.push(new Paragraph({ text: sec.label, heading: HeadingLevel.HEADING_2,
@@ -2458,6 +2579,17 @@ app.post('/api/export-docx', async (req, res) => {
     }
     children.push(...markdownToParagraphs(sec.text || ''));
     children.push(new Paragraph({ text: '' })); // spacer
+  }
+
+  // Charts and diagrams — append after text in a Visuals section
+  const otherImgs = (images || []).filter(img => img.type !== 'hero');
+  if (otherImgs.length > 0) {
+    children.push(new Paragraph({ text: 'Visuals & Diagrams', heading: HeadingLevel.HEADING_2, spacing: { before: 300, after: 100 } }));
+    for (const img of otherImgs) {
+      if (img.alt) children.push(new Paragraph({ children: [new TextRun({ text: img.alt, bold: true })], spacing: { after: 60 } }));
+      const p = imageRunParagraph(img.data, img.alt || '');
+      if (p) { children.push(p); children.push(new Paragraph({ text: '' })); }
+    }
   }
 
   try {

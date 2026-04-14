@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>reliableaiprueba</title>
+  <title>ReliableAI</title>
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-4278E5RC6V"></script>
   <script>
@@ -662,8 +662,30 @@
     .score-llm-toggle:hover { opacity: 1; }
     .amplitude-select { width: 100%; padding: 5px 8px; font-size: .82rem; border-radius: var(--radius); }
 
+    /* ── Blog Post Mode visuals ────────────────────────────── */
+    .blog-visual-wrap { margin: 20px 0; border-radius: 10px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); }
+    .blog-chart-wrap { padding: 16px 20px; }
+    .blog-chart-wrap canvas { max-height: 300px !important; }
+    .blog-chart-title { font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 12px; }
+    .blog-hero-wrap { position: relative; border-radius: 10px; overflow: hidden; margin: 0 0 24px; min-height: 220px; background: var(--surface2); display: flex; align-items: center; justify-content: center; aspect-ratio: 16/9; }
+    .blog-hero-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 10px; }
+    .blog-hero-loading { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text-muted); font-size: .8rem; padding: 24px; text-align: center; }
+    .blog-hero-loading small { opacity: .6; max-width: 280px; font-style: italic; }
+    .blog-og-card { margin: 20px 0; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; background: var(--surface); }
+    .blog-og-header { background: linear-gradient(135deg, var(--accent-dim, rgba(88,166,255,.08)), var(--surface2)); padding: 16px 18px 10px; }
+    .blog-og-domain { font-size: .66rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+    .blog-og-title { font-size: .95rem; font-weight: 700; color: var(--text); line-height: 1.4; }
+    .blog-og-desc { font-size: .78rem; color: var(--text-muted); padding: 8px 18px 12px; border-top: 1px solid var(--border); line-height: 1.5; }
+    .blog-og-footer { display: flex; align-items: center; gap: 8px; padding: 7px 18px; border-top: 1px solid var(--border); background: var(--surface2); }
+    .blog-og-copy-btn { font-size: .7rem; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); background: none; color: var(--text-muted); cursor: pointer; transition: all .15s; }
+    .blog-og-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .blog-mermaid-wrap { padding: 10px 14px; overflow-x: auto; }
+    .blog-mermaid-wrap .mermaid { font-size: 11px; }
+    .blog-mermaid-wrap .mermaid svg { max-width: 100%; max-height: 320px; }
+    .blog-heatmap-wrap { padding: 16px 20px; overflow-x: auto; }
+
     /* Vote buttons (improvement #13) */
-    .vote-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: .75rem; cursor: pointer; transition: all 150ms ease; }
+    .vote-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: .75rem; cursor: pointer; transition: all 150ms ease; min-height: 36px; min-width: 36px; }
     .vote-btn:hover { border-color: var(--accent); } .vote-btn.voted { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
     /* Retry button (improvement #14) */
@@ -1508,6 +1530,15 @@
       <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Models critique and respond to each other's answers</div>
     </div>
 
+    <!-- Blog Post Mode (owner only) -->
+    <div class="config-block" id="blogPostBlock" style="display:none">
+      <div class="config-block-row">
+        <span class="config-block-label" style="flex:1;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Blog Post Mode</span>
+        <button class="rsb-toggle-btn" id="blogPostBtn" onclick="toggleBlogPost()">OFF</button>
+      </div>
+      <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px">Models research as journalists, integrator writes a publishable article</div>
+    </div>
+
     <!-- Specialize Models (collapsible) -->
     <div class="config-block config-block-collapsible collapsed" id="configSpecializeBlock">
       <div class="config-block-row config-block-toggle" onclick="toggleConfigPanel('specialize')" style="cursor:pointer">
@@ -1979,6 +2010,7 @@ const state = {
   debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [],
   cascadeEnabled: false, cascadeOrder: [], globalTemperature: 0.7,
   temporaryChat: false, // when true, results are not saved to history
+  blogPostMode: false, // when true, models use journalist prompt + integrator writes article
 };
 
 let _lastIntegratorText = null;
@@ -2433,6 +2465,25 @@ function toggleCascade() {
     }
   });
   renderCascadeOrderPanel();
+}
+
+function toggleBlogPost() {
+  state.blogPostMode = !state.blogPostMode;
+  const btn = document.getElementById('blogPostBtn');
+  if (btn) {
+    btn.textContent = state.blogPostMode ? 'ON' : 'OFF';
+    btn.classList.toggle('on', state.blogPostMode);
+  }
+  // When blog mode is on, force web search on for all search-capable models
+  if (state.blogPostMode) {
+    state.models.forEach((m, idx) => {
+      if (WEB_SEARCH_PROVIDERS.has(m.provider) && !m.webSearch) {
+        m.webSearch = true;
+        const wsBtn = document.getElementById(`wsToggle-${m.provider}`);
+        if (wsBtn) wsBtn.className = 'websearch-toggle on';
+      }
+    });
+  }
 }
 
 function renderCascadeOrderPanel() {
@@ -3042,6 +3093,7 @@ async function runResearch(withIntegrator = false) {
       attachments: state.attachments, amplitude,
       conversationHistory: state.conversationHistory,
       temporaryChat: state.temporaryChat,
+      blogPostMode: state.blogPostMode,
     };
 
     _abortController = new AbortController();
@@ -3059,7 +3111,7 @@ async function runResearch(withIntegrator = false) {
           if (line.startsWith('event: ')) event = line.slice(7).trim();
           if (line.startsWith('data: ')) data = line.slice(6).trim();
         }
-        if (data && event !== 'ping') handleSSEEvent(event, JSON.parse(data));
+        if (data && event !== 'ping') { try { handleSSEEvent(event, JSON.parse(data)); } catch (_) {} }
       }
     }
   } catch (err) { if (err.name !== 'AbortError') toast('Connection error: ' + err.message, 'error'); }
@@ -3103,9 +3155,19 @@ function handleSSEEvent(event, data) {
     case 'integrator:chunk': // Streaming integrator
       _streamBuf['__integrator'] = (_streamBuf['__integrator'] || '') + data.chunk;
       const intBody = document.getElementById('intBody');
-      if (intBody) intBody.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(_streamBuf['__integrator']))}</div>`;
+      if (intBody) intBody.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(_streamBuf['__integrator'], state.blogPostMode))}</div>`;
       break;
     case 'integrator:done': _lastIntegratorText = data.text; _streamBuf['__integrator'] = ''; updateIntegratorCard('done', data); break;
+    case 'blog:hero_image':
+      const heroWrap = document.getElementById('blog-hero-placeholder');
+      if (heroWrap) {
+        if (data.url) {
+          heroWrap.innerHTML = `<img src="${escHtml(data.url)}" alt="Article hero image" loading="lazy">`;
+        } else {
+          heroWrap.innerHTML = `<div class="blog-hero-loading" style="opacity:.5">⚠ Image generation failed</div>`;
+        }
+      }
+      break;
     case 'integrator:error': updateIntegratorCard('error', data); break;
     case 'consensus':
       // Populate per-model agreement scores, then re-score all cards
@@ -3193,8 +3255,20 @@ function updateResultCard(modelId, status, data) {
       <button class="export-btn" onclick="exportToWord('${safeId}','${data.modelId}',this)" title="Export to Word (.docx)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Word</button>`;
   } else if (status === 'error') {
     if (data.provider) setTabStatus(data.provider, 'error');
-    body.innerHTML = `<div class="result-error">&#9888; ${data.error}</div>
-      <div style="margin-top:8px"><button class="retry-btn" onclick="retryModelFromCard('${data.provider}')">&#x21bb; Retry</button></div>`;
+    const safeProvider = escHtml(data.provider || '');
+    const errDiv = document.createElement('div');
+    errDiv.className = 'result-error';
+    errDiv.textContent = '⚠ ' + (data.error || 'Unknown error');
+    const retryDiv = document.createElement('div');
+    retryDiv.style.marginTop = '8px';
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'retry-btn';
+    retryBtn.textContent = '↻ Retry';
+    retryBtn.onclick = () => retryModelFromCard(data.provider);
+    retryDiv.appendChild(retryBtn);
+    body.innerHTML = '';
+    body.appendChild(errDiv);
+    body.appendChild(retryDiv);
   }
 }
 
@@ -3231,7 +3305,7 @@ async function retryModel(provider, modelId) {
           if (line.startsWith('event: ')) event = line.slice(7).trim();
           if (line.startsWith('data: ')) data = line.slice(6).trim();
         }
-        if (data && event !== 'ping') handleSSEEvent(event, JSON.parse(data));
+        if (data && event !== 'ping') { try { handleSSEEvent(event, JSON.parse(data)); } catch (_) {} }
       }
     }
   } catch (err) { updateResultCard(modelId, 'error', { provider, modelId, error: err.message }); }
@@ -3239,10 +3313,16 @@ async function retryModel(provider, modelId) {
 
 // ── Run integration (standalone, after research) ────────────────────────────
 async function runIntegration() {
-  if (!state.lastResults.length) { toast('Run research first.', 'error'); return; }
+  console.log('[blog] runIntegration — state.blogPostMode:', state.blogPostMode);
+  // Snapshot results at start — re-integration reuses the same model results
+  const resultsSnapshot = state.lastResults.length ? [...state.lastResults] : null;
+  if (!resultsSnapshot) { toast('Run research first.', 'error'); return; }
   const question = document.getElementById('questionInput').value.trim();
   if (!question) { toast('No question found.', 'error'); return; }
+
+  showIntegrationPanel();
   const intArea = document.getElementById('integratorResultArea');
+  if (!intArea) { toast('Integration panel not found.', 'error'); return; }
   intArea.innerHTML = '';
   const card = buildIntegratorCard('pending');
   intArea.appendChild(card);
@@ -3260,10 +3340,11 @@ async function runIntegration() {
       ? state.lastDebateResponses.map(r => `[${r.modelId || r.provider || 'Model'} — Round ${r.round || 1}]: ${r.text || r.response || ''}`).join('\n\n')
       : null;
     const body = {
-      question, results: state.lastResults, integrator: intCfg,
+      question, results: resultsSnapshot, integrator: intCfg,
       maxTokensIntegrator: maxTokensInt,
       attachments: state.attachments, conversationHistory: state.conversationHistory,
       sessionId: state.lastSessionId,
+      blogPostMode: state.blogPostMode,
       ...(debateContext ? { debateContext } : {}),
     };
     _intAbortController = new AbortController();
@@ -3288,7 +3369,7 @@ async function runIntegration() {
         } else if (event === 'integrator:chunk') {
           _streamBuf['__integrator'] = (_streamBuf['__integrator'] || '') + parsed.chunk;
           const intBody = document.getElementById('intBody');
-          if (intBody) intBody.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(_streamBuf['__integrator']))}</div>`;
+          if (intBody) intBody.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(_streamBuf['__integrator'], state.blogPostMode))}</div>`;
         } else if (event === 'integrator:done') {
           _lastIntegratorText = parsed.text;
           _streamBuf['__integrator'] = '';
@@ -3301,6 +3382,15 @@ async function runIntegration() {
           }
         } else if (event === 'integrator:error') {
           updateIntegratorCard('error', parsed);
+        } else if (event === 'blog:hero_image') {
+          const heroWrap = document.getElementById('blog-hero-placeholder');
+          if (heroWrap) {
+            if (parsed.url) {
+              heroWrap.innerHTML = `<img src="${escHtml(parsed.url)}" alt="Article hero image" loading="lazy">`;
+            } else {
+              heroWrap.innerHTML = `<div class="blog-hero-loading" style="opacity:.5">⚠ Image generation failed</div>`;
+            }
+          }
         }
       }
     }
@@ -3309,12 +3399,15 @@ async function runIntegration() {
       updateIntegratorCard('error', { error: err.message });
       toast('Integration error: ' + err.message, 'error');
     }
+  } finally {
+    _intAbortController = null;
+    _streamBuf['__integrator'] = '';
+    // Restore snapshot so re-integration always works (new research clears state.lastResults)
+    if (resultsSnapshot && !state.lastResults.length) state.lastResults = resultsSnapshot;
+    const stopBtn2 = document.getElementById('intStopBtn');
+    if (stopBtn2) stopBtn2.style.display = 'none';
+    if (intBtn) { intBtn.disabled = false; intBtn.textContent = 'Integrate'; }
   }
-
-  _intAbortController = null;
-  const stopBtn2 = document.getElementById('intStopBtn');
-  if (stopBtn2) stopBtn2.style.display = 'none';
-  if (intBtn) { intBtn.disabled = false; intBtn.textContent = 'Integrate'; }
 }
 
 // ── Run debate (standalone, after research) ──────────────────────────────────
@@ -3533,13 +3626,17 @@ function updateIntegratorCard(status, data) {
   }
   else if (status === 'done') {
     if (stopBtn) stopBtn.style.display = 'none';
-    body.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(data.text))}</div>`;
+    body.innerHTML = `<div class="md-content">${colorizeConsensus(renderMarkdown(data.text, state.blogPostMode))}</div>`;
     const dur = data.durationMs ? (data.durationMs / 1000).toFixed(1) + 's' : '';
     meta.innerHTML = `<span class="duration-badge ${durationClass(data.durationMs || 0)}">${dur}</span> ${data.inputTokens}&#8593; ${data.outputTokens}&#8595; &nbsp;${fmtCost(data.cost)}`;
     _copyBuf['integrator'] = data.text;
     foot.innerHTML = `<button class="copy-btn" onclick="copyFromBuf('integrator', this)">Copy synthesis</button>
       <button class="export-btn" onclick="exportToWord('integrator','Synthesis',this)" title="Export synthesis to Word (.docx)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Word</button>`;
     renderReliabilityIndex();
+    // Blog mode: initialise multimedia visuals
+    if (state.blogPostMode) {
+      initBlogVisuals(body).catch(err => console.warn('[blog] initBlogVisuals:', err));
+    }
   } else if (status === 'error') {
     if (stopBtn) stopBtn.style.display = 'none';
     body.innerHTML = `<div class="result-error">&#9888; Error: ${data.error}</div>`;
@@ -4071,23 +4168,70 @@ function colorizeConsensus(html) {
 }
 
 // Sanitise markdown output — DOMPurify (S6 security fix)
-function renderMarkdown(text) {
+function renderMarkdown(text, isBlog) {
   if (!text) return '';
+  // Blog mode: pre-process visual markers into DOMPurify-safe placeholder divs
+  if (isBlog) {
+    const ea = s => s.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    text = text
+      .replace(/\[HERO_IMAGE:\s*([\s\S]*?)\]/g, (_, p) =>
+        `<div class="blog-visual" data-btype="hero_image" data-bparams="${ea(p.trim())}"></div>`)
+      .replace(/\[CONSENSUS_CHART\]/g, '<div class="blog-visual" data-btype="consensus_chart"></div>')
+      .replace(/\[RADAR_CHART\]/g, '<div class="blog-visual" data-btype="radar_chart"></div>')
+      .replace(/\[AGREEMENT_HEATMAP\]/g, '<div class="blog-visual" data-btype="agreement_heatmap"></div>')
+      .replace(/\[OG_CARD\]/g, '<div class="blog-visual" data-btype="og_card"></div>');
+  }
   marked.setOptions({ breaks: true, gfm: true });
   const raw = marked.parse(text);
   if (typeof DOMPurify !== 'undefined') {
     return DOMPurify.sanitize(raw, {
       ALLOWED_TAGS: ['p','br','strong','em','b','i','u','s','del','ins','code','pre','blockquote',
-        'ul','ol','li','h1','h2','h3','h4','h5','h6','a','table','thead','tbody','tr','th','td','hr','span','div'],
-      ALLOWED_ATTR: ['href','title','target','rel','class','id'],
+        'ul','ol','li','h1','h2','h3','h4','h5','h6','a','table','thead','tbody','tr','th','td','hr','span','div','figure','figcaption'],
+      ALLOWED_ATTR: ['href','title','target','rel','class','id','data-btype','data-bparams'],
       ALLOW_DATA_ATTR: false,
     });
   }
-  // Fallback if DOMPurify not loaded
   return raw.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/\son\w+\s*=\s*["'][^"']*["']/gi,'').replace(/javascript\s*:/gi,'nojs:');
 }
 function copyFromBuf(key, btn) { navigator.clipboard.writeText(_copyBuf[key] || '').then(() => { btn.textContent = 'Copied!'; btn.classList.add('copied');
   setTimeout(() => { btn.textContent = key === 'integrator' ? 'Copy synthesis' : 'Copy'; btn.classList.remove('copied'); }, 2000); }); }
+
+// Capture blog visuals (hero img, Chart.js canvases, Mermaid SVGs) as base64 data URLs
+async function captureBlogImages(bodyEl) {
+  const images = [];
+  if (!bodyEl) return images;
+
+  // Hero image
+  const heroImg = bodyEl.querySelector('#blog-hero-placeholder img, .blog-hero-wrap img');
+  if (heroImg && heroImg.src) {
+    try {
+      const r = await fetch(heroImg.src);
+      const blob = await r.blob();
+      const data = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob); });
+      images.push({ type: 'hero', data, alt: 'Hero image' });
+    } catch (_) {}
+  }
+
+  // Chart.js canvases
+  bodyEl.querySelectorAll('.blog-chart-wrap canvas, .blog-radar-wrap canvas').forEach(canvas => {
+    try {
+      const data = canvas.toDataURL('image/png');
+      const title = canvas.closest('.blog-visual-wrap')?.querySelector('.blog-chart-title')?.textContent || 'Chart';
+      images.push({ type: 'chart', data, alt: title });
+    } catch (_) {}
+  });
+
+  // Mermaid SVGs
+  bodyEl.querySelectorAll('.blog-mermaid-wrap .mermaid svg').forEach(svg => {
+    try {
+      const serialized = new XMLSerializer().serializeToString(svg);
+      const b64 = btoa(unescape(encodeURIComponent(serialized)));
+      images.push({ type: 'mermaid', data: 'data:image/svg+xml;base64,' + b64, alt: 'Diagram' });
+    } catch (_) {}
+  });
+
+  return images;
+}
 
 async function exportToWord(key, label, btn) {
   const text = _copyBuf[key] || '';
@@ -4096,9 +4240,17 @@ async function exportToWord(key, label, btn) {
   btn.textContent = 'Exporting...'; btn.disabled = true;
   try {
     const title = document.getElementById('questionInput')?.value?.trim() || 'Research';
+
+    // Capture blog visuals if in blog mode
+    let images = [];
+    if (state.blogPostMode && key === 'integrator') {
+      const bodyEl = document.getElementById('intBody');
+      images = await captureBlogImages(bodyEl).catch(() => []);
+    }
+
     const resp = await fetch('/api/export-docx', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, sections: [{ label, text }] }),
+      body: JSON.stringify({ title, sections: [{ label, text }], images }),
     });
     if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || resp.statusText); }
     const blob = await resp.blob();
@@ -4397,6 +4549,9 @@ function onLoginSuccess(user) {
   if (user.limits && user.limits.projects) {
     fetch('/api/projects').then(r => r.json()).then(({ projects }) => { _projects = projects; updateAtpSelect(); }).catch(() => {});
   }
+  // Show Blog Post Mode toggle only for owner
+  const blogBlock = document.getElementById('blogPostBlock');
+  if (blogBlock) blogBlock.style.display = (user.email && user.email.toLowerCase() === 'juanjomir@gmail.com') ? '' : 'none';
   // Initialize sidebar content
   initSidebar();
   // Check for billing redirect or email verified
@@ -4644,6 +4799,20 @@ async function recoverSession(sid) {
 
   const nonIntRows = sRows.filter(r => !r.is_integrator);
   const intRow = sRows.find(r => r.is_integrator);
+
+  // Populate state.lastResults so "Integrate" button works after history recovery
+  state.lastResults = nonIntRows.map(r => ({
+    provider: r.provider,
+    modelId: r.model_id,
+    text: r.response,
+    inputTokens: r.input_tokens || 0,
+    outputTokens: r.output_tokens || 0,
+    cost: r.cost_usd || 0,
+    durationMs: r.duration_ms || 0,
+    selfScore: null,
+  }));
+  state.lastSessionId = sid;
+  _lastIntegratorText = intRow ? intRow.response : null;
 
   // Reset active tab tracker
   _activeResultTab = 'integration';
@@ -5641,6 +5810,206 @@ function initSidebar() {
   }
 }
 
+// ── Blog Post Mode — multimedia rendering ────────────────────────────────────
+
+function loadBlogLibraries() {
+  return new Promise(resolve => {
+    let pending = 0;
+    const done = () => { if (--pending === 0) resolve(); };
+    if (!window.Chart) {
+      pending++;
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
+      s.onload = done; s.onerror = done;
+      document.head.appendChild(s);
+    }
+    if (!window.mermaid) {
+      pending++;
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+      s.onload = () => {
+        window.mermaid.initialize({
+          startOnLoad: false, theme: 'dark', darkMode: true,
+          fontSize: 11,
+          flowchart: { rankSpacing: 28, nodeSpacing: 28, padding: 8 },
+          sequence: { actorMargin: 30, width: 100, height: 28, boxMargin: 6, mirrorActors: false },
+          gantt: { barHeight: 14, fontSize: 11 },
+          themeVariables: { primaryColor: '#58a6ff', lineColor: '#58a6ff', textColor: '#c9d1d9', background: '#0d1117', fontSize: '11px' }
+        });
+        done();
+      };
+      s.onerror = done;
+      document.head.appendChild(s);
+    }
+    if (pending === 0) resolve();
+  });
+}
+
+function computeWordOverlap(a, b) {
+  const stop = new Set(['the','and','for','that','this','with','are','from','have','been','will','they','their','what','which','when','where','your','you','can','use','not','all','but','its','was','has','had','how','out','more','also','into','than','about','over','then','only','some','after','first','these','those','both','most','like','each','very','just','because']);
+  const words = t => new Set((t.toLowerCase().match(/\b[a-z]{4,}\b/g) || []).filter(w => !stop.has(w)));
+  const wA = words(a), wB = words(b);
+  const inter = [...wA].filter(w => wB.has(w)).length;
+  const union = new Set([...wA, ...wB]).size;
+  return union ? Math.round(inter / union * 100) : 0;
+}
+
+function copyOgData(btn, title, desc) {
+  const text = `${title}\n\n${desc}\n\nhttps://reliableai.net`;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy for Social', 2000);
+  });
+}
+
+async function initBlogVisuals(bodyEl) {
+  await loadBlogLibraries();
+  const CHART_COLORS = ['#58a6ff', '#3fb950', '#f78166', '#d29922', '#a371f7'];
+  const PROV_NAMES = { anthropic: 'Claude', openai: 'GPT', google: 'Gemini', xai: 'Grok', qwen: 'Qwen', moonshot: 'Kimi' };
+  const chartDefaults = {
+    plugins: { legend: { labels: { color: '#c9d1d9', font: { size: 11 } } } },
+    scales: {
+      y: { min: 0, max: 100, grid: { color: '#30363d' }, ticks: { color: '#8b949e' } },
+      x: { grid: { color: '#30363d' }, ticks: { color: '#8b949e' } }
+    }
+  };
+
+  // 1. Hero Image placeholder (filled by blog:hero_image SSE event)
+  bodyEl.querySelectorAll('.blog-visual[data-btype="hero_image"]').forEach(el => {
+    const prompt = el.dataset.bparams || '';
+    const wrap = document.createElement('div');
+    wrap.className = 'blog-hero-wrap';
+    wrap.id = 'blog-hero-placeholder';
+    wrap.innerHTML = `<div class="blog-hero-loading"><div class="spinner"></div><span>Generating hero image…</span><small>${escHtml(prompt.slice(0, 90))}${prompt.length > 90 ? '…' : ''}</small></div>`;
+    el.replaceWith(wrap);
+  });
+
+  // 2. OG Share Card
+  bodyEl.querySelectorAll('.blog-visual[data-btype="og_card"]').forEach(el => {
+    const titleEl = bodyEl.querySelector('h1') || bodyEl.querySelector('h2');
+    const title = titleEl?.textContent?.trim() || 'ReliableAI Analysis';
+    const descEl = bodyEl.querySelector('p');
+    const desc = (descEl?.textContent || '').slice(0, 150).trim();
+    const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const card = document.createElement('div');
+    card.className = 'blog-og-card';
+    card.innerHTML =
+      `<div class="blog-og-header"><div class="blog-og-domain">🌐 reliableai.net · The Board</div>` +
+      `<div class="blog-og-title">${escHtml(title)}</div></div>` +
+      `<div class="blog-og-desc">${escHtml(desc)}${desc.length === 150 ? '…' : ''}</div>` +
+      `<div class="blog-og-footer"><span style="font-size:.72rem;color:var(--text-muted);flex:1">${date}</span>` +
+      `<button class="blog-og-copy-btn" onclick="copyOgData(this,${JSON.stringify(title)},${JSON.stringify(desc)})">Copy for Social</button></div>`;
+    el.replaceWith(card);
+  });
+
+  // 3. Consensus bar chart (selfScore per model)
+  bodyEl.querySelectorAll('.blog-visual[data-btype="consensus_chart"]').forEach(el => {
+    const models = state.lastResults.filter(r => r.selfScore);
+    if (!models.length) { el.remove(); return; }
+    const wrap = document.createElement('div');
+    wrap.className = 'blog-visual-wrap blog-chart-wrap';
+    const uid = 'bc-' + Date.now();
+    wrap.innerHTML = `<div class="blog-chart-title">Model Confidence &amp; Quality Scores</div><canvas id="${uid}"></canvas>`;
+    el.replaceWith(wrap);
+    new Chart(document.getElementById(uid), {
+      type: 'bar',
+      data: {
+        labels: models.map(m => PROV_NAMES[m.provider] || m.modelId),
+        datasets: [
+          { label: 'Confidence', data: models.map(m => m.selfScore.confidence || 0), backgroundColor: '#58a6ff66', borderColor: '#58a6ff', borderWidth: 1.5 },
+          { label: 'Novelty', data: models.map(m => m.selfScore.novelty || 0), backgroundColor: '#3fb95066', borderColor: '#3fb950', borderWidth: 1.5 },
+          { label: 'Data Density', data: models.map(m => m.selfScore.data_density || 0), backgroundColor: '#d2992266', borderColor: '#d29922', borderWidth: 1.5 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: true, ...chartDefaults }
+    });
+  });
+
+  // 4. Radar chart (per-model score dimensions)
+  bodyEl.querySelectorAll('.blog-visual[data-btype="radar_chart"]').forEach(el => {
+    const models = state.lastResults.filter(r => r.selfScore);
+    if (!models.length) { el.remove(); return; }
+    const wrap = document.createElement('div');
+    wrap.className = 'blog-visual-wrap blog-chart-wrap';
+    const uid = 'br-' + Date.now();
+    wrap.innerHTML = `<div class="blog-chart-title">Model Profile Radar</div><canvas id="${uid}"></canvas>`;
+    el.replaceWith(wrap);
+    new Chart(document.getElementById(uid), {
+      type: 'radar',
+      data: {
+        labels: ['Confidence', 'Novelty', 'Data Density'],
+        datasets: models.map((m, i) => ({
+          label: PROV_NAMES[m.provider] || m.modelId,
+          data: [m.selfScore.confidence || 0, m.selfScore.novelty || 0, m.selfScore.data_density || 0],
+          borderColor: CHART_COLORS[i % CHART_COLORS.length],
+          backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + '22',
+          pointBackgroundColor: CHART_COLORS[i % CHART_COLORS.length],
+          borderWidth: 2,
+        }))
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#c9d1d9', font: { size: 11 } } } },
+        scales: { r: { min: 0, max: 100, grid: { color: '#30363d' }, pointLabels: { color: '#8b949e', font: { size: 11 } }, ticks: { color: '#8b949e', backdropColor: 'transparent', stepSize: 25 } } }
+      }
+    });
+  });
+
+  // 5. Agreement heatmap (SVG — pairwise word overlap)
+  bodyEl.querySelectorAll('.blog-visual[data-btype="agreement_heatmap"]').forEach(el => {
+    const models = state.lastResults;
+    if (models.length < 2) { el.remove(); return; }
+    const names = models.map(m => PROV_NAMES[m.provider] || m.modelId.slice(0, 8));
+    const n = names.length;
+    const matrix = [];
+    for (let i = 0; i < n; i++) {
+      matrix[i] = [];
+      for (let j = 0; j < n; j++) {
+        matrix[i][j] = i === j ? 100 : computeWordOverlap(models[i].text || '', models[j].text || '');
+      }
+    }
+    const cell = 58, pad = 76;
+    const W = pad + n * cell + 12, H = pad + n * cell + 12;
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="max-width:100%;display:block;margin:0 auto">`;
+    names.forEach((name, j) => {
+      svg += `<text x="${pad + j * cell + cell / 2}" y="${pad - 10}" text-anchor="middle" font-size="11" fill="#8b949e" font-family="monospace">${escHtml(name)}</text>`;
+    });
+    names.forEach((name, i) => {
+      svg += `<text x="${pad - 8}" y="${pad + i * cell + cell / 2 + 4}" text-anchor="end" font-size="11" fill="#8b949e" font-family="monospace">${escHtml(name)}</text>`;
+      for (let j = 0; j < n; j++) {
+        const s = matrix[i][j];
+        const bg = s >= 60 ? `rgba(63,185,80,${0.25 + s / 200})` : s >= 35 ? `rgba(210,153,34,${0.25 + s / 200})` : `rgba(248,81,73,${0.25 + s / 200})`;
+        svg += `<rect x="${pad + j * cell + 1}" y="${pad + i * cell + 1}" width="${cell - 3}" height="${cell - 3}" rx="4" fill="${bg}"/>`;
+        svg += `<text x="${pad + j * cell + cell / 2}" y="${pad + i * cell + cell / 2 + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(255,255,255,.85)" font-family="monospace">${s}%</text>`;
+      }
+    });
+    svg += `</svg>`;
+    const wrap = document.createElement('div');
+    wrap.className = 'blog-visual-wrap blog-heatmap-wrap';
+    wrap.innerHTML = `<div class="blog-chart-title">Model Agreement Heatmap</div>${svg}`;
+    el.replaceWith(wrap);
+  });
+
+  // 6. Mermaid diagrams (standard ```mermaid code blocks)
+  const mermaidCodes = bodyEl.querySelectorAll('code.language-mermaid');
+  if (mermaidCodes.length && window.mermaid) {
+    mermaidCodes.forEach((codeEl, idx) => {
+      const pre = codeEl.closest('pre') || codeEl.parentElement;
+      const mermaidContent = codeEl.textContent;
+      const wrap = document.createElement('div');
+      wrap.className = 'blog-visual-wrap blog-mermaid-wrap';
+      const uid = `mmd-${Date.now()}-${idx}`;
+      wrap.innerHTML = `<div class="blog-chart-title">Diagram</div><div class="mermaid" id="${uid}"></div>`;
+      // Set text content safely to avoid XSS
+      pre.replaceWith(wrap);
+      wrap.querySelector(`#${uid}`).textContent = mermaidContent;
+    });
+    try {
+      await window.mermaid.run({ nodes: bodyEl.querySelectorAll('.mermaid') });
+    } catch (e) { console.warn('[mermaid]', e); }
+  }
+}
+
 // ── Keyboard shortcuts (F10) ─────────────────────────────────────────────────
 document.addEventListener('keydown', (e) => {
   // Cmd/Ctrl + Enter → submit research
@@ -5650,12 +6019,18 @@ document.addEventListener('keydown', (e) => {
     const runBtn = document.getElementById('runBtn');
     if (runBtn && !runBtn.disabled) { e.preventDefault(); runBtn.click(); }
   }
-  // Escape → close modals
+  // Escape → close modals / overlays
   if (e.key === 'Escape') {
     const fm = document.getElementById('forgotModal');
     if (fm && !fm.classList.contains('hidden')) { closeForgotModal(); return; }
     const billing = document.getElementById('billingModal');
     if (billing && billing.style.display !== 'none') { closeBilling?.(); return; }
+    const projects = document.getElementById('projectsOverlay');
+    if (projects && !projects.classList.contains('hidden')) { closeProjects(); return; }
+    const history = document.getElementById('historyOverlay');
+    if (history && !history.classList.contains('hidden')) { closeHistory(); return; }
+    const userDD = document.getElementById('userDropdown');
+    if (userDD && userDD.classList.contains('open')) { closeUserMenu(); return; }
   }
 });
 </script>
