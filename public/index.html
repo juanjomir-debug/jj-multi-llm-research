@@ -1910,53 +1910,65 @@ const PROVIDERS = {
   },
 };
 
-// Prices in USD per million tokens (input / output) — updated March 2026
+// Prices in USD per million tokens (input / output) — updated April 2026
 const PRICING = {
-  // Claude 4.6 Search
-  'claude-opus-4-6-search':   { i: 15,   o: 75  },
-  'claude-sonnet-4-6-search': { i:  3,   o: 15  },
-  // Claude 4.6
-  'claude-opus-4-6-thinking': { i: 15,   o: 75  },
-  'claude-opus-4-6':          { i: 15,   o: 75  },
-  'claude-sonnet-4-6':        { i:  3,   o: 15  },
-  // Claude 4.5
-  'claude-opus-4-5':          { i: 15,   o: 75  },
-  'claude-sonnet-4-5':        { i:  3,   o: 15  },
-  'claude-haiku-4-5-20251001':{ i:  0.8, o:  4  },
-  // GPT-5 Search
-  'gpt-5.2':                  { i:  5,   o: 20  },
-  // GPT-5
-  'gpt-5.4':                  { i:  5,   o: 20  },
-  'gpt-5.3':                  { i:  5,   o: 20  },
-  'gpt-5':                    { i:  5,   o: 20  },
-  'gpt-5-mini':               { i:  0.15,o:  0.6},
-  // GPT-4.1
-  // OpenAI thinking (o-series)
-  // Gemini 3.x preview
-  'models/gemini-3.1-pro-preview':       { i: 1.25, o: 5.0 },
-  'models/gemini-3-flash-preview':       { i: 0.10, o: 0.4 },
-  'models/gemini-3.1-flash-lite-preview':{ i: 0.075,o: 0.3 },
-  // Gemini 2.5
-  // Grok 4.20
-  'grok-4.20-0309-reasoning':     { i: 2,   o: 6 },
-  'grok-4.20-0309-non-reasoning': { i: 2,   o: 6 },
-  // Grok 4.1
-  'grok-4-1-fast-reasoning':      { i: 0.2,  o: 0.5  },
-  'grok-4-1-fast-non-reasoning':  { i: 0.2,  o: 0.5  },
-  // Qwen
-  'qwen-max-thinking': { i: 1.6,  o: 6.4  },
-  'qwen-max':   { i: 1.6,  o: 6.4  },
-  'qwen-plus':  { i: 0.4,  o: 1.2  },
-  'qwen-turbo': { i: 0.05, o: 0.15 },
-  // Zhipu (GLM)
-  'glm-5.1':          { i: 0.5,  o: 2.0  },
-  'glm-5-turbo':      { i: 0.1,  o: 0.4  },
-  'glm-5-turbo-search':{ i: 0.1, o: 0.4  },
-  'glm-5':            { i: 0.3,  o: 1.2  },
-  'glm-4.7':          { i: 0.25, o: 1.0  },
-  'glm-4.6':          { i: 0.2,  o: 0.8  },
-  'glm-4.5':          { i: 0.15, o: 0.6  },
-  'glm-4.5-air':      { i: 0.05, o: 0.2  },
+  // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-opus-4-6-search':    { i: 15,    o: 75   },
+  'claude-sonnet-4-6-search':  { i:  3,    o: 15   },
+  'claude-opus-4-6-thinking':  { i: 15,    o: 75   },
+  'claude-opus-4-6':           { i: 15,    o: 75   },
+  'claude-sonnet-4-6':         { i:  3,    o: 15   },
+  'claude-opus-4-5':           { i: 15,    o: 75   },
+  'claude-sonnet-4-5':         { i:  3,    o: 15   },
+  'claude-haiku-4-5-20251001': { i:  0.8,  o:  4   },
+  // ── OpenAI ────────────────────────────────────────────────────────────────
+  'gpt-4.1':      { i: 2.00,  o:  8.00 },
+  'gpt-4.1-mini': { i: 0.40,  o:  1.60 },
+  'gpt-4.1-nano': { i: 0.10,  o:  0.40 },
+  'o4-mini':      { i: 1.10,  o:  4.40 },
+  'o3':           { i: 10.00, o: 40.00 },
+  // ── Google Gemini ─────────────────────────────────────────────────────────
+  'models/gemini-3.1-pro-preview':        { i: 1.25,  o:  5.00 },
+  'models/gemini-3-flash-preview':        { i: 0.10,  o:  0.40 },
+  'models/gemini-3.1-flash-lite-preview': { i: 0.075, o:  0.30 },
+  'gemini-2.5-pro':                       { i: 1.25,  o: 10.00 },
+  'gemini-2.5-flash':                     { i: 0.15,  o:  0.60 },
+  'gemini-2.0-flash-thinking-exp':        { i: 0.10,  o:  0.40 },
+  // ── xAI Grok ──────────────────────────────────────────────────────────────
+  'grok-3':                       { i: 3.00,  o: 15.00 },
+  'grok-3-mini':                  { i: 0.30,  o:  0.50 },
+  'grok-3-fast':                  { i: 5.00,  o: 25.00 },
+  'grok-3-mini-fast':             { i: 0.60,  o:  4.00 },
+  'grok-4.20-0309-reasoning':     { i: 3.00,  o: 15.00 },
+  'grok-4.20-0309-non-reasoning': { i: 3.00,  o: 15.00 },
+  'grok-4-1-fast-reasoning':      { i: 0.20,  o:  0.50 },
+  'grok-4-1-fast-non-reasoning':  { i: 0.20,  o:  0.50 },
+  // ── Moonshot Kimi ─────────────────────────────────────────────────────────
+  'kimi-k2-5':        { i: 2.00, o: 8.00 },
+  'kimi-latest':      { i: 2.00, o: 6.00 },
+  'moonshot-v1-128k': { i: 8.00, o: 8.00 },
+  'moonshot-v1-32k':  { i: 2.40, o: 2.40 },
+  'moonshot-v1-8k':   { i: 0.80, o: 0.80 },
+  // ── Perplexity Sonar ──────────────────────────────────────────────────────
+  'sonar':               { i: 1.00, o:  1.00 },
+  'sonar-pro':           { i: 3.00, o: 15.00 },
+  'sonar-reasoning':     { i: 1.00, o:  5.00 },
+  'sonar-reasoning-pro': { i: 2.00, o:  8.00 },
+  // ── Qwen / Alibaba DashScope ──────────────────────────────────────────────
+  'qwen-max-thinking': { i: 1.60, o: 6.40 },
+  'qwen-max':          { i: 1.60, o: 6.40 },
+  'qwen-plus':         { i: 0.40, o: 1.20 },
+  'qwen-turbo':        { i: 0.05, o: 0.15 },
+  'qwq-32b':           { i: 0.60, o: 2.40 },
+  // ── Zhipu GLM ─────────────────────────────────────────────────────────────
+  'glm-5.1':            { i: 0.50, o: 2.00 },
+  'glm-5-turbo':        { i: 0.10, o: 0.40 },
+  'glm-5-turbo-search': { i: 0.10, o: 0.40 },
+  'glm-5':              { i: 0.30, o: 1.20 },
+  'glm-4.7':            { i: 0.25, o: 1.00 },
+  'glm-4.6':            { i: 0.20, o: 0.80 },
+  'glm-4.5':            { i: 0.15, o: 0.60 },
+  'glm-4.5-air':        { i: 0.05, o: 0.20 },
 };
 
 function calcCost(id,i,o){const p=PRICING[id];return p?(i/1e6)*p.i+(o/1e6)*p.o:0;}
@@ -2974,20 +2986,89 @@ function getAmplitudeTokens() {
 }
 function getAmplitudeCostTokens() { return AMPLITUDE_TOKENS[document.getElementById('responseAmplitude')?.value || 'normal'] || 2048; }
 
+// Context tier limits mirroring server.js — keep in sync
+const MODEL_CONTEXT_LIMITS = { expensive: 12_000, medium: 24_000, cheap: 40_000 };
+function modelContextLimit(modelId) {
+  const p = PRICING[modelId];
+  const inp = p?.i ?? p?.input ?? 1.0; // client uses {i,o}, server uses {input,output}
+  if (inp >= 3.0) return MODEL_CONTEXT_LIMITS.expensive;
+  if (inp >= 0.5) return MODEL_CONTEXT_LIMITS.medium;
+  return MODEL_CONTEXT_LIMITS.cheap;
+}
+function trimHistoryTokens(history, modelId) {
+  if (!history || !history.length) return 0;
+  const limit = modelContextLimit(modelId);
+  let total = 0; const result = [];
+  for (let i = history.length - 1; i >= 0; i--) {
+    const tok = Math.ceil((history[i].content || '').length / 4);
+    if (total + tok > limit && result.length > 0) break;
+    total += tok; result.unshift(history[i]);
+  }
+  if (result.length && result[0].role === 'assistant') { total -= Math.ceil((result[0].content || '').length / 4); }
+  return Math.min(total, limit);
+}
+
 function updateEstimate() {
-  const question = document.getElementById('questionInput').value; const qTok = Math.ceil(question.length / 4);
-  const estOut = getAmplitudeCostTokens(); const estIntOut = parseInt(document.getElementById('maxTokensInt')?.value) || 4096;
+  const question = document.getElementById('questionInput').value;
+  const qTok = Math.ceil(question.length / 4);
+  const estOut = getAmplitudeCostTokens();
+  const estIntOut = parseInt(document.getElementById('maxTokensInt')?.value) || 4096;
+  const amplitude = document.getElementById('responseAmplitude')?.value || 'normal';
+
+  // Fixed overhead: hidden instructions + amplitude + confidence (~600 tokens typical)
+  const FIXED_SYS_TOK = 600;
+
+  // Attachment tokens
+  const attachTok = state.attachments.reduce((s, a) => s + Math.ceil(((a.textContent || a.content || a.data || '').length) / 4), 0);
+
+  // Total raw history tokens (for warning)
+  const rawHistTok = state.conversationHistory.reduce((s, h) => s + Math.ceil((h.content || '').length / 4), 0);
+
   let totalCost = 0;
-  state.models.forEach(m => { if (!m.enabled) return; const inTok = qTok + Math.ceil((m.customInstructions || '').length / 4) + 30;
-    const cost = calcCost(m.modelId, inTok, estOut); totalCost += cost; const el = document.getElementById(`mcost-${m.provider}`);
+  state.models.forEach(m => {
+    if (!m.enabled) return;
+    const customTok = Math.ceil((m.customInstructions || '').length / 4);
+    const histTok = trimHistoryTokens(state.conversationHistory, m.modelId);
+    const inTok = FIXED_SYS_TOK + customTok + qTok + histTok + attachTok;
+    const cost = calcCost(m.modelId, inTok, estOut);
+    totalCost += cost;
+    const el = document.getElementById(`mcost-${m.provider}`);
     if (el) { el.textContent = fmtCost(cost); el.className = `cost-val ${costClass(cost)}`; }
   });
-  const intCfg = getIntegratorConfig(); const enabledCount = state.models.filter(m => m.enabled).length;
-  const intInTok = enabledCount * (estOut + 200) + qTok + Math.ceil((intCfg.customInstructions || '').length / 4) + 100;
-  const intCost = state.integratorEnabled ? calcCost(intCfg.modelId, intInTok, estIntOut) : 0; totalCost += intCost;
-  const intEl = document.getElementById('intCostVal'); intEl.textContent = state.integratorEnabled ? fmtCost(intCost) : '---';
+
+  const intCfg = getIntegratorConfig();
+  const enabledCount = state.models.filter(m => m.enabled).length;
+  const intHistTok = trimHistoryTokens(state.conversationHistory, intCfg.modelId);
+  const intSysTok = 400 + Math.ceil((intCfg.customInstructions || '').length / 4);
+  const intInTok = intSysTok + enabledCount * (estOut + 200) + qTok + intHistTok + attachTok;
+  const intCost = state.integratorEnabled ? calcCost(intCfg.modelId, intInTok, estIntOut) : 0;
+  totalCost += intCost;
+
+  const intEl = document.getElementById('intCostVal');
+  intEl.textContent = state.integratorEnabled ? fmtCost(intCost) : '---';
   intEl.className = `cost-val ${costClass(intCost)}`;
-  const totalEl = document.getElementById('totalCostVal'); totalEl.textContent = fmtCost(totalCost); totalEl.className = `tval ${costClass(totalCost)}`;
+
+  const totalEl = document.getElementById('totalCostVal');
+  totalEl.textContent = fmtCost(totalCost);
+  totalEl.className = `tval ${costClass(totalCost)}`;
+
+  // Context warning: show if raw history > 8k tokens
+  let ctxWarn = document.getElementById('ctxWarnBadge');
+  if (rawHistTok > 8_000) {
+    if (!ctxWarn) {
+      ctxWarn = document.createElement('span');
+      ctxWarn.id = 'ctxWarnBadge';
+      ctxWarn.style.cssText = 'font-size:.7rem;color:#f0a04b;margin-left:6px;cursor:pointer';
+      ctxWarn.title = 'Large context — some history may be trimmed for expensive models. Click "Clear" to reset.';
+      ctxWarn.textContent = `⚠ ${Math.round(rawHistTok / 1000)}k ctx`;
+      const convBar = document.getElementById('convBar');
+      if (convBar) convBar.appendChild(ctxWarn);
+    } else {
+      ctxWarn.textContent = `⚠ ${Math.round(rawHistTok / 1000)}k ctx`;
+    }
+  } else if (ctxWarn) {
+    ctxWarn.remove();
+  }
 }
 
 function updateRunBtn() { const hasQ = document.getElementById('questionInput').value.trim().length > 0;

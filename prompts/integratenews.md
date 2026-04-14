@@ -139,7 +139,7 @@ Include this exact block at the end, after `[OG_CARD]`:
 **FORMATTING**:
 - Clean Markdown with H2 and H3 headings
 - Bold sparingly — only for key terms on first appearance
-- Respond in the SAME LANGUAGE as the original question
+- Always write in **English**, regardless of the language of the original question or the models' responses
 
 **CONSTRAINTS**:
 - Do NOT fabricate quotes, studies, or data points not in the models' responses

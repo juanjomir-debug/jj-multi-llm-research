@@ -198,72 +198,97 @@ function addMonthlyCost(userId, costUsd) {
 }
 
 // ─── Pricing (USD per 1M tokens: input / output) ────────────────────────────
-// Prices USD per million tokens (input / output) — updated March 2026
+// Prices USD per million tokens (input / output) — updated April 2026
 const PRICING = {
-  // Claude 4.6
-  'claude-opus-4-6-thinking':   { input: 15.00, output: 75.00 },
-  'claude-opus-4-6':            { input: 15.00, output: 75.00 },
-  'claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
-  // Claude 4.5
-  'claude-opus-4-5':            { input: 15.00, output: 75.00 },
-  'claude-sonnet-4-5':          { input:  3.00, output: 15.00 },
-  'claude-haiku-4-5-20251001':  { input:  0.80, output:  4.00 },
-  // GPT-5
-  'gpt-5.4':                    { input:  5.00, output: 20.00 },
-  'gpt-5.3':                    { input:  5.00, output: 20.00 },
-  'gpt-5':                      { input:  5.00, output: 20.00 },
-  'gpt-5-mini':                 { input:  0.15, output:  0.60 },
-  // GPT-4.1
-  'gpt-4.1':                    { input:  2.00, output:  8.00 },
-  'gpt-4.1-mini':               { input:  0.40, output:  1.60 },
-  'gpt-4.1-nano':               { input:  0.10, output:  0.40 },
-  // OpenAI thinking
-  'o4-mini':                    { input:  1.10, output:  4.40 },
-  'o3':                         { input: 10.00, output: 40.00 },
-  // Gemini 3.x preview
-  'models/gemini-3.1-pro-preview':        { input: 1.25,  output:  5.00 },
-  'models/gemini-3-flash-preview':        { input: 0.10,  output:  0.40 },
-  'models/gemini-3.1-flash-lite-preview': { input: 0.075, output:  0.30 },
-  // Gemini 2.5
+  // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-opus-4-6-thinking':  { input: 15.00, output: 75.00 },
+  'claude-opus-4-6':           { input: 15.00, output: 75.00 },
+  'claude-sonnet-4-6':         { input:  3.00, output: 15.00 },
+  'claude-opus-4-5':           { input: 15.00, output: 75.00 },
+  'claude-sonnet-4-5':         { input:  3.00, output: 15.00 },
+  'claude-haiku-4-5-20251001': { input:  0.80, output:  4.00 },
+  // ── OpenAI ────────────────────────────────────────────────────────────────
+  'gpt-4.1':       { input: 2.00, output:  8.00 },
+  'gpt-4.1-mini':  { input: 0.40, output:  1.60 },
+  'gpt-4.1-nano':  { input: 0.10, output:  0.40 },
+  'o4-mini':       { input: 1.10, output:  4.40 },
+  'o3':            { input: 10.00, output: 40.00 },
+  // ── Google Gemini ─────────────────────────────────────────────────────────
+  // Gemini 2.5 Pro: $1.25/M ≤200k tokens, $2.50/M >200k — we use the lower tier
   'gemini-2.5-pro':                       { input: 1.25,  output: 10.00 },
   'gemini-2.5-flash':                     { input: 0.15,  output:  0.60 },
   'gemini-2.0-flash-thinking-exp':        { input: 0.10,  output:  0.40 },
-  // Grok 4.20
-  'grok-4.20-0309-reasoning':     { input: 2.00, output:  6.00 },
-  'grok-4.20-0309-non-reasoning': { input: 2.00, output:  6.00 },
-  // Grok 4.1
-  'grok-4-1-fast-reasoning':      { input: 0.20, output:  0.50 },
-  'grok-4-1-fast-non-reasoning':  { input: 0.20, output:  0.50 },
-  // Kimi (kept for compatibility)
+  'models/gemini-3.1-pro-preview':        { input: 1.25,  output:  5.00 },
+  'models/gemini-3-flash-preview':        { input: 0.10,  output:  0.40 },
+  'models/gemini-3.1-flash-lite-preview': { input: 0.075, output:  0.30 },
+  // ── xAI Grok ──────────────────────────────────────────────────────────────
+  'grok-3':                       { input: 3.00, output:  15.00 },
+  'grok-3-mini':                  { input: 0.30, output:   0.50 },
+  'grok-3-fast':                  { input: 5.00, output:  25.00 },
+  'grok-3-mini-fast':             { input: 0.60, output:   4.00 },
+  'grok-4.20-0309-reasoning':     { input: 3.00, output:  15.00 },
+  'grok-4.20-0309-non-reasoning': { input: 3.00, output:  15.00 },
+  'grok-4-1-fast-reasoning':      { input: 0.20, output:   0.50 },
+  'grok-4-1-fast-non-reasoning':  { input: 0.20, output:   0.50 },
+  // ── Moonshot Kimi ─────────────────────────────────────────────────────────
   'kimi-k2-5':        { input: 2.00, output: 8.00 },
   'kimi-latest':      { input: 2.00, output: 6.00 },
   'moonshot-v1-128k': { input: 8.00, output: 8.00 },
   'moonshot-v1-32k':  { input: 2.40, output: 2.40 },
   'moonshot-v1-8k':   { input: 0.80, output: 0.80 },
-  // Perplexity Sonar
-  'sonar':                { input: 1.00, output: 1.00 },
-  'sonar-pro':            { input: 3.00, output: 15.00 },
-  'sonar-reasoning':      { input: 1.00, output: 5.00 },
-  'sonar-reasoning-pro':  { input: 2.00, output: 8.00 },
-  // Qwen (Alibaba DashScope)
-  'qwen-plus':            { input: 0.40, output: 1.20 },
-  'qwen-turbo':           { input: 0.05, output: 0.15 },
-  'qwen-max':             { input: 1.60, output: 6.40 },
-  'qwq-32b':              { input: 0.60, output: 2.40 },
-  // Zhipu AI (GLM)
-  'glm-5.1':       { input: 0.50, output: 2.00 },
-  'glm-5-turbo':   { input: 0.10, output: 0.40 },
-  'glm-5':         { input: 0.30, output: 1.20 },
-  'glm-4.7':       { input: 0.25, output: 1.00 },
-  'glm-4.6':       { input: 0.20, output: 0.80 },
-  'glm-4.5':       { input: 0.15, output: 0.60 },
-  'glm-4.5-air':   { input: 0.05, output: 0.20 },
+  // ── Perplexity Sonar ──────────────────────────────────────────────────────
+  'sonar':              { input: 1.00, output:  1.00 },
+  'sonar-pro':          { input: 3.00, output: 15.00 },
+  'sonar-reasoning':    { input: 1.00, output:  5.00 },
+  'sonar-reasoning-pro':{ input: 2.00, output:  8.00 },
+  // ── Qwen / Alibaba DashScope ──────────────────────────────────────────────
+  'qwen-plus':  { input: 0.40, output: 1.20 },
+  'qwen-turbo': { input: 0.05, output: 0.15 },
+  'qwen-max':   { input: 1.60, output: 6.40 },
+  'qwq-32b':    { input: 0.60, output: 2.40 },
+  // ── Zhipu GLM ─────────────────────────────────────────────────────────────
+  'glm-5.1':     { input: 0.50, output: 2.00 },
+  'glm-5-turbo': { input: 0.10, output: 0.40 },
+  'glm-5':       { input: 0.30, output: 1.20 },
+  'glm-4.7':     { input: 0.25, output: 1.00 },
+  'glm-4.6':     { input: 0.20, output: 0.80 },
+  'glm-4.5':     { input: 0.15, output: 0.60 },
+  'glm-4.5-air': { input: 0.05, output: 0.20 },
 };
 
 function calcCost(modelId, inputTok, outputTok) {
   const p = PRICING[modelId];
   if (!p) return 0;
   return (inputTok / 1_000_000) * p.input + (outputTok / 1_000_000) * p.output;
+}
+
+// ─── Context tier limits (tokens) ────────────────────────────────────────────
+// Expensive ≥$3/M input → 12k  |  Medium $0.5–$3 → 24k  |  Cheap <$0.5 → 40k
+function modelContextLimit(modelId) {
+  const p = PRICING[modelId];
+  const inputPrice = p?.input ?? 1.0; // unknown models → treat as medium
+  if (inputPrice >= 3.0) return 12_000;
+  if (inputPrice >= 0.5) return 24_000;
+  return 40_000;
+}
+
+// Trim conversation history to fit within a model's context budget.
+// Always keeps complete user/assistant pairs, newest-first.
+// Returns the trimmed array and the number of tokens consumed.
+function trimHistory(history, modelId) {
+  if (!history || history.length === 0) return { trimmed: [], tokens: 0 };
+  const limit = modelContextLimit(modelId);
+  let total = 0;
+  const result = [];
+  for (let i = history.length - 1; i >= 0; i--) {
+    const tok = Math.ceil((history[i].content || '').length / 4);
+    if (total + tok > limit && result.length > 0) break;
+    total += tok;
+    result.unshift(history[i]);
+  }
+  // Ensure we don't start mid-pair with an assistant turn
+  if (result.length > 0 && result[0].role === 'assistant') result.shift();
+  return { trimmed: result, tokens: total };
 }
 
 // ─── PDF text extraction ──────────────────────────────────────────────────────
@@ -774,20 +799,22 @@ async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, hi
 // Streaming dispatcher (improvement #1)
 // temperature = null → use API default; pass as last arg to preserve backward compat
 async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk, temperature = null, options = {}) {
+  // Trim history to model's context budget before sending
+  const { trimmed: trimmedHistory } = trimHistory(history || [], modelId);
   // Qwen and Zhipu (GLM) do not support vision — strip image attachments
   const NO_VISION_PROVIDERS = new Set(['qwen', 'zhipu']);
   const effectiveAttachments = NO_VISION_PROVIDERS.has(provider)
     ? attachments.filter(a => !a.type?.startsWith('image/'))
     : attachments;
   switch (provider) {
-    case 'anthropic':  return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, history, temperature, onChunk, webSearch);
-    case 'openai':     return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, history, temperature, onChunk, webSearch);
-    case 'google':     return callGemini(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, webSearch, history, temperature, options.thinking || false, onChunk);
-    case 'xai':        return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, webSearch, history, temperature, onChunk);
-    case 'moonshot':   return callKimi(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, history, temperature);
-    case 'perplexity': return callPerplexityStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk);
-    case 'qwen':       return callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, !!webSearch);
-    case 'zhipu':      return callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, !!webSearch);
+    case 'anthropic':  return callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, trimmedHistory, temperature, onChunk, webSearch);
+    case 'openai':     return callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, trimmedHistory, temperature, onChunk, webSearch);
+    case 'google':     return callGemini(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, webSearch, trimmedHistory, temperature, options.thinking || false, onChunk);
+    case 'xai':        return callGrokStream(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, webSearch, trimmedHistory, temperature, onChunk);
+    case 'moonshot':   return callKimi(modelId, systemPrompt, userMessage, maxTokens, effectiveAttachments, trimmedHistory, temperature);
+    case 'perplexity': return callPerplexityStream(modelId, systemPrompt, userMessage, maxTokens, trimmedHistory, temperature, onChunk);
+    case 'qwen':       return callQwenStream(modelId, systemPrompt, userMessage, maxTokens, trimmedHistory, temperature, onChunk, !!webSearch);
+    case 'zhipu':      return callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, trimmedHistory, temperature, onChunk, !!webSearch);
     default: throw new Error(`Unknown provider: ${provider}`);
   }
 }
@@ -1469,20 +1496,39 @@ app.get('/api/model-strengths', (req, res) => {
 
 // ─── Cost estimate ───────────────────────────────────────────────────────────
 app.post('/api/estimate', (req, res) => {
-  const { question = '', models = [], integrator = {} } = req.body;
+  const { question = '', models = [], integrator = {}, conversationHistory = [], attachments = [], amplitude = 'normal' } = req.body;
+
+  // Approximate fixed overhead: HIDDEN_INSTRUCTIONS + amplitude + confidence instruction
+  const FIXED_SYSTEM_TOK = Math.ceil((HIDDEN_INSTRUCTIONS.length + (AMPLITUDE_INSTRUCTIONS[amplitude] || '').length + CONFIDENCE_INSTRUCTION.length) / 4);
+
+  // History tokens (raw, before per-model trimming)
+  const rawHistoryTok = Math.ceil((conversationHistory || []).reduce((s, h) => s + (h.content || '').length, 0) / 4);
+
+  // Attachment tokens (text-extracted content approximation)
+  const attachTok = Math.ceil((attachments || []).reduce((s, a) => s + (a.textContent || a.content || a.data || '').length, 0) / 4);
+
   const qTok = Math.ceil(question.length / 4);
   const estOut = 1500;
+
   const modelBreakdown = models.filter(m => m.enabled).map(m => {
-    const inTok = qTok + Math.ceil(((m.customInstructions || '').length) / 4) + 20;
+    const customTok = Math.ceil((m.customInstructions || '').length / 4);
+    // Per-model: trim history to that model's context budget
+    const { tokens: histTok } = trimHistory(conversationHistory || [], m.modelId);
+    const inTok = FIXED_SYSTEM_TOK + customTok + qTok + histTok + attachTok;
     const cost = calcCost(m.modelId, inTok, estOut);
-    return { modelId: m.modelId, provider: m.provider, inTok, outTok: estOut, cost };
+    return { modelId: m.modelId, provider: m.provider, inTok, outTok: estOut, cost, histTok, attachTok };
   });
+
   const enabledCount = modelBreakdown.length;
-  const intInTok = enabledCount * (estOut + 200) + qTok + Math.ceil(((integrator.customInstructions || '').length) / 4) + 100;
+  // Integrator input = all model responses + question + integrator system prompt + history
+  const intSysTok = Math.ceil((INTEGRATOR_CONSENSUS_PROMPT.length + (integrator.customInstructions || '').length) / 4);
+  const { tokens: intHistTok } = trimHistory(conversationHistory || [], integrator.modelId || '');
+  const intInTok = intSysTok + enabledCount * (estOut + 200) + qTok + intHistTok + attachTok;
   const intOutTok = 3000;
   const intCost = integrator.modelId ? calcCost(integrator.modelId, intInTok, intOutTok) : 0;
   const total = modelBreakdown.reduce((s, m) => s + m.cost, 0) + intCost;
-  res.json({ modelBreakdown, intCost, intInTok, intOutTok, total });
+
+  res.json({ modelBreakdown, intCost, intInTok, intOutTok, total, rawHistoryTok, attachTok });
 });
 
 
