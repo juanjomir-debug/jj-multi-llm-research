@@ -3018,8 +3018,18 @@ function updateEstimate() {
   // Fixed overhead: hidden instructions + amplitude + confidence (~600 tokens typical)
   const FIXED_SYS_TOK = 600;
 
-  // Attachment tokens
-  const attachTok = state.attachments.reduce((s, a) => s + Math.ceil(((a.textContent || a.content || a.data || '').length) / 4), 0);
+  // Attachment tokens — estimate from actual text if available, else approximate from file size
+  // PDFs/binary: base64 data inflates 33%; PDFs extract to ~20% of raw bytes as text
+  // Text files: base64 → raw bytes (*0.75) → tokens (/4)
+  const attachTok = state.attachments.reduce((s, a) => {
+    if (a.textContent) return s + Math.ceil(a.textContent.length / 4);
+    const isPdf = (a.type || '').includes('pdf') || (a.name || '').endsWith('.pdf');
+    const isText = (a.type || '').startsWith('text/') || /\.(txt|md|csv|json|xml|html)$/i.test(a.name || '');
+    const rawBytes = Math.ceil((a.data || a.content || '').length * 0.75); // base64 → bytes
+    if (isPdf)   return s + Math.ceil(rawBytes * 0.20 / 4); // PDFs: ~20% extractable text
+    if (isText)  return s + Math.ceil(rawBytes / 4);
+    return s + Math.ceil(rawBytes * 0.15 / 4); // other binary (images, docx…): minimal text
+  }, 0);
 
   // Total raw history tokens (for warning)
   const rawHistTok = state.conversationHistory.reduce((s, h) => s + Math.ceil((h.content || '').length / 4), 0);

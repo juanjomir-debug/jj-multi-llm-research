@@ -1504,8 +1504,16 @@ app.post('/api/estimate', (req, res) => {
   // History tokens (raw, before per-model trimming)
   const rawHistoryTok = Math.ceil((conversationHistory || []).reduce((s, h) => s + (h.content || '').length, 0) / 4);
 
-  // Attachment tokens (text-extracted content approximation)
-  const attachTok = Math.ceil((attachments || []).reduce((s, a) => s + (a.textContent || a.content || a.data || '').length, 0) / 4);
+  // Attachment tokens — use extracted text if available, else approximate from file size
+  const attachTok = Math.ceil((attachments || []).reduce((s, a) => {
+    if (a.textContent) return s + a.textContent.length;
+    const isPdf  = (a.type || '').includes('pdf') || (a.name || '').endsWith('.pdf');
+    const isText = (a.type || '').startsWith('text/') || /\.(txt|md|csv|json|xml|html)$/i.test(a.name || '');
+    const rawBytes = Math.ceil((a.data || a.content || '').length * 0.75);
+    if (isPdf)  return s + rawBytes * 0.20;
+    if (isText) return s + rawBytes;
+    return s + rawBytes * 0.15;
+  }, 0) / 4);
 
   const qTok = Math.ceil(question.length / 4);
   const estOut = 1500;
