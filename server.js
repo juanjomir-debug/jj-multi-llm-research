@@ -208,11 +208,17 @@ const PRICING = {
   'claude-sonnet-4-5':         { input:  3.00, output: 15.00 },
   'claude-haiku-4-5-20251001': { input:  0.80, output:  4.00 },
   // ── OpenAI ────────────────────────────────────────────────────────────────
-  'gpt-4.1':       { input: 2.00, output:  8.00 },
-  'gpt-4.1-mini':  { input: 0.40, output:  1.60 },
-  'gpt-4.1-nano':  { input: 0.10, output:  0.40 },
-  'o4-mini':       { input: 1.10, output:  4.40 },
-  'o3':            { input: 10.00, output: 40.00 },
+  'gpt-5':        { input:  5.00, output: 20.00 },
+  'gpt-5.2':      { input:  5.00, output: 20.00 },
+  'gpt-5.3':      { input:  5.00, output: 20.00 },
+  'gpt-5.4':      { input:  5.00, output: 20.00 },
+  'gpt-5-mini':   { input:  0.15, output:  0.60 },
+  'gpt-4.1':      { input:  2.00, output:  8.00 },
+  'gpt-4.1-mini': { input:  0.40, output:  1.60 },
+  'gpt-4.1-nano': { input:  0.10, output:  0.40 },
+  'o4-mini':      { input:  1.10, output:  4.40 },
+  'o3':           { input: 10.00, output: 40.00 },
+  'o3-mini':      { input:  1.10, output:  4.40 },
   // ── Google Gemini ─────────────────────────────────────────────────────────
   // Gemini 2.5 Pro: $1.25/M ≤200k tokens, $2.50/M >200k — we use the lower tier
   'gemini-2.5-pro':                       { input: 1.25,  output: 10.00 },
