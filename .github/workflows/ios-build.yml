@@ -125,6 +125,20 @@ jobs:
           echo "=== PWD ==="
           pwd
 
+      - name: Configure Team ID in Xcode project
+        working-directory: reliableai/ios/App
+        run: |
+          echo "=== Configuring Team ID ==="
+          # Set DEVELOPMENT_TEAM in project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = C59QGKA8BH;/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = ;/DEVELOPMENT_TEAM = C59QGKA8BH;/g' App.xcodeproj/project.pbxproj
+          # Also add it if it doesn't exist
+          sed -i '' '/CODE_SIGN_STYLE = Automatic;/a\
+				DEVELOPMENT_TEAM = C59QGKA8BH;
+' App.xcodeproj/project.pbxproj
+          echo "=== Team ID configured ==="
+          grep -n "DEVELOPMENT_TEAM" App.xcodeproj/project.pbxproj | head -5
+
       - name: Build & Upload to TestFlight
         working-directory: reliableai
         env:
