@@ -37,24 +37,44 @@ jobs:
       - name: Initialize Capacitor iOS (if ios/ dir missing)
         working-directory: reliableai
         run: |
-          # reliableai/package.json exists so Capacitor CLI can find it.
-          # Node resolves @capacitor/* from root node_modules via directory traversal.
+          echo "=== Checking for ios directory ==="
           if [ ! -d "ios" ]; then
-            npx cap add ios
+            echo "ios/ not found, initializing..."
+            echo "Current directory: $(pwd)"
+            echo "Capacitor config:"
+            cat capacitor.config.json
+            echo "Running: cap add ios"
+            npx --yes cap add ios || {
+              echo "cap add ios failed, trying with explicit path..."
+              cd .. && npx cap add ios --project reliableai
+            }
+          else
+            echo "ios/ directory already exists, skipping initialization"
           fi
+          echo "=== iOS directory check complete ==="
+          ls -la ios/ 2>/dev/null || echo "Still no ios/ directory!"
 
       - name: Sync Capacitor
         working-directory: reliableai
-        run: npx cap sync ios
+        run: |
+          echo "=== Syncing Capacitor ==="
+          npx --yes cap sync ios || {
+            echo "cap sync failed, trying with explicit path..."
+            cd .. && npx cap sync ios --project reliableai
+          }
+          echo "=== Sync complete ==="
 
       - name: Generate app icons and splash
         working-directory: reliableai
         run: |
+          echo "=== Generating app assets ==="
           if [ -f "ios-assets/icon-1024.png" ]; then
-            npx @capacitor/assets generate --ios
+            echo "Found icon-1024.png, generating assets..."
+            npx --yes @capacitor/assets generate --ios || echo "Asset generation failed, continuing anyway..."
           else
-            echo "No ios-assets found, skipping asset generation"
+            echo "No ios-assets/icon-1024.png found, skipping asset generation"
           fi
+          echo "=== Asset generation complete ==="
 
       - name: Setup Ruby and Fastlane
         uses: ruby/setup-ruby@v1
@@ -114,7 +134,15 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
-        run: bundle exec fastlane ios deploy
+        run: |
+          echo "=== Starting Fastlane build ==="
+          echo "Working directory: $(pwd)"
+          echo "Parent directory contents:"
+          ls -la ..
+          echo "iOS project check:"
+          ls -la ../ios/App/ 2>/dev/null || echo "No ../ios/App/ found"
+          echo "Running: bundle exec fastlane ios deploy"
+          bundle exec fastlane ios deploy
 
       - name: Upload IPA artifact (for manual inspection)
         uses: actions/upload-artifact@v4
