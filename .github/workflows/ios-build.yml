@@ -27,12 +27,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Capacitor globally
-        run: npm install -g @capacitor/cli@6.2.0
-
-      - name: Install Capacitor dependencies
+      - name: Install Capacitor dependencies in reliableai
+        working-directory: reliableai
         run: |
-          npm install --save-exact @capacitor/core@6.2.0 @capacitor/ios@6.2.0 @capacitor/splash-screen@6.0.2 @capacitor/assets@3.0.5
+          echo "=== Installing Capacitor locally in reliableai/ ==="
+          npm install --save-exact @capacitor/cli@6.2.0 @capacitor/core@6.2.0 @capacitor/ios@6.2.0 @capacitor/splash-screen@6.0.2 @capacitor/assets@3.0.5
+          echo "=== Verifying installation ==="
+          ls -la node_modules/@capacitor/ 2>/dev/null || echo "No @capacitor packages found!"
+          echo "=== Installation complete ==="
 
       - name: Initialize Capacitor iOS (if ios/ dir missing)
         working-directory: reliableai
@@ -43,26 +45,22 @@ jobs:
             echo "Current directory: $(pwd)"
             echo "Capacitor config:"
             cat capacitor.config.json
-            echo "Running: cap add ios"
-            npx --yes cap add ios || {
-              echo "cap add ios failed, trying with explicit path..."
-              cd .. && npx cap add ios --project reliableai
-            }
+            echo "Running: npx cap add ios"
+            npx cap add ios
           else
             echo "ios/ directory already exists, skipping initialization"
           fi
           echo "=== iOS directory check complete ==="
-          ls -la ios/ 2>/dev/null || echo "Still no ios/ directory!"
+          ls -la ios/ 2>/dev/null || echo "ERROR: Still no ios/ directory!"
 
       - name: Sync Capacitor
         working-directory: reliableai
         run: |
           echo "=== Syncing Capacitor ==="
-          npx --yes cap sync ios || {
-            echo "cap sync failed, trying with explicit path..."
-            cd .. && npx cap sync ios --project reliableai
-          }
+          npx cap sync ios
           echo "=== Sync complete ==="
+          echo "Checking ios/App structure:"
+          ls -la ios/App/ 2>/dev/null || echo "ERROR: No ios/App/ directory!"
 
       - name: Generate app icons and splash
         working-directory: reliableai
@@ -70,9 +68,9 @@ jobs:
           echo "=== Generating app assets ==="
           if [ -f "ios-assets/icon-1024.png" ]; then
             echo "Found icon-1024.png, generating assets..."
-            npx --yes @capacitor/assets generate --ios || echo "Asset generation failed, continuing anyway..."
+            npx @capacitor/assets generate --ios || echo "WARNING: Asset generation failed, continuing anyway..."
           else
-            echo "No ios-assets/icon-1024.png found, skipping asset generation"
+            echo "WARNING: No ios-assets/icon-1024.png found, skipping asset generation"
           fi
           echo "=== Asset generation complete ==="
 
