@@ -202,7 +202,7 @@
     }
     /* Mobile */
     @media (max-width: 767px) {
-      html { font-size: 16px; }
+      html { font-size: 24px; }
       .result-body, .imc-result-area .result-body { font-size: 1rem; line-height: 1.65; }
       .query-section textarea, .followup-bar textarea { font-size: 1rem; }
       .inline-model-card-header .model-name, .model-name { font-size: .9rem; }
@@ -1006,7 +1006,7 @@
     .config-block-collapsible.collapsed .config-block-arrow { transform: rotate(-90deg); }
     /* ── Result tabs bar ── */
     .result-tabs-bar {
-      display: flex; overflow-x: auto; padding: 0 8px;
+      display: flex; overflow-x: auto; overflow-y: hidden; padding: 0 8px;
       background: var(--surface1); border-bottom: 2px solid rgba(99,102,241,0.25);
       flex-shrink: 0; gap: 4px;
     }
@@ -1040,7 +1040,7 @@
     /* ── Action row ── */
     .action-row {
       display: flex; align-items: center; gap: 5px;
-      flex-wrap: wrap; padding: 6px 0 4px;
+      flex-wrap: wrap; padding: 0 0 4px;
     }
     .action-row-spacer { flex: 1; min-width: 10px; }
     .act-btn {
@@ -1049,6 +1049,12 @@
       white-space: nowrap; transition: background .15s;
     }
     .act-btn:hover { background: var(--surface1); }
+    .act-btn-new-research {
+      background: #0d7a3e; border-color: #10a050;
+      color: #fff; font-weight: 600;
+      box-shadow: 0 0 8px rgba(16,160,80,.35);
+    }
+    .act-btn-new-research:hover { background: #10a050; box-shadow: 0 0 14px rgba(16,160,80,.55); }
     .act-btn-refine {
       background: var(--accent-dim); border-color: var(--accent);
       color: var(--accent);
@@ -1374,7 +1380,7 @@
         <div class="proj-tags-row" id="sessionProjTags"></div>
       </div>
       <div class="action-row">
-        <button class="act-btn" onclick="clearConversation()" title="New Research"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Research</button>
+        <button class="act-btn act-btn-new-research" onclick="clearConversation()" title="New Research"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Research</button>
         <button class="act-btn act-btn-refine" onclick="openRefinePanel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Refine Prompting</button>
         <div class="action-row-spacer"></div>
         <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none" onchange="handleFileSelect(event)">
@@ -1989,7 +1995,7 @@ const _copyBuf = {};
 const AMPLITUDE_TOKENS     = { superconcise: 170,  concise: 512,  normal: 2048, detailed: 4096, exhaustive: 8192 };
 // Actual API ceiling: high enough to finish a brief response cleanly, not cut mid-sentence
 const AMPLITUDE_MAX_TOKENS = { superconcise: 600,  concise: 1200, normal: 2048, detailed: 4096, exhaustive: 8192 };
-const WEB_SEARCH_PROVIDERS = new Set(['anthropic', 'openai', 'google', 'xai', 'qwen', 'zhipu']);
+const WEB_SEARCH_PROVIDERS = new Set(['anthropic', 'openai', 'google', 'xai', 'qwen']);
 const ALWAYS_SEARCH_PROVIDERS = new Set([]); // reserved for providers that always search
 
 // Claude: base model → search variant (and reverse)
@@ -2900,17 +2906,17 @@ function toggleWebSearch(idx) {
   }
 
   // Qwen: enable_search via extra_body — no model switch needed, just flag
-  // GLM: auto-switch to/from glm-5-turbo-search
+  // GLM: no soporta web search real — desactivar el modelo si se intenta activar
   if (m.provider === 'zhipu') {
-    const sel = document.getElementById(`sel-${m.provider}`);
     if (m.webSearch) {
-      m._searchPreBase = m.modelId;
-      m.modelId = 'glm-5-turbo-search';
-    } else {
-      m.modelId = m._searchPreBase || 'glm-5-turbo';
+      // Revertir el toggle y desactivar el modelo
+      m.webSearch = false;
+      const btn = document.getElementById(`wsToggle-${m.provider}`);
+      if (btn) btn.className = 'websearch-toggle';
+      toggleModel(idx); // desactivar el modelo
+      toast('GLM no soporta búsqueda web. Modelo desactivado.', 'warn');
     }
-    if (sel) sel.value = m.modelId;
-    updateEstimate();
+    return;
   }
 }
 
