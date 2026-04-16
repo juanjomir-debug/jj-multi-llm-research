@@ -132,12 +132,8 @@ jobs:
           # Set DEVELOPMENT_TEAM in project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = C59QGKA8BH;/g' App.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = ;/DEVELOPMENT_TEAM = C59QGKA8BH;/g' App.xcodeproj/project.pbxproj
-          # Also add it if it doesn't exist
-          sed -i '' '/CODE_SIGN_STYLE = Automatic;/a\
-				DEVELOPMENT_TEAM = C59QGKA8BH;
-' App.xcodeproj/project.pbxproj
           echo "=== Team ID configured ==="
-          grep -n "DEVELOPMENT_TEAM" App.xcodeproj/project.pbxproj | head -5
+          grep -n "DEVELOPMENT_TEAM" App.xcodeproj/project.pbxproj | head -5 || echo "No DEVELOPMENT_TEAM found yet"
 
       - name: Build & Upload to TestFlight
         working-directory: reliableai
