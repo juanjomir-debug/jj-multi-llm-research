@@ -6,16 +6,23 @@ Automatización de redes sociales para promoción de contenido.
 
 ### twitter-bot/
 Bot de Twitter con 3 cuentas configuradas:
-- @juanjomir (principal, funciona ✅)
+- @juanjomir (principal, funciona ✅) - **Cuenta Basic (25,000 caracteres)**
 - @martinkarsel (cuenta nueva, error 226 ⚠️)
 - @reliableai (cuenta nueva, error 226 ⚠️)
 
 **Funcionalidades:**
 - Publicación de threads automáticos
-- Engagement (buscar y responder tweets relevantes)
+- **Engagement mejorado con priorización inteligente** ⭐ NUEVO
+  - Prioriza respuestas a nuestros tweets
+  - Usa límite de 25,000 caracteres
+  - Siempre en inglés
+  - Múltiples estrategias de respuesta
+- Engagement básico (buscar y responder tweets relevantes)
 - Cron jobs configurados en VPS
 
 **Scripts principales:**
+- `engagement-enhanced.js` - **Sistema mejorado de engagement** ⭐ NUEVO
+- `twitter-engage-enhanced.sh` - Script de shell para engagement mejorado
 - `twitter-post.sh` - Publica posts originales (cron 9:00 L-V)
 - `twitter-engage.sh` - Busca y responde tweets (cron 18:00 L-V)
 - `tweet-playwright.js` - Motor de publicación via Playwright
