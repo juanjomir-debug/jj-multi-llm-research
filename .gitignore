@@ -15,8 +15,8 @@ probe-upload.js
 backlink-bot/credentials.json
 backlink-bot/token.json
 
-# GitHub Actions workflows (PAT lacks workflow scope)
-.github/workflows/
+# GitHub Actions workflows (keep — needed for iOS build)
+# .github/workflows/
 
 # iOS / Capacitor
 ios/App/Pods/
@@ -30,6 +30,7 @@ fastlane/screenshots/
 fastlane/test_output/
 fastlane/.env.*
 Gemfile.lock
+!reliableai/fastlane/Gemfile.lock
 
 # OAuth credentials
 credentials.json

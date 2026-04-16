@@ -1,0 +1,7 @@
+{
+  "superconcise": "Longitud aproximada 1 párrafo corto.",
+  "concise":      "Longitud aproximada de la respuesta media pagina",
+  "normal":       "Longitud aproximada de la respuesta 1 pagina",
+  "detailed":     "Longitud aproximada de la respuesta 2-3 paginas",
+  "exhaustive":   "Longitud aproximada de la respuesta 5 paginas Respuesta EXHAUSTIVA. Cubre todos los ángulos, matices y casos extremos en profundidad."
+}
