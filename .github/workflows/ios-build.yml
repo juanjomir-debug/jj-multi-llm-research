@@ -126,7 +126,7 @@ jobs:
           pwd
 
       - name: Build & Upload to TestFlight
-        working-directory: reliableai/fastlane
+        working-directory: reliableai
         env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -135,12 +135,12 @@ jobs:
         run: |
           echo "=== Starting Fastlane build ==="
           echo "Working directory: $(pwd)"
-          echo "Parent directory contents:"
-          ls -la ..
+          echo "Directory contents:"
+          ls -la
           echo "iOS project check:"
-          ls -la ../ios/App/ 2>/dev/null || echo "No ../ios/App/ found"
+          ls -la ios/App/ 2>/dev/null || echo "No ios/App/ found"
           echo "Running: bundle exec fastlane ios deploy"
-          bundle exec fastlane ios deploy
+          cd fastlane && bundle exec fastlane ios deploy
 
       - name: Upload IPA artifact (for manual inspection)
         uses: actions/upload-artifact@v4
