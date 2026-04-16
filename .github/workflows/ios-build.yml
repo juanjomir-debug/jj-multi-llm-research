@@ -92,6 +92,15 @@ jobs:
           echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode \
             -o ~/Library/MobileDevice/Provisioning\ Profiles/ReliableAI.mobileprovision
 
+      - name: Debug - List iOS directory structure
+        run: |
+          echo "=== reliableai/ios structure ==="
+          ls -la reliableai/ios/ 2>/dev/null || echo "reliableai/ios NOT FOUND"
+          ls -la reliableai/ios/App/ 2>/dev/null || echo "reliableai/ios/App NOT FOUND"
+          find reliableai/ios -name "*.xcodeproj" 2>/dev/null || echo "No .xcodeproj found"
+          echo "=== PWD ==="
+          pwd
+
       - name: Build & Upload to TestFlight
         working-directory: reliableai/fastlane
         env:
