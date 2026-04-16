@@ -33,6 +33,17 @@ platform :ios do
 
     # Auto-increment build number using GitHub run number
     build_num = ENV["GITHUB_RUN_NUMBER"] || Time.now.strftime("%Y%m%d%H%M")
+    
+    # Configure code signing before build
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      team_id: "C59QGKA8BH",
+      bundle_identifier: "net.reliableai.app",
+      code_sign_identity: "Apple Distribution",
+      profile_name: "ReliableAI App Store",
+      path: "ios/App/App.xcodeproj"
+    )
+    
     increment_build_number(
       build_number: build_num,
       xcodeproj:   "ios/App/App.xcodeproj"
