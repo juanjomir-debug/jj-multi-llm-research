@@ -26,14 +26,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
+      - name: Install Capacitor globally
+        run: npm install -g @capacitor/cli@6.2.0
 
-      - name: Install Capacitor iOS
+      - name: Install Capacitor dependencies
         run: |
-          npm install --save-exact @capacitor/core@6.2.0 @capacitor/ios@6.2.0 @capacitor/splash-screen@6.0.2
+          npm install --save-exact @capacitor/core@6.2.0 @capacitor/ios@6.2.0 @capacitor/splash-screen@6.0.2 @capacitor/assets@3.0.5
 
       - name: Initialize Capacitor iOS (if ios/ dir missing)
         working-directory: reliableai
