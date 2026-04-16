@@ -59,8 +59,13 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: true
+          bundler-cache: false
           working-directory: reliableai/fastlane
+
+      - name: Install Fastlane
+        working-directory: reliableai/fastlane
+        run: |
+          bundle install
 
       - name: Import Distribution Certificate
         env:
