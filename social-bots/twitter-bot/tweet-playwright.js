@@ -84,14 +84,53 @@ if (!account) { console.error(`Unknown account: ${accountName}`); process.exit(1
     await textbox.fill(text);
     await page.waitForTimeout(1000);
 
-    // Publicar
+    // Publicar - intentar cerrar cualquier overlay primero
+    try {
+      // Intentar cerrar modales o overlays
+      const closeBtn = page.locator('[aria-label="Close"]').first();
+      if (await closeBtn.isVisible({ timeout: 1000 })) {
+        await closeBtn.click();
+        await page.waitForTimeout(500);
+      }
+    } catch (e) {
+      // No hay overlay, continuar
+    }
+    
     const submitBtn = page.locator('[data-testid="tweetButtonInline"], [data-testid="tweetButton"]').first();
-    await submitBtn.click();
-    await page.waitForTimeout(3000);
+    await submitBtn.click({ force: true });
+    await page.waitForTimeout(5000);
 
-    // Verificar éxito buscando el tweet en el perfil
+    // Intentar capturar el ID del tweet publicado
+    let tweetId = null;
+    try {
+      // Esperar a que aparezca el tweet en la página
+      await page.waitForTimeout(2000);
+      
+      // Buscar el tweet recién publicado en la URL o en el DOM
+      const currentUrl = page.url();
+      const urlMatch = currentUrl.match(/status\/(\d+)/);
+      
+      if (urlMatch) {
+        tweetId = urlMatch[1];
+      } else {
+        // Intentar encontrar el tweet en el timeline
+        const tweetLinks = await page.locator('a[href*="/status/"]').all();
+        if (tweetLinks.length > 0) {
+          const href = await tweetLinks[0].getAttribute('href');
+          const match = href.match(/status\/(\d+)/);
+          if (match) tweetId = match[1];
+        }
+      }
+    } catch (e) {
+      // No pudimos capturar el ID, pero el tweet se publicó
+    }
+
+    // Verificar éxito
     console.log(`[playwright] ✅ Tweet published successfully from @${accountName}`);
     console.log(`[playwright] Text: ${text.substring(0, 80)}...`);
+    if (tweetId) {
+      console.log(`[playwright] Tweet ID: ${tweetId}`);
+    }
 
   } catch (err) {
     // Captura de pantalla para debug

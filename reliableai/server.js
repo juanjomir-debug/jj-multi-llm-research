@@ -160,8 +160,14 @@ function resetDailyIfNeeded(user) {
 
 function checkQuota(req, res, next) {
   if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
-  const user = db.prepare('SELECT id, plan, monthly_cost_usd, billing_period_start, paused, daily_queries, daily_queries_date FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT id, plan, monthly_cost_usd, billing_period_start, paused, daily_queries, daily_queries_date, role FROM users WHERE id = ?').get(req.session.userId);
   if (!user) return res.status(401).json({ error: 'User not found' });
+  // Admins bypass all quota limits
+  if (user.role === 'admin' || user.role === 'superadmin') {
+    req.userId = user.id;
+    req.userPlan = user.plan;
+    return next();
+  }
   resetMonthlyIfNeeded(user);
   resetDailyIfNeeded(user);
   if (user.paused) {
@@ -185,8 +191,15 @@ function incrementDailyQueries(userId) {
 
 function addMonthlyCost(userId, costUsd) {
   if (!userId || !costUsd) return;
-  const user = db.prepare('SELECT plan, monthly_cost_usd, billing_period_start FROM users WHERE id = ?').get(userId);
+  const user = db.prepare('SELECT plan, monthly_cost_usd, billing_period_start, role FROM users WHERE id = ?').get(userId);
   if (!user) return;
+  // Admins: track cost but never pause
+  if (user.role === 'admin' || user.role === 'superadmin') {
+    resetMonthlyIfNeeded(user);
+    const newCost = (user.monthly_cost_usd || 0) + costUsd;
+    db.prepare('UPDATE users SET monthly_cost_usd = ? WHERE id = ?').run(newCost, userId);
+    return;
+  }
   resetMonthlyIfNeeded(user);
   const newCost = (user.monthly_cost_usd || 0) + costUsd;
   const plan = PLANS[user.plan] || PLANS.free;

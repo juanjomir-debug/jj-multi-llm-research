@@ -30,3 +30,11 @@ fastlane/screenshots/
 fastlane/test_output/
 fastlane/.env.*
 Gemfile.lock
+
+# OAuth credentials
+credentials.json
+token.json
+
+# OAuth credentials
+credentials.json
+token.json

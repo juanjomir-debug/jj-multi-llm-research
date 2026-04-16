@@ -1,11 +1,15 @@
 {
-  "name": "jj-multi-llm-research",
+  "name": "reliableai-platform",
   "version": "1.0.1",
-  "description": "Multi-LLM research tool – replicates n8n workflow with model selection, cost estimation & custom instructions",
-  "main": "server.js",
+  "description": "ReliableAI - Multi-LLM research platform with content automation",
+  "main": "reliableai/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node reliableai/server.js",
+    "dev": "node --watch reliableai/server.js",
+    "blog:publish": "node blog-automation/publish-article-with-hero.js content-generator/article-full.json",
+    "blog:update": "node blog-automation/update-post-with-hero.js",
+    "twitter:thread": "node social-bots/twitter-bot/publish-thread-final.js",
+    "content:og-image": "node content-generator/generate-og-image.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -23,17 +27,21 @@
     "express-session": "^1.19.0",
     "googleapis": "^171.4.0",
     "helmet": "^8.1.0",
+    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.4",
     "openai": "^4.85.1",
     "pdf-parse": "^1.1.1",
     "playwright-extra": "^4.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "stripe": "^20.4.1"
+    "ssh2": "^1.17.0",
+    "stripe": "^20.4.1",
+    "twitter-api-v2": "^1.29.0"
   },
   "_buildId": "1774453606403",
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.2.0",
+    "canvas": "^3.2.3",
     "playwright": "^1.59.1"
   }
 }

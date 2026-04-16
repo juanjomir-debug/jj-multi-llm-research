@@ -1,0 +1,57 @@
+[
+  {
+    "tweet": "https://x.com/JibrilQanqadar/status/2044434851344896287",
+    "author": "JibrilQanqadar",
+    "originalText": "Testing four AI video models from the same input image and prompt. The scene: two cybernetic soldiers dueling with energy swords in a rainy neon cyberpunk city. \nThis thread breaks down scene richness",
+    "responseText": "AI-generated video content opens new creative avenues, but challenges like realistic physics, fluid camera motion, and scene richness remain. As models evolve, they'll redefine storytelling in film and gaming, though balancing creativity with technical precision is key.",
+    "type": "value",
+    "score": 8,
+    "isCurrentEvent": false,
+    "modelUsed": "gpt-4o",
+    "timestamp": "2026-04-15T19:22:00.049Z"
+  },
+  {
+    "tweet": "https://x.com/Gugombly/status/2044398566563512478",
+    "author": "Gugombly",
+    "originalText": "Tested ImagineArt 2.0 on 7 completely different concepts today and ran the same prompts on different models such as Grok Imagine, MJ7 and Meta AI for comparison.\n\nHonestly, ImagineArt stood out on the",
+    "responseText": "Seems like ImagineArt 2.0 has a knack for capturing mood and atmosphere! It's fascinating how each model has its own strengths—like Grok's detail precision or MJ7's creativity. The choice really depends on the desired style and emotion in the artwork.",
+    "type": "value",
+    "score": 8,
+    "isCurrentEvent": false,
+    "modelUsed": "gpt-4o",
+    "timestamp": "2026-04-15T19:25:10.304Z"
+  },
+  {
+    "tweet": "https://x.com/rikonazza/status/2044483055742566896",
+    "author": "rikonazza",
+    "originalText": "Claude vs ChatGPT - Don’t Pick the Wrong One!\n\nIf you’re trying to decide which AI tool to use, I break down the real differences between Claude and ChatGPT for beginners — including writing, coding, ",
+    "responseText": "Claude excels in handling large text inputs and offers a more conversational tone, ideal for brainstorming and creative tasks. ChatGPT shines in coding assistance and structured responses. Both are versatile, but your choice depends on the specific task at hand.",
+    "type": "value",
+    "score": 8,
+    "isCurrentEvent": false,
+    "modelUsed": "gpt-4o",
+    "timestamp": "2026-04-15T19:28:20.241Z"
+  },
+  {
+    "tweet": "https://x.com/allen_lattimer/status/2044474715369312348",
+    "author": "allen_lattimer",
+    "originalText": " Top AI LLM Models for Every Task\n\nAsk Gemini 3.1 Pro FREE now  \nhttps://\nglbgpt.com/home/gemini-3-\n1-pro/?inviter=x\n…\n\n→ Writing & Research: GPT-5.4, Claude 4.6, Gemini 3.1 Pro, Perplexity\n→ Social C",
+    "responseText": "Interesting list, @allen_lattimer! GPT-5.4 and Claude 4.6 are known for their versatility in writing and research, while Grok 4 excels in social content. In academic/STEM, Claude Opus 4.6's precision stands out. Each model has its niche, advancing AI's specialized capabilities.",
+    "type": "value",
+    "score": 8,
+    "isCurrentEvent": false,
+    "modelUsed": "gpt-4o",
+    "timestamp": "2026-04-15T19:31:30.212Z"
+  },
+  {
+    "tweet": "https://x.com/TechieBySA/status/2044378453265272870",
+    "author": "TechieBySA",
+    "originalText": "I put Seedance 2.0 against 5 other AI video models using the exact same prompts \n\n\n@gmi_cloud\n is hosting a Seedance 2.0 Comparison Challenge and the top 5 most creative entries each win $100 in credi",
+    "responseText": "Fascinating challenge! Comparing AI video models like Seedance 2.0 highlights how nuanced content creation is becoming. As competition grows, creators have more power to choose tools that best suit their vision, potentially pushing innovation and creativity even further.",
+    "type": "value",
+    "score": 7,
+    "isCurrentEvent": false,
+    "modelUsed": "gpt-4o",
+    "timestamp": "2026-04-15T19:34:40.542Z"
+  }
+]
