@@ -36,6 +36,8 @@ jobs:
       - name: Initialize Capacitor iOS (if ios/ dir missing)
         working-directory: reliableai
         run: |
+          # reliableai/package.json exists so Capacitor CLI can find it.
+          # Node resolves @capacitor/* from root node_modules via directory traversal.
           if [ ! -d "ios" ]; then
             npx cap add ios
           fi
