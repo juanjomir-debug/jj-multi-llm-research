@@ -4,15 +4,15 @@ Comparación detallada de las dos principales soluciones de automatización de n
 
 ## 📊 Resumen ejecutivo
 
-| Característica | Amazon Bedrock AgentCore Browser | Claude Code + Chrome Extension |
-|---|---|---|
-| **Proveedor** | AWS | Anthropic |
-| **Tipo** | Servicio cloud managed | Extensión de navegador local |
-| **Modelo de ejecución** | Contenedor aislado en AWS | Chrome/Edge local del usuario |
-| **Sesiones** | Efímeras, aisladas | Usa tu navegador con tus sesiones |
-| **Escalabilidad** | Serverless, auto-scaling | Limitado a tu máquina |
-| **Precio** | Pay-per-use (AWS) | Incluido en plan Claude (Pro/Max/Team) |
-| **Mejor para** | Producción, enterprise, QA automation | Desarrollo, debugging, tareas personales |
+| Característica | Amazon Bedrock AgentCore Browser | Claude Code + Chrome Extension | Playwright |
+|---|---|---|---|
+| **Proveedor** | AWS | Anthropic | Microsoft (Open Source) |
+| **Tipo** | Servicio cloud managed | Extensión de navegador local | Framework de automatización |
+| **Modelo de ejecución** | Contenedor aislado en AWS | Chrome/Edge local del usuario | Headless/headed local |
+| **Sesiones** | Efímeras, aisladas | Usa tu navegador con tus sesiones | Contextos aislados |
+| **Escalabilidad** | Serverless, auto-scaling | Limitado a tu máquina | Paralelo ilimitado (local/cloud) |
+| **Precio** | Pay-per-use (AWS) | Incluido en plan Claude (Pro/Max/Team) | Gratis (open source) |
+| **Mejor para** | Producción, enterprise, QA automation | Desarrollo, debugging, tareas personales | Testing E2E, CI/CD, scraping |
 
 ---
 
@@ -422,5 +422,438 @@ read them and suggest fixes."
 1. Desarrollar con Claude Chrome (rápido, gratis)
 2. Migrar tests críticos a AgentCore (producción, escalable)
 3. Mantener ambos para diferentes propósitos
+
+Content was rephrased for compliance with licensing restrictions.
+
+
+---
+
+## 🎯 Playwright (Framework de automatización)
+
+### Características principales
+
+#### 1. **Arquitectura**
+- Framework open source de Microsoft
+- Controla Chromium, Firefox y WebKit con una sola API
+- Ejecuta local (headless o headed) o en cloud
+- Soporta múltiples lenguajes: JavaScript, TypeScript, Python, Java, .NET
+
+#### 2. **Capacidades**
+
+**Acciones de navegador:**
+- Navegación completa (goto, back, forward, reload)
+- Interacción con elementos (click, fill, select, check)
+- Keyboard y mouse events
+- Drag & drop
+- File uploads
+- Screenshots y videos
+- PDF generation
+
+**Características avanzadas:**
+- **Auto-waiting:** Espera automática a que elementos estén listos
+- **Network interception:** Interceptar y modificar requests/responses
+- **API testing:** Hacer requests HTTP directamente
+- **Mobile emulation:** Simular dispositivos móviles
+- **Geolocation y permissions:** Simular ubicación y permisos
+- **Multi-tab y multi-window:** Manejar múltiples pestañas/ventanas
+- **iframes:** Acceso completo a iframes
+
+**Testing features:**
+- Test runner integrado (Playwright Test)
+- Assertions built-in
+- Fixtures y hooks
+- Parallel execution
+- Retry logic
+- Test isolation (cada test en contexto limpio)
+- Trace viewer (debugging visual)
+- Codegen (grabar acciones y generar código)
+
+#### 3. **Navegadores soportados**
+
+| Navegador | Engine | Notas |
+|---|---|---|
+| Chrome/Edge | Chromium | Versión específica bundled |
+| Firefox | Firefox | Versión específica bundled |
+| Safari | WebKit | Versión específica bundled |
+
+**Ventaja:** No necesitas instalar navegadores, Playwright los descarga automáticamente.
+
+#### 4. **Casos de uso**
+
+✅ **Ideal para:**
+- Testing E2E automatizado
+- CI/CD pipelines
+- Web scraping a escala
+- Testing cross-browser
+- Regression testing
+- Visual testing (screenshots)
+- Performance testing
+- API testing combinado con UI
+
+❌ **No ideal para:**
+- Tareas que requieren sesiones autenticadas personales
+- Debugging interactivo con IA
+- Usuarios no técnicos
+- Tareas ad-hoc sin código
+
+#### 5. **Ejemplo de código**
+
+```javascript
+const { chromium } = require('playwright');
+
+(async () => {
+  // Lanzar navegador
+  const browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  
+  // Navegar
+  await page.goto('https://reliableai.net');
+  
+  // Interactuar
+  await page.click('[data-testid="run-research"]');
+  await page.fill('textarea', 'Compare GPT-4 vs Claude');
+  await page.click('button:has-text("Run")');
+  
+  // Esperar resultados
+  await page.waitForSelector('.results-panel');
+  
+  // Screenshot
+  await page.screenshot({ path: 'results.png' });
+  
+  // Cerrar
+  await browser.close();
+})();
+```
+
+#### 6. **Integración con CI/CD**
+
+```yaml
+# GitHub Actions example
+name: Playwright Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npx playwright test
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+```
+
+#### 7. **Pricing**
+```
+Gratis (open source)
+
+Costos opcionales:
+- BrowserStack/Sauce Labs para testing en cloud: ~$29-199/mes
+- Playwright Inspector (gratis)
+- Trace Viewer (gratis)
+```
+
+---
+
+## 🔄 Comparación: Playwright vs Claude Code Chrome
+
+### Filosofía y enfoque
+
+| Aspecto | Playwright | Claude Chrome |
+|---|---|---|
+| **Paradigma** | Código imperativo | Lenguaje natural + IA |
+| **Control** | Programático completo | Delegado a IA |
+| **Flexibilidad** | Total (escribes cada paso) | Limitada (IA decide) |
+| **Curva de aprendizaje** | Media (requiere programación) | Baja (hablas con IA) |
+| **Determinismo** | 100% predecible | Variable (IA puede variar) |
+| **Debugging** | Tradicional (breakpoints, logs) | Conversacional |
+
+### Capacidades técnicas
+
+| Capacidad | Playwright | Claude Chrome |
+|---|---|---|
+| **Navegadores** | Chromium, Firefox, WebKit | Solo Chrome/Edge |
+| **Headless mode** | ✅ Sí | ❌ No (siempre visible) |
+| **Parallel execution** | ✅ Ilimitado | ❌ 1 a la vez |
+| **Cross-browser** | ✅ Sí | ❌ Solo Chrome/Edge |
+| **Mobile emulation** | ✅ Sí | ❌ No |
+| **Network interception** | ✅ Completo | ⚠️ Limitado |
+| **API testing** | ✅ Built-in | ❌ No |
+| **Screenshots/Videos** | ✅ Completo | ⚠️ Solo screenshots |
+| **PDF generation** | ✅ Sí | ❌ No |
+| **Auto-waiting** | ✅ Inteligente | ✅ IA decide |
+| **Sesiones autenticadas** | ⚠️ Requiere setup | ✅ Usa tus sesiones |
+
+### Desarrollo y testing
+
+| Aspecto | Playwright | Claude Chrome |
+|---|---|---|
+| **Test runner** | ✅ Integrado | ❌ No |
+| **Assertions** | ✅ Built-in | ⚠️ Via IA |
+| **Fixtures** | ✅ Sí | ❌ No |
+| **Retry logic** | ✅ Configurable | ⚠️ IA puede reintentar |
+| **Parallel tests** | ✅ Sí | ❌ No |
+| **CI/CD integration** | ✅ Excelente | ⚠️ Limitada |
+| **Test isolation** | ✅ Completa | ❌ Navegador compartido |
+| **Trace viewer** | ✅ Sí | ❌ No |
+| **Code generation** | ✅ Codegen tool | ⚠️ IA genera acciones |
+
+### Mantenibilidad
+
+| Aspecto | Playwright | Claude Chrome |
+|---|---|---|
+| **Código versionable** | ✅ Sí | ⚠️ Prompts |
+| **Refactoring** | ✅ Fácil | ⚠️ Reescribir prompts |
+| **Reutilización** | ✅ Funciones/clases | ⚠️ Copiar prompts |
+| **Documentación** | ✅ Código autodocumentado | ⚠️ Prompts como docs |
+| **Team collaboration** | ✅ Git workflow | ⚠️ Compartir prompts |
+| **Debugging** | ✅ Tradicional | ⚠️ Conversacional |
+
+### Performance
+
+| Métrica | Playwright | Claude Chrome |
+|---|---|---|
+| **Velocidad** | Muy rápida (headless) | Media (headed + IA) |
+| **Overhead** | Mínimo | Alto (procesamiento IA) |
+| **Paralelización** | Excelente | No disponible |
+| **Resource usage** | Bajo | Alto (navegador + IA) |
+| **Latencia** | Mínima | Variable (API calls) |
+
+### Costos
+
+| Escenario | Playwright | Claude Chrome |
+|---|---|---|
+| **Setup inicial** | $0 | $0 |
+| **Uso básico** | $0 | $0 (incluido en plan) |
+| **CI/CD (100 runs/mes)** | $0 | ❌ No recomendado |
+| **Cloud testing** | ~$29-199/mes (opcional) | N/A |
+| **Mantenimiento** | Tiempo de desarrollo | Tiempo de prompting |
+
+---
+
+## 🎯 Cuándo usar cada herramienta
+
+### Usa Playwright cuando:
+
+✅ **Testing automatizado:**
+- Tests E2E en CI/CD
+- Regression testing
+- Cross-browser testing
+- Performance testing
+
+✅ **Necesitas control total:**
+- Flujos complejos determinísticos
+- Network interception
+- API testing combinado
+- Mobile emulation
+
+✅ **Escalabilidad:**
+- Parallel execution
+- Headless mode
+- Integración con cloud testing
+
+✅ **Equipo técnico:**
+- Desarrolladores escribiendo tests
+- QA engineers con experiencia en código
+- Necesitas código versionable
+
+### Usa Claude Chrome cuando:
+
+✅ **Desarrollo interactivo:**
+- Debugging de UI
+- Verificación rápida de features
+- Exploración de sitios
+
+✅ **Tareas ad-hoc:**
+- Extracción de datos one-off
+- Automatización de tareas personales
+- Workflows multi-sitio
+
+✅ **Sesiones autenticadas:**
+- Gmail, Google Docs, Notion
+- Sitios donde ya estás logueado
+- Sin configurar cookies/tokens
+
+✅ **No-code/Low-code:**
+- Usuarios no técnicos
+- Prototipado rápido
+- Tareas que cambian frecuentemente
+
+### Usa Playwright cuando:
+
+❌ **NO uses Claude Chrome para:**
+- Testing automatizado en CI/CD
+- Tests que deben ser 100% determinísticos
+- Parallel execution
+- Headless automation
+- Cross-browser testing
+
+❌ **NO uses Playwright para:**
+- Tareas ad-hoc sin código
+- Debugging interactivo con IA
+- Sitios que requieren tus sesiones personales
+- Usuarios no técnicos
+
+---
+
+## 🔧 Integración híbrida: Playwright + Claude
+
+### Estrategia combinada
+
+Puedes usar ambas herramientas en diferentes etapas:
+
+#### 1. **Exploración con Claude → Automatización con Playwright**
+
+```
+Fase 1: Exploración (Claude Chrome)
+"Navigate to the checkout page and tell me what fields are required"
+
+Fase 2: Automatización (Playwright)
+// Escribir test basado en lo que Claude descubrió
+await page.fill('[name="email"]', 'test@example.com');
+await page.fill('[name="card"]', '4242424242424242');
+await page.click('button:has-text("Pay")');
+```
+
+#### 2. **Debugging con Claude → Fix con Playwright**
+
+```
+Fase 1: Debugging (Claude Chrome)
+"Run the test and check console for errors"
+
+Fase 2: Fix (Playwright)
+// Corregir el test basado en el feedback de Claude
+await page.waitForSelector('.success-message', { timeout: 10000 });
+```
+
+#### 3. **Playwright para CI/CD + Claude para debugging**
+
+```yaml
+# CI/CD: Playwright tests
+- name: Run tests
+  run: npx playwright test
+
+# Si falla, usar Claude Chrome localmente para investigar
+```
+
+---
+
+## 📊 Comparación completa: Las 3 herramientas
+
+| Característica | AgentCore Browser | Claude Chrome | Playwright |
+|---|---|---|---|
+| **Tipo** | Cloud managed | Browser extension | Open source framework |
+| **Ejecución** | AWS containers | Local browser | Local/Cloud |
+| **Control** | API programática | Lenguaje natural | Código imperativo |
+| **Sesiones** | Efímeras | Tus sesiones | Contextos limpios |
+| **Parallel** | ✅ Ilimitado | ❌ No | ✅ Ilimitado |
+| **Cross-browser** | ✅ Chrome | ❌ Chrome/Edge | ✅ Chrome/Firefox/Safari |
+| **Headless** | ✅ Sí | ❌ No | ✅ Sí |
+| **CI/CD** | ✅ Excelente | ❌ No | ✅ Excelente |
+| **Observabilidad** | ✅ Completa | ⚠️ Básica | ✅ Trace viewer |
+| **Autenticación** | ⚠️ Setup | ✅ Tus sesiones | ⚠️ Setup |
+| **Curva aprendizaje** | Alta (AWS) | Baja (hablar) | Media (código) |
+| **Precio** | Pay-per-use | Incluido | Gratis |
+| **Mejor para** | Enterprise prod | Dev/debugging | Testing E2E |
+
+---
+
+## 🎯 Recomendación final para ReliableAI
+
+### Estrategia de 3 capas
+
+#### **Capa 1: Desarrollo (Claude Chrome)**
+- Debugging interactivo
+- Exploración de features
+- Verificación rápida
+- **Costo:** $0 adicional
+
+#### **Capa 2: Testing (Playwright)**
+- Tests E2E automatizados
+- CI/CD pipeline
+- Regression testing
+- Cross-browser testing
+- **Costo:** $0 (open source)
+
+#### **Capa 3: Producción (AgentCore Browser)**
+- QA automation a escala
+- Monitoreo continuo
+- Compliance y auditoría
+- **Costo:** ~$200-500/mes (cuando escales)
+
+### Implementación sugerida
+
+```
+1. AHORA (Gratis):
+   ├─ Claude Chrome: Desarrollo y debugging
+   └─ Playwright: Tests E2E básicos
+
+2. PRÓXIMO MES (Gratis):
+   ├─ Playwright en CI/CD
+   ├─ Test suite completo
+   └─ Claude Chrome para debugging
+
+3. CUANDO ESCALES (Paid):
+   ├─ AgentCore Browser para QA enterprise
+   ├─ Playwright para tests
+   └─ Claude Chrome para dev
+```
+
+### Ejemplo de workflow completo
+
+```javascript
+// 1. Explorar con Claude Chrome
+"Check the research page and tell me how the model selection works"
+
+// 2. Escribir test con Playwright
+test('should run research with multiple models', async ({ page }) => {
+  await page.goto('https://reliableai.net');
+  
+  // Seleccionar modelos
+  await page.check('[data-model="claude"]');
+  await page.check('[data-model="gpt4"]');
+  
+  // Ejecutar research
+  await page.fill('textarea', 'Compare AI models');
+  await page.click('button:has-text("Run Research")');
+  
+  // Verificar resultados
+  await expect(page.locator('.result-claude')).toBeVisible();
+  await expect(page.locator('.result-gpt4')).toBeVisible();
+});
+
+// 3. Ejecutar en CI/CD
+// GitHub Actions ejecuta Playwright tests automáticamente
+
+// 4. Si falla, debuggear con Claude Chrome
+"Run the test and check why the GPT-4 result isn't showing"
+
+// 5. Cuando escales, migrar tests críticos a AgentCore
+// Para QA automation enterprise con observabilidad completa
+```
+
+---
+
+## 📚 Recursos adicionales
+
+### Playwright
+- [Documentación oficial](https://playwright.dev/)
+- [GitHub](https://github.com/microsoft/playwright)
+- [Playwright Test](https://playwright.dev/docs/test-intro)
+- [Trace Viewer](https://playwright.dev/docs/trace-viewer)
+- [Best practices](https://playwright.dev/docs/best-practices)
+
+### Comparaciones
+- [Playwright vs Selenium](https://playwright.dev/docs/selenium)
+- [Playwright vs Puppeteer](https://playwright.dev/docs/puppeteer)
+- [Playwright vs Cypress](https://playwright.dev/docs/cypress)
 
 Content was rephrased for compliance with licensing restrictions.
