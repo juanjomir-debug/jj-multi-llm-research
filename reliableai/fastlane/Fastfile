@@ -47,8 +47,10 @@ platform :ios do
       export_options: {
         provisioningProfiles: {
           "net.reliableai.app" => "ReliableAI App Store"
-        }
+        },
+        teamID: "C59QGKA8BH"
       },
+      xcargs: "DEVELOPMENT_TEAM=C59QGKA8BH CODE_SIGN_STYLE=Manual",
       output_directory: "./",
       output_name:      "ReliableAI.ipa"
     )
