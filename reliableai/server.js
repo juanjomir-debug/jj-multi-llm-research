@@ -87,7 +87,7 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing.html')));
 app.get('/demo', (req, res) => res.sendFile(path.join(__dirname, 'public', 'demo.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'public', 'security.html')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
   console.error('[FATAL] SESSION_SECRET must be set in production'); process.exit(1);
 }

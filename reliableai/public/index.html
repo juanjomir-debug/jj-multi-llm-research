@@ -278,12 +278,12 @@
     .model-toggles-row .mt-item.active { border-color: var(--accent); background: var(--accent-dim); }
     .model-toggles-row .mt-item .mt-dot { width: 8px; height: 8px; border-radius: 50%; }
     @media (max-width: 767px) {
-      .model-toggles-row { gap: 4px; padding: 6px 8px; }
-      .model-toggles-row .mt-item { font-size: .65rem; padding: 3px 6px; gap: 3px; }
+      .model-toggles-row { gap: 4px; padding: 4px 6px; margin-bottom: 6px; }
+      .model-toggles-row .mt-item { font-size: .65rem; padding: 2px 6px; gap: 3px; line-height: 1.2; }
       .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; }
-      .model-toggle { width: 24px !important; height: 13px !important; border-radius: 7px !important; }
-      .model-toggle::after { width: 8px !important; height: 8px !important; top: 2px !important; left: 2px !important; }
-      .model-toggle.on::after { transform: translateX(11px) !important; }
+      .model-toggle { width: 22px !important; height: 12px !important; border-radius: 6px !important; }
+      .model-toggle::after { width: 7px !important; height: 7px !important; top: 2px !important; left: 2px !important; }
+      .model-toggle.on::after { transform: translateX(10px) !important; }
     }
     @media (max-width: calc(var(--bp-sm) - 140px)) {
       .model-toggles-row .mt-item { font-size: .6rem; padding: 2px 5px; }
@@ -583,8 +583,8 @@
       .tab-model-ver { display: none; }
       .tab-status.done { font-size: 0; }
       .tab-status.done::before { content: '✓'; font-size: .68rem; }
-      .result-tab { padding: 12px 16px; font-size: .85rem; min-height: 52px; display: flex; align-items: center; justify-content: center; }
-      .result-tabs-bar { gap: 0; min-height: 52px; align-items: stretch; }
+      .result-tab { padding: 7px 10px; font-size: .78rem; min-height: 36px; display: flex; align-items: center; justify-content: center; }
+      .result-tabs-bar { gap: 0; min-height: 36px; align-items: stretch; overflow-y: visible; }
     }
     @media (min-width: calc(var(--bp-lg) + 1px)) { .layout { height: calc(100vh - 78px); height: calc(100dvh - 78px); } .main { height: 100%; overflow-y: auto; } .mobile-toggle-btn { display: none; } }
 
@@ -608,7 +608,7 @@
     .history-overlay.hidden { display: none; }
     .history-panel { width: min(680px, 100vw); height: 100%; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: -8px 0 30px rgba(0,0,0,.4); }
     .history-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; } .history-header h2 { font-size: 1rem; flex: 1; }
-    .history-body { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+    .history-body { flex: 1; overflow-y: auto; padding: 4px 0; -webkit-overflow-scrolling: touch; }
     .history-session { border: none; border-radius: 0; margin-bottom: 0; overflow: hidden; }
     .history-session-header {
       padding: 9px 10px 9px 12px;
@@ -1055,7 +1055,7 @@
     .config-block-collapsible.collapsed .config-block-arrow { transform: rotate(-90deg); }
     /* ── Result tabs bar ── */
     .result-tabs-bar {
-      display: flex; overflow-x: auto; overflow-y: hidden; padding: 0 8px;
+      display: flex; overflow-x: auto; overflow-y: visible; padding: 0 8px;
       background: var(--surface1); border-bottom: 2px solid rgba(99,102,241,0.25);
       position: relative; -webkit-overflow-scrolling: touch;
     }
@@ -3370,6 +3370,17 @@ async function runResearch(withIntegrator = false) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body), signal: _abortController.signal,
     });
+    if (!response.ok) {
+      let errMsg = 'Error ' + response.status;
+      try { const j = await response.json(); errMsg = j.error || j.message || errMsg; } catch (_) {}
+      toast(errMsg, 'error');
+      state.isRunning = false; runBtn.classList.remove('running');
+      document.getElementById('runBtnIcon').textContent = '\u25B6';
+      document.getElementById('runBtnLabel').textContent = 'Research Selected';
+      document.getElementById('stopBtn').classList.remove('visible');
+      updateRunBtn();
+      return;
+    }
     const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
