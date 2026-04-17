@@ -3268,11 +3268,10 @@ function updateRunBtn() { const hasQ = document.getElementById('questionInput').
   const hasM = state.models.some(m => m.enabled); const dis = !hasQ || !hasM || state.isRunning;
   document.getElementById('runBtn').disabled = dis;
   const ri = document.getElementById('runIntegrateBtn'); if (ri) ri.disabled = dis;
+  const cb = document.getElementById('runCascadeBtn'); if (cb) cb.disabled = dis;
   // Show "Select Models" hint when no models selected and no results
   const hint = document.getElementById('selectModelsHint');
   if (hint) hint.style.display = (!hasM && !state.isRunning && state.lastResults.length === 0) ? 'flex' : 'none';
-}
-  const cb = document.getElementById('runCascadeBtn'); if (cb) cb.disabled = dis;
 }
 
 // Templates (improvement #9)
