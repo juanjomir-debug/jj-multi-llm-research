@@ -251,6 +251,10 @@
     .btn-icon:hover { background: var(--surface2); color: var(--text); }
 
     @media (max-width: var(--bp-md)) {
+      .attach-btn { display: none !important; visibility: hidden !important; }
+    }
+    /* iOS Safari specific */
+    @supports (-webkit-touch-callout: none) {
       .attach-btn { display: none !important; }
     }
 
@@ -274,8 +278,8 @@
     .model-toggles-row .mt-item.active { border-color: var(--accent); background: var(--accent-dim); }
     .model-toggles-row .mt-item .mt-dot { width: 8px; height: 8px; border-radius: 50%; }
     @media (max-width: 767px) {
-      .model-toggles-row { gap: 8px; padding: 8px 12px; }
-      .model-toggles-row .mt-item { font-size: .82rem; padding: 4px 12px; gap: 5px; }
+      .model-toggles-row { gap: 4px; padding: 6px 8px; }
+      .model-toggles-row .mt-item { font-size: .65rem; padding: 3px 6px; gap: 3px; }
       .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; }
       .model-toggle { width: 24px !important; height: 13px !important; border-radius: 7px !important; }
       .model-toggle::after { width: 8px !important; height: 8px !important; top: 2px !important; left: 2px !important; }
@@ -579,8 +583,8 @@
       .tab-model-ver { display: none; }
       .tab-status.done { font-size: 0; }
       .tab-status.done::before { content: '✓'; font-size: .68rem; }
-      .result-tab { padding: 9px 13px; font-size: .8rem; min-height: 44px; display: flex; align-items: center; }
-      .result-tabs-bar { gap: 2px; min-height: 44px; }
+      .result-tab { padding: 12px 16px; font-size: .85rem; min-height: 52px; display: flex; align-items: center; justify-content: center; }
+      .result-tabs-bar { gap: 0; min-height: 52px; align-items: stretch; }
     }
     @media (min-width: calc(var(--bp-lg) + 1px)) { .layout { height: calc(100vh - 78px); height: calc(100dvh - 78px); } .main { height: 100%; overflow-y: auto; } .mobile-toggle-btn { display: none; } }
 
@@ -608,12 +612,13 @@
     .history-session { border: none; border-radius: 0; margin-bottom: 0; overflow: hidden; }
     .history-session-header {
       padding: 9px 10px 9px 12px;
-      background: var(--surface2);
+      background: transparent;
       display: flex; align-items: center; gap: 6px;
       cursor: pointer;
-      border-radius: var(--radius);
+      border-radius: 0;
+      border-bottom: 1px solid var(--border);
     }
-    .history-session-header:hover { background: var(--border); }
+    .history-session-header:hover { background: rgba(255,255,255,0.05); }
     .history-session-prompt {
       flex: 1; font-size: .82rem; font-weight: 500;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -3298,7 +3303,7 @@ async function runResearch(withIntegrator = false) {
   // Increment client-side daily counter
   if (state.currentUser) { state.currentUser.daily_queries = (state.currentUser.daily_queries || 0) + 1; updateDailyQueryUI(); }
   state.isRunning = true; _lastIntegratorText = null; state.lastResults = [];
-  _activeResultTab = 'integration'; // reset so first model auto-switches
+  _activeResultTab = null; // no auto-switch, user picks tab manually
   Object.keys(_consensusScores).forEach(k => delete _consensusScores[k]);
   Object.keys(_resultData).forEach(k => delete _resultData[k]);
   Object.keys(_llmAnalysisCache).forEach(k => delete _llmAnalysisCache[k]);
