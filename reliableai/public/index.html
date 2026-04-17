@@ -580,8 +580,7 @@
       .md-content pre { overflow-x: auto; max-width: 100%; }
       /* Compact result tabs on mobile: hide version and timing */
       .tab-model-ver { display: none; }
-      .tab-status.done { font-size: 0; }
-      .tab-status.done::before { content: '✓'; font-size: .68rem; }
+      .tab-status { display: none; }
       .result-tab { padding: 7px 10px; font-size: .78rem; min-height: 36px; display: flex; align-items: center; justify-content: center; }
       .result-tabs-bar { gap: 0; min-height: 36px; align-items: stretch; overflow-y: visible; }
     }
@@ -1297,7 +1296,7 @@
       .run-btn-row .run-btn {
         flex: 1; min-width: 0; white-space: normal;
         text-align: center; justify-content: center;
-        font-size: .7rem; padding: 7px 3px; line-height: 1.25;
+        font-size: .82rem; padding: 8px 4px; line-height: 1.3;
       }
     }
     @media (max-width: 767px) {
@@ -2191,7 +2190,7 @@ const TEMPLATES = {
 };
 
 const state = {
-  models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({ provider, modelId: cfg.defaultModel, enabled: true, customInstructions: '', webSearch: false, temperature: null, thinking: false, deepResearch: false })),
+  models: Object.entries(PROVIDERS).map(([provider, cfg]) => ({ provider, modelId: cfg.defaultModel, enabled: false, customInstructions: '', webSearch: false, temperature: null, thinking: false, deepResearch: false })),
   attachments: [], conversationHistory: [], integratorEnabled: true, isRunning: false, currentUser: null,
   debateEnabled: false, lastSessionId: null, lastResults: [], lastDebateVotes: null, lastDebateResponses: [],
   cascadeEnabled: false, cascadeOrder: [], globalTemperature: 0.7,
@@ -4324,7 +4323,7 @@ function runDiffAnalysis() {
   if (state.lastResults.length < 2) return;
   const results = state.lastResults.filter(r => r.text && r.text.length > 80);
   if (results.length < 2) return;
-  showIntegrationPanel();
+  // Don't auto-switch to integration tab — only show panel if already there
 
   // Build per-model data
   const models = results.map(r => ({
