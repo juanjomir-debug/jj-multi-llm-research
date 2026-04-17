@@ -1572,6 +1572,10 @@
 
     <!-- Answers area -->
     <div class="answers-area" id="answersArea">
+      <div id="selectModelsHint" class="empty-state" style="display:flex">
+        <div class="emo">🤖</div>
+        <p>Select models above to start researching</p>
+      </div>
       <div class="tab-panel" id="tabPanel-integration" style="display:none">
         <div id="debateResultArea"></div>
         <div id="turnHistoryArea"></div>
@@ -2788,6 +2792,7 @@ function clearConversation() {
   const planBody = document.getElementById('planResultBody');
   if (planBody) planBody.innerHTML = '';
   _lastPlan = null;
+  updateRunBtn();
 }
 
 function onTempChatToggle(enabled) {
@@ -3263,6 +3268,10 @@ function updateRunBtn() { const hasQ = document.getElementById('questionInput').
   const hasM = state.models.some(m => m.enabled); const dis = !hasQ || !hasM || state.isRunning;
   document.getElementById('runBtn').disabled = dis;
   const ri = document.getElementById('runIntegrateBtn'); if (ri) ri.disabled = dis;
+  // Show "Select Models" hint when no models selected and no results
+  const hint = document.getElementById('selectModelsHint');
+  if (hint) hint.style.display = (!hasM && !state.isRunning && state.lastResults.length === 0) ? 'flex' : 'none';
+}
   const cb = document.getElementById('runCascadeBtn'); if (cb) cb.disabled = dis;
 }
 
