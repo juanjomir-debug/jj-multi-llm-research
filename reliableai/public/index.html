@@ -279,11 +279,9 @@
     .model-toggles-row .mt-item .mt-dot { width: 8px; height: 8px; border-radius: 50%; }
     @media (max-width: 767px) {
       .model-toggles-row { gap: 4px; padding: 4px 6px; margin-bottom: 6px; }
-      .model-toggles-row .mt-item { font-size: .65rem; padding: 2px 6px; gap: 3px; line-height: 1.2; }
-      .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; }
-      .model-toggle { width: 22px !important; height: 12px !important; border-radius: 6px !important; }
-      .model-toggle::after { width: 7px !important; height: 7px !important; top: 2px !important; left: 2px !important; }
-      .model-toggle.on::after { transform: translateX(10px) !important; }
+      .model-toggles-row .mt-item { font-size: .65rem; padding: 3px 8px; gap: 3px; line-height: 1; align-items: center; height: 24px; box-sizing: border-box; }
+      .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; flex-shrink: 0; }
+      .model-toggles-row .mt-item .model-toggle { display: none !important; }
     }
     @media (max-width: calc(var(--bp-sm) - 140px)) {
       .model-toggles-row .mt-item { font-size: .6rem; padding: 2px 5px; }
