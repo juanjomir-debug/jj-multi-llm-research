@@ -233,7 +233,7 @@
       :root:not([data-theme="dark"]):not([data-theme="light"]) .app-header-brand h1 { color: #1c1c1c; }
     }
     /* Mobile */
-    @media (max-width: var(--bp-md)) {
+    @media (max-width: 768px) {
       html { font-size: 16px; }
       .result-body, .imc-result-area .result-body { font-size: 1rem; line-height: 1.7; }
       .query-section textarea, .followup-bar textarea { font-size: 1rem; }
@@ -246,7 +246,7 @@
       .act-btn { font-size: .88rem; }
       .result-tab { font-size: .88rem; }
     }
-    @media (max-width: var(--bp-sm)) {
+    @media (max-width: 540px) {
       .app-header { padding: 10px 14px; }
       .app-header-brand h1 { font-size: 1.2rem; }
       .app-header-brand .app-claim { display: none; }
@@ -4063,7 +4063,8 @@ const PROV_ICON = { anthropic: _dot('#d97757'), openai: _dot('#10a37f'), google:
 function showFollowUpBar() {
   const area = document.getElementById('followUpArea');
   if (!area) return;
-  showIntegrationPanel();
+  // Only show integration panel if integrator was actually used
+  if (_lastIntegratorText) showIntegrationPanel();
   area.style.display = '';
   const intCfg = getIntegratorConfig();
 
@@ -5909,10 +5910,10 @@ function switchResultTab(tabId) {
 
 function showIntegrationPanel() {
   // Ensure the integration tab bar is visible, then switch to it
-  // Only auto-switch if user is not already viewing a model tab
+  // Only auto-switch if user is already on integration tab or no model tab is active
   const bar = document.getElementById('resultTabsBar');
   if (bar) bar.style.display = 'flex';
-  if (_activeResultTab === 'integration' || !_activeResultTab.startsWith('model-')) {
+  if (_activeResultTab === 'integration') {
     switchResultTab('integration');
   }
 }
