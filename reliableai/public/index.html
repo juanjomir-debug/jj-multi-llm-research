@@ -271,21 +271,22 @@
     .inline-section .inline-arrow { font-size: .8rem; color: var(--text-muted); transition: transform .2s; }
     .inline-section.collapsed .inline-arrow { transform: rotate(-90deg); }
 
-    .model-toggles-row { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; margin-bottom: 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; position: relative; }
-    .model-toggles-row::after { content: "→"; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.2rem; opacity: 0.5; pointer-events: none; mix-blend-mode: multiply; }
+    .model-toggles-wrapper { display: flex; flex-direction: column; gap: 4px; }
+    .model-toggles-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); }
+    .model-toggles-row { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; padding: 4px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; position: relative; }
+    .model-toggles-row::after { content: "→"; position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1rem; opacity: 0.4; pointer-events: none; }
     .model-toggles-row:empty { display: none; }
     .model-toggles-row .mt-item { display: flex; align-items: center; gap: 5px; font-size: .82rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); transition: all 150ms ease; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .model-toggles-row .mt-item.active { border-color: var(--accent); background: var(--accent-dim); }
     .model-toggles-row .mt-item .mt-dot { width: 8px; height: 8px; border-radius: 50%; }
     @media (max-width: 767px) {
-      .model-toggles-row { gap: 4px; padding: 4px 6px; margin-bottom: 6px; }
-      .model-toggles-row .mt-item { font-size: .65rem; padding: 3px 8px; gap: 3px; line-height: 1; align-items: center; height: 24px; box-sizing: border-box; }
-      .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; flex-shrink: 0; }
+      .model-toggles-row .mt-item { font-size: .78rem; padding: 5px 10px; gap: 5px; height: 30px; box-sizing: border-box; }
+      .model-toggles-row .mt-item .mt-dot { width: 7px; height: 7px; flex-shrink: 0; }
       .model-toggles-row .mt-item .model-toggle { display: none !important; }
     }
     @media (max-width: calc(var(--bp-sm) - 140px)) {
-      .model-toggles-row .mt-item { font-size: .6rem; padding: 2px 5px; }
-      .model-toggles-row .mt-item .mt-dot { width: 5px; height: 5px; }
+      .model-toggles-row .mt-item { font-size: .72rem; padding: 4px 8px; }
+      .model-toggles-row .mt-item .mt-dot { width: 6px; height: 6px; }
     }
 
     .inline-models-grid { display: grid; grid-template-columns: repeat(var(--model-cols, 4), 1fr); gap: 12px; }
@@ -1530,6 +1531,11 @@
         <span class="conv-turns" id="convTurns"></span>
         <div class="proj-tags-row" id="sessionProjTags"></div>
       </div>
+      <!-- Model toggles -->
+      <div class="model-toggles-wrapper">
+        <div class="model-toggles-label">Select models</div>
+        <div class="model-toggles-row" id="modelTogglesRow"></div>
+      </div>
       <div class="action-row">
         <button class="act-btn act-btn-new-research" onclick="clearConversation()" title="New Research"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Research</button>
         <button class="act-btn act-btn-refine" onclick="openRefinePanel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Refine Prompting</button>
@@ -1559,9 +1565,6 @@
       </div>
       <div id="cascadeOrderList" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
-
-    <!-- Model toggles -->
-    <div class="model-toggles-row" id="modelTogglesRow"></div>
 
     <!-- Result tabs -->
     <div class="result-tabs-bar" id="resultTabsBar" style="display:none">
