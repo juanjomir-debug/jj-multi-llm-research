@@ -235,16 +235,26 @@
     /* Mobile */
     @media (max-width: 768px) {
       html { font-size: 16px; }
-      .result-body, .imc-result-area .result-body { font-size: 1rem; line-height: 1.7; }
-      .query-section textarea, .followup-bar textarea { font-size: 1rem; }
-      .inline-model-card-header .model-name, .model-name { font-size: .95rem; }
-      .config-block-label, .rsb-toggle-btn, .rsb-level-btn { font-size: .9rem; }
-      .model-select, .integrator-row select { font-size: 1rem; }
-      .md-content, .md-content p, .md-content li { font-size: 1rem; line-height: 1.7; }
-      .history-session-prompt { font-size: .9rem; }
-      .history-row { font-size: .88rem; }
-      .act-btn { font-size: .88rem; }
-      .result-tab { font-size: .88rem; }
+      /* Unify all text to 1rem (16px) — same as prompt textarea */
+      body, button, input, select, textarea,
+      .result-body, .imc-result-area .result-body,
+      .md-content, .md-content p, .md-content li, .md-content h1, .md-content h2, .md-content h3,
+      .integrator-result-body,
+      .history-session-prompt, .history-session-meta, .history-row, .history-row-response,
+      .model-name, .inline-model-card-header .model-name,
+      .model-select, .integrator-row select,
+      .act-btn, .run-btn, .result-tab,
+      .config-block-label, .rsb-toggle-btn, .rsb-level-btn,
+      .score-row, .cost-chip, .conv-bar,
+      .tab-panel, .answers-area,
+      .lsb-nav-item, .lsb-panel,
+      .empty-state p,
+      .model-toggles-label, .model-toggles-row .mt-item,
+      .udd-btn, .udd-name, .udd-spend,
+      .toast, .toast-msg { font-size: 1rem !important; line-height: 1.6; }
+      /* Keep small decorative elements compact */
+      .mt-dot, .tab-status, .tab-model-ver,
+      .key-item, .score-badge, .duration-badge { font-size: .75rem !important; }
     }
     @media (max-width: 540px) {
       .app-header { padding: 10px 14px; }
