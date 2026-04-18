@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ReliableAI</title>
+  <!-- v20260418 -->
   <meta name="theme-color" content="#1c1c1c" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -604,6 +605,16 @@
         left: 0;
         right: 0;
         z-index: 99;
+        /* Prevent page scroll from bleeding through the tabs bar */
+        overscroll-behavior: none;
+        pointer-events: auto;
+      }
+      /* Intercept vertical scroll on the tabs bar area */
+      .result-tabs-bar::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
       }
       /* Push answers area down only when tabs bar is visible */
       .answers-area { padding-top: 0; }
