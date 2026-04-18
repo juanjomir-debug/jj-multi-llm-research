@@ -587,7 +587,23 @@
     .empty-state .emo { font-size: 2.5rem; } .empty-state p { font-size: .85rem; max-width: 340px; line-height: 1.5; }
 
     @media (max-width: 1024px) {
-      body { overflow-y: auto; overflow-x: hidden; }
+      /* Make body non-scrollable, main is the scroll container */
+      html, body { overflow: hidden; height: 100%; }
+      .app-layout { height: calc(100dvh - 57px); overflow: hidden; }
+      .main {
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .answers-area {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0;
+      }
       .results-grid { grid-template-columns: 1fr !important; }
       .answers-area, .tab-panel, #tabPanel-integration, #turnHistoryArea,
       #integratorResultArea, #resultsSection, .integrator-result-card,
@@ -598,27 +614,17 @@
       /* Mobile layout: run buttons full width on own row */
       .action-row-run { padding: 0; }
       .action-row-run .run-btn-row { width: 100%; }
-      /* Tabs bar: fixed just below the app header */
+      /* query-section doesn't grow/shrink */
+      .query-section { flex-shrink: 0; }
+      /* Tabs bar: sticky inside .main scroll container */
       .result-tabs-bar {
-        position: fixed;
-        top: 57px;
-        left: 0;
-        right: 0;
+        position: sticky;
+        top: 0;
         z-index: 99;
-        /* Prevent page scroll from bleeding through the tabs bar */
+        flex-shrink: 0;
         overscroll-behavior: none;
-        pointer-events: auto;
       }
-      /* Intercept vertical scroll on the tabs bar area */
-      .result-tabs-bar::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-      }
-      /* Push answers area down only when tabs bar is visible */
       .answers-area { padding-top: 0; }
-      .result-tabs-bar.active ~ .answers-area { padding-top: 44px; }
       /* Show spinner on mobile but not timing text */
       .tab-status { display: none; }
       .tab-status.working { display: inline-block; }
