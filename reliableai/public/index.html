@@ -204,8 +204,10 @@
       .mob-history-btn { display: flex; align-items: center; justify-content: center; }
       /* Center the title on mobile */
       .app-header { position: relative; }
-      .app-header-brand { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; flex: unset; }
+      .app-header-brand { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; flex: unset; pointer-events: none; }
       .app-header-brand .app-claim { display: none; }
+      /* Keep avatar pinned to the right */
+      .user-menu-wrap { margin-left: auto; }
     }
     .app-header-brand h1 { font-size: 1.55rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text); line-height: 1.15; margin: 0; white-space: nowrap; }
     .app-header-brand .app-claim { font-size: .72rem; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; color: rgba(158,158,158,.7); margin-top: 1px; }
