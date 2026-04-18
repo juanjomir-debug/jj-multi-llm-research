@@ -626,8 +626,15 @@
       /* Mobile layout: run buttons full width on own row */
       .action-row-run { padding: 0; }
       .action-row-run .run-btn-row { width: 100%; }
-      /* query-section doesn't grow/shrink */
+      /* query-section: fixed, doesn't shrink */
       .query-section { flex-shrink: 0; }
+      /* answers-area: takes all remaining space, scrolls internally */
+      .answers-area {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 50vh;
+      }
       /* Hide mob-top-bar — header already has the icons */
       .mob-top-bar { display: none !important; }
       /* Show Config button inline */

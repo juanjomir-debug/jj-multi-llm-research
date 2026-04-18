@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ReliableAI — Mockup v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0d12;--surface:#15171e;--surface1:#1c1f2a;--surface2:#232736;
+  --border:#2a2f42;--border-subtle:#1f2233;
+  --text:#e4e5ea;--text-muted:#8b8fa3;--text-dim:#5c6070;
+  --accent:#6366f1;--accent2:#818cf8;--accent-dim:rgba(99,102,241,.12);
+  --success:#10b981;--warn:#f59e0b;--danger:#ef4444;--info:#3b82f6;
+  --claude:#cc785c;--openai:#10a37f;--gemini:#4285f4;--grok:#a78bfa;--qwen:#6550d4;--glm:#ff6b6b;
+  --radius:8px;--radius-lg:14px;--radius-pill:24px;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Courier New',monospace;
+}
+html{font-size:14px;background:var(--bg);color:var(--text)}
+body{font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+button{cursor:pointer;font-family:inherit}
+/* ── HEADER ── */
+.header{
+  background:var(--surface);border-bottom:1px solid var(--border-subtle);
+  padding:12px 20px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:100;
+}
+.brand h1{font-size:1.5rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.brand .claim{font-size:.68rem;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:rgba(158,158,158,.65);margin-top:1px}
+.header-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.avatar-btn{width:34px;height:34px;border-radius:50%;background:rgba(99,102,241,.15);border:1.5px solid rgba(99,102,241,.4);color:var(--accent);font-weight:800;font-size:.88rem;display:flex;align-items:center;justify-content:center}
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 57px)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+/* ── ONBOARDING BANNER ── */
+.onboarding-banner{
+  background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(129,140,248,.06));
+  border-bottom:1px solid rgba(99,102,241,.2);
+  padding:14px 20px;display:flex;align-items:center;gap:14px;
+  animation:slideDown .4s ease;
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.onboarding-banner .ob-icon{font-size:1.5rem;flex-shrink:0}
+.onboarding-banner .ob-text h3{font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.onboarding-banner .ob-text p{font-size:.75rem;color:var(--text-muted);line-height:1.5}
+.ob-steps{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.ob-step{
+  display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--text-muted);
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-pill);
+  padding:4px 10px;
+}
+.ob-step .step-num{
+  width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ob-step.done{border-color:var(--success);color:var(--success)}
+.ob-step.done .step-num{background:var(--success)}
+.ob-dismiss{margin-left:auto;background:none;border:none;color:var(--text-dim);font-size:1.1rem;padding:4px;flex-shrink:0;border-radius:4px}
+.ob-dismiss:hover{color:var(--text-muted);background:var(--surface2)}
+
+/* ── QUERY SECTION ── */
+.query-section{
+  padding:14px 16px 0;display:flex;flex-direction:column;gap:10px;
+  background:var(--bg);
+}
+/* Template chips */
+.template-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.template-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);white-space:nowrap}
+.tpl-chip{
+  font-size:.72rem;font-weight:600;padding:4px 11px;border-radius:var(--radius-pill);
+  border:1px solid var(--border);background:var(--surface);color:var(--text-muted);
+  transition:all .15s ease;white-space:nowrap;
+}
+.tpl-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.tpl-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);font-weight:700}
+/* Textarea */
+.textarea-wrap{position:relative}
+.textarea-wrap textarea{
+  width:100%;min-height:90px;resize:none;
+  padding:12px 14px;font-size:.93rem;line-height:1.6;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  color:var(--text);transition:border-color .15s;
+}
+.textarea-wrap textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.textarea-actions{
+  position:absolute;bottom:10px;right:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.ta-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 9px;font-size:.72rem;display:flex;align-items:center;gap:5px;transition:all .12s}
+.ta-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* Action row (nav) */
+.action-row-nav{display:flex;align-items:center;gap:6px}
+.act-btn{
+  display:flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600;
+  padding:5px 12px;border-radius:var(--radius-pill);border:1px solid var(--border);
+  background:var(--surface);color:var(--text-muted);transition:all .15s;
+}
+.act-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+/* ── MODEL SELECTION ── */
+.model-section{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:12px 14px;
+}
+.model-section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.model-section-header .ms-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);flex:1}
+.ms-count{font-size:.68rem;font-weight:700;background:var(--accent-dim);color:var(--accent);border-radius:10px;padding:2px 8px}
+.model-grid{display:flex;gap:6px;flex-wrap:wrap}
+.model-pill{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-pill);
+  border:1.5px solid var(--border);background:var(--surface1);
+  font-size:.8rem;font-weight:600;color:var(--text-muted);
+  transition:all .15s ease;cursor:pointer;white-space:nowrap;
+}
+.model-pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.model-pill:hover{border-color:var(--border);background:var(--surface2);color:var(--text)}
+.model-pill.active{color:var(--text)}
+.model-pill.active[data-p=claude]{border-color:var(--claude);background:rgba(204,120,92,.12)}
+.model-pill.active[data-p=openai]{border-color:var(--openai);background:rgba(16,163,127,.12)}
+.model-pill.active[data-p=gemini]{border-color:var(--gemini);background:rgba(66,133,244,.12)}
+.model-pill.active[data-p=grok]{border-color:var(--grok);background:rgba(167,139,250,.12)}
+.model-pill.active[data-p=qwen]{border-color:var(--qwen);background:rgba(101,80,212,.12)}
+.model-pill.active[data-p=glm]{border-color:var(--glm);background:rgba(255,107,107,.12)}
+
+/* ── RESEARCH MODE ── */
+.mode-row{display:flex;gap:6px}
+.mode-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 8px;border-radius:var(--radius-lg);border:1.5px solid var(--border);
+  background:var(--surface1);color:var(--text-muted);transition:all .15s;
+}
+.mode-btn:hover{border-color:var(--border);background:var(--surface2)}
+.mode-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.mode-btn .mode-icon{font-size:1.1rem}
+.mode-btn .mode-name{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.mode-btn .mode-desc{font-size:.62rem;color:var(--text-dim);text-align:center;line-height:1.3}
+.mode-btn.active .mode-desc{color:rgba(129,140,248,.7)}
+
+/* ── RUN AREA ── */
+.run-area{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border-subtle);background:var(--bg)}
+.run-btn-primary{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 20px;border-radius:var(--radius-lg);
+  background:var(--accent);border:none;color:#fff;
+  font-size:.95rem;font-weight:700;letter-spacing:.02em;
+  transition:all .15s;box-shadow:0 4px 14px rgba(99,102,241,.3);
+}
+.run-btn-primary:hover{background:#5254cc;box-shadow:0 6px 20px rgba(99,102,241,.4);transform:translateY(-1px)}
+.run-btn-primary:disabled{opacity:.45;box-shadow:none;transform:none;cursor:not-allowed}
+.run-btn-secondary{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 16px;border-radius:var(--radius-lg);
+  background:var(--surface);border:1.5px solid var(--border);
+  color:var(--text-muted);font-size:.85rem;font-weight:600;
+  transition:all .15s;white-space:nowrap;
+}
+.run-btn-secondary:hover{border-color:var(--accent2);color:var(--accent2)}
+.cost-hint{
+  font-family:var(--mono);font-size:.72rem;color:var(--text-muted);
+  background:var(--surface1);border:1px solid var(--border);
+  border-radius:8px;padding:5px 10px;white-space:nowrap;
+}
+.cost-hint span{color:var(--success);font-weight:700}
+
+/* ── ANSWERS AREA ── */
+.answers-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+/* Result cards */
+.result-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;animation:fadeUp .3s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.result-card-header{
+  padding:10px 14px;display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--border-subtle);
+}
+.model-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.model-label{font-size:.85rem;font-weight:700}
+.model-ver{font-size:.68rem;color:var(--text-dim);font-family:var(--mono)}
+.result-badges{display:flex;gap:5px;margin-left:auto;align-items:center}
+.badge{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.badge-score{background:rgba(16,185,129,.15);color:var(--success);border:1px solid rgba(16,185,129,.3)}
+.badge-cost{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);font-family:var(--mono)}
+.badge-speed{background:rgba(59,130,246,.12);color:var(--info);border:1px solid rgba(59,130,246,.25)}
+.result-card-body{padding:14px;font-size:.88rem;line-height:1.7;color:var(--text);max-height:220px;overflow-y:auto}
+.result-card-body p{margin-bottom:8px}
+.result-card-body strong{color:var(--text);font-weight:700}
+.result-card-footer{padding:8px 14px;border-top:1px solid var(--border-subtle);display:flex;gap:6px;align-items:center}
+.footer-btn{background:none;border:none;color:var(--text-dim);font-size:.72rem;display:flex;align-items:center;gap:4px;padding:3px 7px;border-radius:5px;transition:all .12s}
+.footer-btn:hover{background:var(--surface2);color:var(--text-muted)}
+.footer-btn.highlight:hover{color:var(--accent)}
+
+/* ── SYNTHESIS CARD ── */
+.synthesis-card{
+  background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(129,140,248,.04));
+  border:1.5px solid rgba(99,102,241,.3);border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.synthesis-header{
+  padding:10px 14px;display:flex;align-items:center;gap:8px;
+  background:rgba(99,102,241,.08);border-bottom:1px solid rgba(99,102,241,.2);
+}
+.synthesis-header .syn-icon{font-size:1rem}
+.synthesis-header .syn-title{font-size:.88rem;font-weight:700;color:var(--accent2)}
+.syn-models{font-size:.68rem;color:var(--text-dim);margin-left:auto}
+.synthesis-body{padding:14px;font-size:.88rem;line-height:1.7;color:var(--text)}
+
+/* ── RELIABILITY STRIP ── */
+.reliability-strip{
+  display:flex;gap:10px;padding:12px 14px;
+  background:var(--surface1);border:1px solid var(--border);border-radius:var(--radius-lg);
+}
+.rel-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.rel-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim)}
+.rel-val{font-size:1.3rem;font-weight:800}
+.rel-val.high{color:var(--success)}
+.rel-val.medium{color:var(--warn)}
+.rel-val.low{color:var(--danger)}
+.rel-sub{font-size:.62rem;color:var(--text-dim);text-align:center;line-height:1.3}
+.rel-divider{width:1px;background:var(--border);align-self:stretch;flex:none}
+
+/* ── HALLUCINATION ALERT ── */
+.hallucination-alert{
+  display:flex;gap:10px;padding:11px 14px;
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:var(--radius-lg);
+  align-items:flex-start;
+}
+.hall-icon{font-size:1rem;flex-shrink:0;margin-top:1px}
+.hall-content .hall-title{font-size:.78rem;font-weight:700;color:var(--warn);margin-bottom:3px}
+.hall-content .hall-text{font-size:.75rem;color:var(--text-muted);line-height:1.5}
+.hall-badge{margin-left:auto;flex-shrink:0;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--warn);border-radius:8px;padding:2px 9px;font-size:.68rem;font-weight:700;align-self:center}
+
+/* ── RIGHT SIDEBAR (Settings — always visible on desktop) ── */
+.right-sidebar{
+  width:280px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;overflow-y:auto;padding:14px 12px;gap:1px;
+}
+.rsb-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:4px 2px 8px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.config-block{padding:10px 0;border-bottom:1px solid var(--border-subtle)}
+.config-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:6px}
+.btn-group{display:flex;gap:4px}
+.btn-grp-item{
+  flex:1;padding:6px 4px;font-size:.72rem;font-weight:600;border-radius:6px;
+  border:1px solid var(--border);background:var(--surface1);color:var(--text-muted);transition:all .12s;
+}
+.btn-grp-item:hover{border-color:var(--accent);color:var(--accent)}
+.btn-grp-item.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.toggle-name{font-size:.8rem;font-weight:600;color:var(--text)}
+.toggle-pill{
+  position:relative;width:36px;height:20px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border);cursor:pointer;
+  transition:background .2s;flex-shrink:0;
+}
+.toggle-pill.on{background:var(--accent);border-color:var(--accent)}
+.toggle-pill::after{
+  content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;
+  border-radius:50%;background:#fff;transition:transform .2s;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle-pill.on::after{transform:translateX(16px)}
+.toggle-sub{font-size:.65rem;color:var(--text-dim);margin-top:2px;line-height:1.3}
+/* Slider */
+.slider-row{display:flex;align-items:center;gap:8px}
+.slider-val{font-family:var(--mono);font-size:.72rem;color:var(--text-muted);min-width:32px;text-align:right}
+input[type=range]{flex:1;height:4px;-webkit-appearance:none;appearance:none;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+/* Select */
+.cfg-select{width:100%;padding:6px 8px;font-size:.78rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);outline:none}
+.cfg-select:focus{border-color:var(--accent)}
+/* Budget bar */
+.budget-row{display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-muted);margin-bottom:5px}
+.budget-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.budget-fill{height:100%;background:var(--success);border-radius:2px;transition:width .5s ease}
+/* Export row */
+.export-row{display:flex;gap:6px;padding:10px 0}
+.exp-btn{flex:1;padding:7px 8px;font-size:.72rem;font-weight:600;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface1);color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s}
+.exp-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* ── SHARE BANNER ── */
+.share-banner{
+  display:flex;align-items:center;gap:8px;padding:9px 14px;
+  background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius-lg);
+  margin:0 16px;
+}
+.share-url{font-family:var(--mono);font-size:.7rem;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.share-copy-btn{background:var(--success);border:none;color:#fff;border-radius:6px;padding:4px 10px;font-size:.72rem;font-weight:700;white-space:nowrap}
+
+/* ── TABS ── */
+.result-tabs{display:flex;gap:2px;padding:8px 16px 0;border-bottom:1px solid var(--border-subtle);background:var(--bg)}
+.r-tab{
+  padding:7px 16px;font-size:.78rem;font-weight:600;border:none;background:none;
+  color:var(--text-muted);border-radius:var(--radius) var(--radius) 0 0;
+  border-bottom:2px solid transparent;transition:all .15s;
+}
+.r-tab:hover{color:var(--text)}
+.r-tab.active{color:var(--accent2);border-bottom-color:var(--accent);background:rgba(99,102,241,.06)}
+
+/* ── EMPTY STATE ── */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  color:var(--text-dim);padding:40px;text-align:center;
+}
+.empty-state .emo{font-size:2.5rem;filter:grayscale(.5)}
+.empty-state h3{font-size:.95rem;font-weight:700;color:var(--text-muted)}
+.empty-state p{font-size:.78rem;line-height:1.6;max-width:320px}
+.empty-cta{
+  margin-top:6px;padding:9px 20px;border-radius:var(--radius-pill);
+  background:var(--accent);color:#fff;border:none;
+  font-size:.82rem;font-weight:700;transition:all .15s;
+}
+.empty-cta:hover{background:#5254cc;transform:translateY(-1px)}
+
+/* ── DEMO STATE TOGGLE ── */
+.demo-toggle{
+  position:fixed;bottom:20px;right:20px;z-index:999;
+  background:var(--surface1);border:1px solid var(--border);border-radius:var(--radius-pill);
+  padding:8px 14px;font-size:.78rem;font-weight:600;color:var(--text-muted);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);transition:all .15s;
+}
+.demo-toggle:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .right-sidebar{display:none}
+  .mobile-settings-btn{
+    display:flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;
+    padding:5px 11px;border-radius:var(--radius-pill);border:1px solid var(--border);
+    background:var(--surface);color:var(--text-muted);
+  }
+  .run-area{flex-wrap:wrap}
+  .run-btn-primary{min-width:100%}
+}
+@media(min-width:769px){.mobile-settings-btn{display:none}}
+.spinner{
+  width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="header">
+  <div class="brand">
+    <h1>ReliableAI</h1>
+    <div class="claim">Multi-model Reliable Intelligence</div>
+  </div>
+  <div class="header-actions">
+    <button class="mobile-settings-btn" onclick="toggleMobileSettings()">⚙ Settings</button>
+    <button class="avatar-btn">J</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     LAYOUT
+══════════════════════════════════════════ -->
+<div class="layout">
+
+  <!-- ── MAIN ── -->
+  <main class="main" id="mainArea">
+
+    <!-- ONBOARDING BANNER -->
+    <div class="onboarding-banner" id="onboardingBanner">
+      <div class="ob-icon">👋</div>
+      <div class="ob-text" style="flex:1">
+        <h3>Welcome to ReliableAI — compare AI models in 3 steps</h3>
+        <div class="ob-steps">
+          <div class="ob-step done" id="step1"><span class="step-num">1</span> Pick a template or write your question</div>
+          <div class="ob-step" id="step2"><span class="step-num">2</span> Select models to compare</div>
+          <div class="ob-step" id="step3"><span class="step-num">3</span> Hit Research &amp; Integrate</div>
+        </div>
+      </div>
+      <button class="ob-dismiss" onclick="dismissOnboarding()" title="Dismiss">×</button>
+    </div>
+
+    <!-- QUERY SECTION -->
+    <div class="query-section">
+
+      <!-- Template chips -->
+      <div class="template-row">
+        <span class="template-label">Templates:</span>
+        <button class="tpl-chip" onclick="applyTemplate(this,'technical')">⚙ Technical</button>
+        <button class="tpl-chip" onclick="applyTemplate(this,'academic')">🎓 Academic</button>
+        <button class="tpl-chip active" onclick="applyTemplate(this,'market')">📊 Market</button>
+        <button class="tpl-chip" onclick="applyTemplate(this,'factcheck')">✅ Fact-check</button>
+        <button class="tpl-chip" onclick="applyTemplate(this,'creative')">💡 Creative</button>
+      </div>
+
+      <!-- Textarea -->
+      <div class="textarea-wrap">
+        <textarea id="questionInput" placeholder="What do you want to research? Ask anything…" oninput="onInput()" rows="3">What are the competitive advantages of OpenAI vs Google in the enterprise AI market for 2026?</textarea>
+        <div class="textarea-actions">
+          <button class="ta-btn" onclick="openRefine()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            AI Research Planner
+          </button>
+          <button class="ta-btn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            Attach
+          </button>
+        </div>
+      </div>
+
+      <!-- Nav actions -->
+      <div class="action-row-nav">
+        <button class="act-btn" onclick="newResearch()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Research
+        </button>
+        <button class="act-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          History
+        </button>
+      </div>
+
+      <!-- Model selection -->
+      <div class="model-section">
+        <div class="model-section-header">
+          <span class="ms-label">Select models</span>
+          <span class="ms-count" id="modelCount">3 selected</span>
+        </div>
+        <div class="model-grid" id="modelGrid">
+          <button class="model-pill" data-p="claude" onclick="togglePill(this)">
+            <span class="dot" style="background:var(--claude)"></span>Claude
+          </button>
+          <button class="model-pill active" data-p="openai" onclick="togglePill(this)">
+            <span class="dot" style="background:var(--openai)"></span>OpenAI
+          </button>
+          <button class="model-pill active" data-p="gemini" onclick="togglePill(this)">
+            <span class="dot" style="background:var(--gemini)"></span>Gemini
+          </button>
+          <button class="model-pill active" data-p="grok" onclick="togglePill(this)">
+            <span class="dot" style="background:var(--grok)"></span>Grok
+          </button>
+          <button class="model-pill" data-p="qwen" onclick="togglePill(this)">
+            <span class="dot" style="background:var(--qwen)"></span>Qwen
+          </button>
+          <button class="model-pill" data-p="glm" onclick="togglePill(this)">
+            <span class="dot" style="background:var(--glm)"></span>GLM
+          </button>
+        </div>
+      </div>
+
+      <!-- Research Mode selector -->
+      <div class="mode-row">
+        <button class="mode-btn active" id="modeParallel" onclick="setMode('parallel')">
+          <span class="mode-icon">⚡</span>
+          <span class="mode-name">Parallel</span>
+          <span class="mode-desc">All models answer simultaneously</span>
+        </button>
+        <button class="mode-btn" id="modeCascade" onclick="setMode('cascade')">
+          <span class="mode-icon">»</span>
+          <span class="mode-name">Cascade</span>
+          <span class="mode-desc">Each model sees previous answers</span>
+        </button>
+        <button class="mode-btn" id="modeDebate" onclick="setMode('debate')">
+          <span class="mode-icon">⚔</span>
+          <span class="mode-name">Debate</span>
+          <span class="mode-desc">Models critique each other</span>
+        </button>
+      </div>
+
+    </div><!-- /query-section -->
+
+    <!-- RUN AREA -->
+    <div class="run-area">
+      <button class="run-btn-primary" id="runBtn" onclick="runDemo()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Research &amp; Integrate
+      </button>
+      <button class="run-btn-secondary" id="runOnlyBtn" onclick="runOnlyDemo()">
+        Research only
+      </button>
+      <div class="cost-hint">Est. <span id="costEst">~$0.004</span></div>
+    </div>
+
+    <!-- RESULTS TABS (hidden initially) -->
+    <div class="result-tabs" id="resultTabs" style="display:none">
+      <button class="r-tab active" onclick="switchTab(this,'synthesis')">🔗 Synthesis</button>
+      <button class="r-tab" onclick="switchTab(this,'answers')">📄 Answers (3)</button>
+      <button class="r-tab" onclick="switchTab(this,'reliability')">🛡 Reliability</button>
+    </div>
+
+    <!-- SHARE BANNER (hidden initially) -->
+    <div class="share-banner" id="shareBanner" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#10b981;flex-shrink:0"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span class="share-url" id="shareUrl">reliable.net/r/mkt-openai-google-2026</span>
+      <button class="share-copy-btn" onclick="copyShare()">Copy link</button>
+    </div>
+
+    <!-- ANSWERS AREA -->
+    <div class="answers-area" id="answersArea">
+
+      <!-- EMPTY STATE (default) -->
+      <div id="emptyState" class="empty-state">
+        <div class="emo">🤖</div>
+        <h3>Your research results will appear here</h3>
+        <p>Select 2+ models above and hit <strong>Research &amp; Integrate</strong> to get a multi-model synthesis with reliability analysis.</p>
+        <button class="empty-cta" onclick="runDemo()">Try with example question →</button>
+      </div>
+
+      <!-- RESULTS (hidden initially) -->
+      <div id="resultsArea" style="display:none;display:flex;flex-direction:column;gap:12px">
+
+        <!-- Synthesis card -->
+        <div class="synthesis-card">
+          <div class="synthesis-header">
+            <span class="syn-icon">🔗</span>
+            <span class="syn-title">Integrated Synthesis</span>
+            <span class="syn-models">GPT-5 Mini · Gemini 3 Flash · Grok 4.1 Fast</span>
+          </div>
+          <div class="synthesis-body">
+            <p><strong>Enterprise AI advantage summary (April 2026):</strong></p>
+            <p>OpenAI maintains a stronger foothold in enterprise productivity tools through deep Microsoft integrations (Azure OpenAI, Copilot suite), while Google leads in data infrastructure and multimodal search capabilities via Gemini Enterprise.</p>
+            <p>Key differentiators: OpenAI excels in <strong>developer ecosystem maturity</strong> and <strong>API adoption rate</strong>; Google leads in <strong>real-time data access</strong>, <strong>workspace integration</strong>, and <strong>cost at scale</strong> through TPU infrastructure.</p>
+            <p>Both face converging threat from open-weight models (Llama 4, Mistral Large) reducing switching costs for enterprises. The competitive gap is narrowing faster than either predicted in 2025 roadmaps.</p>
+          </div>
+        </div>
+
+        <!-- Reliability strip -->
+        <div class="reliability-strip">
+          <div class="rel-item">
+            <div class="rel-label">Reliability</div>
+            <div class="rel-val high">87%</div>
+            <div class="rel-sub">3/3 models agree on core points</div>
+          </div>
+          <div class="rel-divider"></div>
+          <div class="rel-item">
+            <div class="rel-label">Consensus</div>
+            <div class="rel-val high">High</div>
+            <div class="rel-sub">Strong agreement on market position</div>
+          </div>
+          <div class="rel-divider"></div>
+          <div class="rel-item">
+            <div class="rel-label">Hallucination risk</div>
+            <div class="rel-val medium">Low</div>
+            <div class="rel-sub">1 unverified stat flagged</div>
+          </div>
+        </div>
+
+        <!-- Hallucination alert -->
+        <div class="hallucination-alert">
+          <span class="hall-icon">⚠️</span>
+          <div class="hall-content">
+            <div class="hall-title">1 potential hallucination detected</div>
+            <div class="hall-text">Grok 4.1 Fast cited "OpenAI 340% enterprise growth Q1 2026" — this figure could not be corroborated by the other 2 models. Treat with caution.</div>
+          </div>
+          <span class="hall-badge">1 flagged</span>
+        </div>
+
+        <!-- Individual model cards -->
+        <div class="result-card" style="animation-delay:.05s">
+          <div class="result-card-header">
+            <span class="model-dot" style="background:var(--openai)"></span>
+            <span class="model-label" style="color:var(--openai)">OpenAI</span>
+            <span class="model-ver">GPT-5 Mini</span>
+            <div class="result-badges">
+              <span class="badge badge-score">Score 91/100</span>
+              <span class="badge badge-speed">1.2s</span>
+              <span class="badge badge-cost">$0.0009</span>
+            </div>
+          </div>
+          <div class="result-card-body">
+            <p>OpenAI's enterprise advantage in 2026 is primarily built on three pillars: the Microsoft Azure distribution channel (used by 85% of Fortune 500 companies for AI workloads), the most mature developer ecosystem (>2M developers), and GPT-5's superior instruction-following in complex multi-step business workflows.</p>
+            <p>Their Achilles heel remains data privacy concerns for regulated industries, where Google's sovereign cloud deployments have gained traction.</p>
+          </div>
+          <div class="result-card-footer">
+            <button class="footer-btn highlight">📋 Copy</button>
+            <button class="footer-btn highlight">🔍 Expand</button>
+            <button class="footer-btn">↩ Follow-up</button>
+            <button class="footer-btn">🔄 Retry</button>
+          </div>
+        </div>
+
+        <div class="result-card" style="animation-delay:.1s">
+          <div class="result-card-header">
+            <span class="model-dot" style="background:var(--gemini)"></span>
+            <span class="model-label" style="color:var(--gemini)">Gemini</span>
+            <span class="model-ver">Gemini 3 Flash</span>
+            <div class="result-badges">
+              <span class="badge badge-score">Score 88/100</span>
+              <span class="badge badge-speed">0.9s</span>
+              <span class="badge badge-cost">$0.0003</span>
+            </div>
+          </div>
+          <div class="result-card-body">
+            <p>Google's competitive moat in enterprise AI is fundamentally different from OpenAI's. Where OpenAI sells a product, Google sells an ecosystem: search grounding, BigQuery integration, Workspace embeddings, and real-time web access make Gemini Enterprise uniquely positioned for knowledge-intensive industries.</p>
+            <p>Google's TPU infrastructure gives it 40-60% cost advantage at high-volume enterprise deployments. However, go-to-market execution has historically lagged behind the technology quality.</p>
+          </div>
+          <div class="result-card-footer">
+            <button class="footer-btn highlight">📋 Copy</button>
+            <button class="footer-btn highlight">🔍 Expand</button>
+            <button class="footer-btn">↩ Follow-up</button>
+            <button class="footer-btn">🔄 Retry</button>
+          </div>
+        </div>
+
+        <div class="result-card" style="animation-delay:.15s">
+          <div class="result-card-header">
+            <span class="model-dot" style="background:var(--grok)"></span>
+            <span class="model-label" style="color:var(--grok)">Grok</span>
+            <span class="model-ver">Grok 4.1 Fast</span>
+            <div class="result-badges">
+              <span class="badge badge-score">Score 79/100</span>
+              <span class="badge badge-speed">1.8s</span>
+              <span class="badge badge-cost">$0.0007</span>
+            </div>
+          </div>
+          <div class="result-card-body">
+            <p>Both OpenAI and Google face an existential challenge from open-weight models in 2026. Enterprises that previously required GPT-4-class intelligence can now self-host Llama 4 Scout at dramatically lower cost. OpenAI's 340% enterprise growth Q1 2026 may mask long-term commoditization risk.</p>
+            <p>Google's advantage in this scenario: it can offer a hybrid strategy — proprietary Gemini Ultra for strategic use cases, open models for cost-sensitive workloads — something OpenAI structurally cannot match.</p>
+          </div>
+          <div class="result-card-footer">
+            <button class="footer-btn highlight">📋 Copy</button>
+            <button class="footer-btn highlight">🔍 Expand</button>
+            <button class="footer-btn">↩ Follow-up</button>
+            <button class="footer-btn">🔄 Retry</button>
+          </div>
+        </div>
+
+      </div><!-- /resultsArea -->
+
+    </div><!-- /answers-area -->
+
+  </main><!-- /main -->
+
+  <!-- ── RIGHT SIDEBAR (Settings — always visible) ── -->
+  <aside class="right-sidebar" id="rightSidebar">
+    <div class="rsb-title">Settings</div>
+
+    <div class="config-block">
+      <div class="config-label">Answer Length</div>
+      <select class="cfg-select" onchange="updateCost()">
+        <option>Brief (~1 paragraph)</option>
+        <option>Concise (~½ page)</option>
+        <option selected>Standard (~1-2 pages)</option>
+        <option>Detailed (~3-5 pages)</option>
+        <option>Exhaustive (~10+ pages)</option>
+      </select>
+    </div>
+
+    <div class="config-block">
+      <div class="config-label">Model Level</div>
+      <div class="btn-group">
+        <button class="btn-grp-item active" onclick="setLevel(this)">Fast</button>
+        <button class="btn-grp-item" onclick="setLevel(this)">Medium</button>
+        <button class="btn-grp-item" onclick="setLevel(this)">High</button>
+      </div>
+      <div style="font-size:.6rem;color:var(--text-dim);margin-top:4px">Fast: Haiku · GPT-5 Mini · Flash · Grok 4.1</div>
+    </div>
+
+    <div class="config-block">
+      <div class="toggle-row">
+        <span class="toggle-name">⚡ Reasoning</span>
+        <div class="toggle-pill" id="tgl-reasoning" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="toggle-sub">Activates thinking mode on supported models</div>
+    </div>
+
+    <div class="config-block">
+      <div class="toggle-row">
+        <span class="toggle-name">🔍 Web Search</span>
+        <div class="toggle-pill on" id="tgl-search" onclick="toggleSwitch(this)"></div>
+      </div>
+      <div class="toggle-sub">Claude, ChatGPT, Gemini &amp; Grok</div>
+    </div>
+
+    <div class="config-block">
+      <div class="config-label">Temperature <span id="tempVal" style="font-family:var(--mono);font-weight:400;color:var(--text-dim)">0.70</span></div>
+      <div class="slider-row">
+        <span style="font-size:.65rem;color:var(--text-dim)">0</span>
+        <input type="range" min="0" max="1.5" step="0.05" value="0.7" oninput="document.getElementById('tempVal').textContent=parseFloat(this.value).toFixed(2)">
+        <span style="font-size:.65rem;color:var(--text-dim)">1.5</span>
+      </div>
+    </div>
+
+    <div class="config-block">
+      <div class="config-label">Integrator</div>
+      <select class="cfg-select" style="margin-bottom:6px">
+        <option>OpenAI</option><option>Gemini</option><option>Grok</option><option>Claude</option>
+      </select>
+      <div class="btn-group">
+        <button class="btn-grp-item" onclick="setLevel(this)">Consensus</button>
+        <button class="btn-grp-item active" onclick="setLevel(this)">Unique</button>
+      </div>
+      <div style="font-size:.6rem;color:var(--text-dim);margin-top:5px">
+        <strong>Consensus:</strong> finds common ground<br>
+        <strong>Unique:</strong> independent synthesis
+      </div>
+    </div>
+
+    <div class="config-block">
+      <div class="config-label">API Budget</div>
+      <div class="budget-row"><span>$0.82 used</span><span>of $3.00</span></div>
+      <div class="budget-bar"><div class="budget-fill" style="width:27%"></div></div>
+    </div>
+
+    <div class="export-row">
+      <button class="exp-btn">📄 PDF</button>
+      <button class="exp-btn">📋 Copy all</button>
+      <button class="exp-btn">🔗 Share</button>
+    </div>
+
+  </aside>
+
+</div><!-- /layout -->
+
+<!-- DEMO TOGGLE -->
+<button class="demo-toggle" onclick="toggleResults()">👁 Toggle: Empty / Results</button>
+
+<script>
+// ── State ──
+let showingResults = false;
+
+function dismissOnboarding(){
+  document.getElementById('onboardingBanner').style.display='none';
+}
+
+function applyTemplate(btn, tpl){
+  document.querySelectorAll('.tpl-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  const prompts = {
+    technical:'How does RAG (Retrieval-Augmented Generation) compare to fine-tuning for enterprise knowledge bases in terms of cost, accuracy and maintainability?',
+    academic:'What are the methodological limitations of current LLM benchmarks (MMLU, HumanEval) and how do they affect our understanding of model capabilities?',
+    market:'What are the competitive advantages of OpenAI vs Google in the enterprise AI market for 2026?',
+    factcheck:'Is it true that GPT-5 scores 90%+ on the bar exam? Verify this claim and provide context on what it means for legal AI applications.',
+    creative:'Generate 5 unconventional go-to-market strategies for an AI startup competing against well-funded incumbents.'
+  };
+  document.getElementById('questionInput').value = prompts[tpl]||'';
+  updateStep(1);
+}
+
+function togglePill(btn){
+  btn.classList.toggle('active');
+  const count = document.querySelectorAll('.model-pill.active').length;
+  document.getElementById('modelCount').textContent = count + ' selected';
+  document.getElementById('runBtn').disabled = count < 1;
+  document.getElementById('runOnlyBtn').disabled = count < 1;
+  if(count>0) updateStep(2);
+  updateCost();
+}
+
+function setMode(mode){
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mode'+mode.charAt(0).toUpperCase()+mode.slice(1)).classList.add('active');
+}
+
+function setLevel(btn){
+  const group = btn.closest('.btn-group');
+  group.querySelectorAll('.btn-grp-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updateCost();
+}
+
+function toggleSwitch(el){el.classList.toggle('on')}
+
+function updateCost(){
+  const costs = {'1':'0.002','2':'0.006','3':'0.014'};
+  const active = document.querySelectorAll('.model-pill.active').length;
+  const c = costs[Math.min(active,3).toString()] || '0.001';
+  document.getElementById('costEst').textContent='~$'+c;
+}
+
+function updateStep(n){
+  for(let i=1;i<=n;i++){
+    const el=document.getElementById('step'+i);
+    if(el) el.classList.add('done');
+  }
+}
+
+function onInput(){updateCost(); updateStep(1)}
+
+function openRefine(){alert('AI Research Planner\n\nDescribe your research objective and the planner will suggest optimal model selection, custom instructions per model, and a structured prompt.')}
+
+function switchTab(btn,tab){
+  document.querySelectorAll('.r-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function copyShare(){
+  const url = document.getElementById('shareUrl').textContent;
+  navigator.clipboard?.writeText('https://'+url).catch(()=>{});
+  const btn = event.target; btn.textContent='Copied!'; btn.style.background='#059669';
+  setTimeout(()=>{btn.textContent='Copy link';btn.style.background=''},1500);
+}
+
+function newResearch(){
+  showingResults=false;
+  document.getElementById('emptyState').style.display='flex';
+  document.getElementById('resultsArea').style.display='none';
+  document.getElementById('resultTabs').style.display='none';
+  document.getElementById('shareBanner').style.display='none';
+  document.getElementById('questionInput').value='';
+  updateStep(0);
+  // reset steps
+  for(let i=1;i<=3;i++){
+    const el=document.getElementById('step'+i);
+    if(el) el.classList.remove('done');
+  }
+}
+
+function showResults(){
+  showingResults=true;
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('resultsArea').style.display='flex';
+  document.getElementById('resultTabs').style.display='flex';
+  document.getElementById('shareBanner').style.display='flex';
+  updateStep(3);
+}
+
+let running=false;
+function runDemo(){
+  if(running) return;
+  const btn=document.getElementById('runBtn');
+  const active=document.querySelectorAll('.model-pill.active').length;
+  if(active<1){alert('Select at least one model first!');return}
+  running=true;
+  btn.innerHTML='<div class="spinner"></div> Researching…';
+  btn.disabled=true;
+  updateStep(3);
+  setTimeout(()=>{
+    running=false;
+    btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Research & Integrate';
+    btn.disabled=false;
+    showResults();
+  },2200);
+}
+
+function runOnlyDemo(){
+  const active=document.querySelectorAll('.model-pill.active').length;
+  if(active<1){alert('Select at least one model first!');return}
+  showResults();
+}
+
+function toggleResults(){
+  if(showingResults) newResearch(); else showResults();
+}
+
+function toggleMobileSettings(){
+  const sb=document.getElementById('rightSidebar');
+  sb.style.display = sb.style.display==='flex'?'none':'flex';
+}
+
+// init: mark first step done (question is pre-filled)
+updateStep(1);
+</script>
+</body>
+</html>
