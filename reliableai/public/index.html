@@ -604,7 +604,7 @@
       }
       /* Push answers area down only when tabs bar is visible */
       .answers-area { padding-top: 0; }
-      .tabs-visible .answers-area { padding-top: 44px; }
+      .result-tabs-bar.active ~ .answers-area { padding-top: 44px; }
       /* Show spinner on mobile but not timing text */
       .tab-status { display: none; }
       .tab-status.working { display: inline-block; }
@@ -2800,7 +2800,7 @@ function clearConversation() {
   // Reset model tab panels from previous run
   document.querySelectorAll('.tab-panel[id^="tabPanel-"]:not(#tabPanel-integration)').forEach(el => el.remove());
   const bar = document.getElementById('resultTabsBar');
-  if (bar) { bar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); bar.style.display = 'none'; }
+  if (bar) { bar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); bar.style.display = 'none'; bar.classList.remove('active'); }
   document.getElementById('mainPanel')?.classList.remove('tabs-visible');
   const intP = document.getElementById('tabPanel-integration'); if (intP) intP.style.display = 'none';
   document.getElementById('exportBtn').style.display = 'none';
@@ -2970,7 +2970,7 @@ function prepareInlineResultArea(provider, modelId, questionOverride) {
   _ensureModelTab(provider);
   const _tabsBar = document.getElementById('resultTabsBar');
   _tabsBar.style.display = 'flex';
-  document.getElementById('mainPanel')?.classList.add('tabs-visible');
+  _tabsBar.classList.add('active');
   setTabStatus(provider, 'working');
   // Stay on current tab — don't auto-switch
 }
@@ -3368,7 +3368,7 @@ async function runResearch(withIntegrator = false) {
     el.remove();
   });
   const _rbar = document.getElementById('resultTabsBar');
-  if (_rbar) { _rbar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); _rbar.style.display = 'none'; }
+  if (_rbar) { _rbar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); _rbar.style.display = 'none'; _rbar.classList.remove('active'); }
   const _intP = document.getElementById('tabPanel-integration'); if (_intP) _intP.style.display = 'none';
   // 4. Prepare inline result areas for each enabled model (prepends history)
   enabledModels.forEach(m => prepareInlineResultArea(m.provider, m.modelId, question));
@@ -5206,7 +5206,7 @@ async function recoverSession(sid) {
     if (!firstProvider) firstProvider = r.provider;
   }
 
-  if (bar && nonIntRows.length > 0) bar.style.display = 'flex';
+  if (bar && nonIntRows.length > 0) { bar.style.display = 'flex'; bar.classList.add('active'); }
 
   // Show first model tab
   if (firstProvider) switchResultTab(`model-${firstProvider}`);
@@ -5933,7 +5933,7 @@ function showIntegrationPanel() {
   // Ensure the integration tab bar is visible, then switch to it
   // Only auto-switch if user is already on integration tab or no model tab is active
   const bar = document.getElementById('resultTabsBar');
-  if (bar) bar.style.display = 'flex';
+  if (bar) { bar.style.display = 'flex'; bar.classList.add('active'); }
   if (_activeResultTab === 'integration') {
     switchResultTab('integration');
   }
