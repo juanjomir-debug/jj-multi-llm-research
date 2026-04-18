@@ -602,13 +602,12 @@
         right: 0;
         z-index: 99;
       }
-      /* Push answers area down so content isn't hidden under fixed tabs bar */
-      .answers-area {
-        padding-top: 44px;
-      }
-      /* Compact result tabs on mobile */
-      .tab-model-ver { display: none; }
+      /* Push answers area down only when tabs bar is visible */
+      .answers-area { padding-top: 0; }
+      .tabs-visible .answers-area { padding-top: 44px; }
+      /* Show spinner on mobile but not timing text */
       .tab-status { display: none; }
+      .tab-status.working { display: inline-block; }
       .result-tab { padding: 7px 10px; font-size: .78rem; min-height: 36px; display: flex; align-items: center; justify-content: center; }
       .result-tabs-bar { gap: 0; min-height: 36px; align-items: stretch; overflow-y: visible; }
     }
@@ -2808,6 +2807,7 @@ function clearConversation() {
   document.querySelectorAll('.tab-panel[id^="tabPanel-"]:not(#tabPanel-integration)').forEach(el => el.remove());
   const bar = document.getElementById('resultTabsBar');
   if (bar) { bar.querySelectorAll('[data-tab^="model-"]').forEach(el => el.remove()); bar.style.display = 'none'; }
+  document.getElementById('mainPanel')?.classList.remove('tabs-visible');
   const intP = document.getElementById('tabPanel-integration'); if (intP) intP.style.display = 'none';
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
@@ -2976,7 +2976,9 @@ function prepareInlineResultArea(provider, modelId, questionOverride) {
 
   // Ensure tab button exists in the tab bar
   _ensureModelTab(provider);
-  document.getElementById('resultTabsBar').style.display = 'flex';
+  const _tabsBar = document.getElementById('resultTabsBar');
+  _tabsBar.style.display = 'flex';
+  document.getElementById('mainPanel')?.classList.add('tabs-visible');
   setTabStatus(provider, 'working');
   // Stay on current tab — don't auto-switch
 }
