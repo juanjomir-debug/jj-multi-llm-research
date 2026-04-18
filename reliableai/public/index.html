@@ -586,41 +586,27 @@
     .empty-state .emo { font-size: 2.5rem; } .empty-state p { font-size: .85rem; max-width: 340px; line-height: 1.5; }
 
     @media (max-width: 1024px) {
-      /* En móvil: main es el scroll container con altura fija */
-      .main {
-        overflow-y: auto !important;
-        overflow-x: hidden;
-        height: calc(100dvh - 113px) !important;
-        display: flex !important;
-        flex-direction: column;
-      }
-      body { overflow: hidden; }
+      body { overflow-y: auto; overflow-x: hidden; }
       .results-grid { grid-template-columns: 1fr !important; }
-      .answers-area {
-        flex: 1;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        min-height: 0;
-      }
-      .tab-panel.tab-panel-active {
-        overflow-x: hidden;
-        box-sizing: border-box;
-      }
       .answers-area, .tab-panel, #tabPanel-integration, #turnHistoryArea,
       #integratorResultArea, #resultsSection, .integrator-result-card,
       .result-body, .integrator-result-body, .hallucination-panel {
         max-width: 100vw; overflow-x: hidden; box-sizing: border-box;
       }
-      /* Tabs bar sticky dentro del main */
-      .result-tabs-bar {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        flex-shrink: 0;
-      }
-      .query-section { flex-shrink: 0; }
       .md-content pre { overflow-x: auto; max-width: 100%; }
-      /* Compact result tabs on mobile: hide version and timing */
+      /* Tabs bar: fixed just below the app header */
+      .result-tabs-bar {
+        position: fixed;
+        top: 57px;
+        left: 0;
+        right: 0;
+        z-index: 99;
+      }
+      /* Push answers area down so content isn't hidden under fixed tabs bar */
+      .answers-area {
+        padding-top: 44px;
+      }
+      /* Compact result tabs on mobile */
       .tab-model-ver { display: none; }
       .tab-status { display: none; }
       .result-tab { padding: 7px 10px; font-size: .78rem; min-height: 36px; display: flex; align-items: center; justify-content: center; }
@@ -1095,8 +1081,12 @@
     .config-block-collapsible.collapsed .config-block-arrow { transform: rotate(-90deg); }
     /* ── Result tabs bar ── */
     .result-tabs-bar {
-      display: flex; overflow-x: auto; overflow-y: visible; padding: 0 8px;
+      display: flex; overflow-x: auto; overflow-y: hidden; padding: 0 8px;
       background: var(--surface1); border-bottom: 2px solid rgba(99,102,241,0.25);
+      /* Prevent vertical scroll on touch swipe */
+      touch-action: pan-x;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
       position: relative; -webkit-overflow-scrolling: touch;
     }
     .result-tabs-bar::after { content: "→"; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.2rem; opacity: 0.5; pointer-events: none; mix-blend-mode: multiply; }
