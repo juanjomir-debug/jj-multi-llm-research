@@ -1557,13 +1557,13 @@
     <div class="query-section">
       <textarea id="questionInput" placeholder="What do you want to research? Write your question here..."
         oninput="updateEstimate(); updateRunBtn()"></textarea>
-      <div class="conv-bar" id="convBar" style="display:none">
-        <span class="conv-turns" id="convTurns"></span>
-        <div class="proj-tags-row" id="sessionProjTags"></div>
-      </div>
       <!-- Model toggles -->
       <div class="model-toggles-wrapper">
-        <div class="model-toggles-label">Select models</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="model-toggles-label">Select models</div>
+          <span class="conv-turns" id="convTurns" style="font-size:.68rem;font-weight:600;color:var(--accent)"></span>
+          <div class="proj-tags-row" id="sessionProjTags" style="display:contents"></div>
+        </div>
         <div class="model-toggles-row" id="modelTogglesRow"></div>
       </div>
       <div class="action-row">
@@ -2747,16 +2747,10 @@ function moveCascadeItem(idx, dir) {
 
 function updateConvIndicator() {
   const turns = Math.floor(state.conversationHistory.length / 2);
-  const bar = document.getElementById('convBar');
   const hasSession = !!state.lastSessionId;
-  if (turns === 0 && !hasSession) {
-    bar.style.display = 'none';
-    document.getElementById('convTurns').textContent = '';
-  } else {
-    bar.style.display = 'flex';
-    document.getElementById('convTurns').textContent = turns > 0 ? `${turns} context turn${turns !== 1 ? 's' : ''} active` : '';
-    if (hasSession) updateSessionProjTags();
-  }
+  const el = document.getElementById('convTurns');
+  if (el) el.textContent = turns > 0 ? `${turns} context turn${turns !== 1 ? 's' : ''} active` : '';
+  if (hasSession) updateSessionProjTags();
 }
 
 function archiveTurn() {
@@ -2812,8 +2806,6 @@ function clearConversation() {
   document.getElementById('exportBtn').style.display = 'none';
   document.getElementById('sessionProjTags').innerHTML = '';
   // Force hide convBar and clear turns text
-  const convBar = document.getElementById('convBar');
-  if (convBar) convBar.style.display = 'none';
   const convTurns = document.getElementById('convTurns');
   if (convTurns) convTurns.textContent = '';
   // Reset Research Planning
@@ -3288,8 +3280,8 @@ function updateEstimate() {
       ctxWarn.style.cssText = 'font-size:.7rem;color:#f0a04b;margin-left:6px;cursor:pointer';
       ctxWarn.title = 'Large context — some history may be trimmed for expensive models. Click "Clear" to reset.';
       ctxWarn.textContent = `⚠ ${Math.round(rawHistTok / 1000)}k ctx`;
-      const convBar = document.getElementById('convBar');
-      if (convBar) convBar.appendChild(ctxWarn);
+      const convTurns = document.getElementById('convTurns');
+      if (convTurns) convTurns.parentElement?.appendChild(ctxWarn);
     } else {
       ctxWarn.textContent = `⚠ ${Math.round(rawHistTok / 1000)}k ctx`;
     }
