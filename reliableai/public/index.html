@@ -616,6 +616,14 @@
       .action-row-run .run-btn-row { width: 100%; }
       /* query-section doesn't grow/shrink */
       .query-section { flex-shrink: 0; }
+      /* Hide mob-top-bar — header already has the icons */
+      .mob-top-bar { display: none !important; }
+      /* Show Config button inline */
+      .mob-cfg-inline { display: flex !important; background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+      /* Bottom bar inside grid row 2 — keep visible */
+      .bottom-bar { grid-column: 1; grid-row: 2; flex-shrink: 0; }
+      /* App layout: 2 rows, main takes remaining space */
+      .app-layout { grid-template-rows: 1fr auto !important; }
       /* Tabs bar: sticky inside .main scroll container */
       .result-tabs-bar {
         position: sticky;
@@ -1577,10 +1585,11 @@
     <div class="query-section">
       <textarea id="questionInput" placeholder="What do you want to research? Write your question here..."
         oninput="updateEstimate(); updateRunBtn()"></textarea>
-      <!-- Row 1: New Research + Refine -->
+      <!-- Row 1: New Research + Refine + Config -->
       <div class="action-row action-row-nav">
         <button class="act-btn act-btn-new-research" onclick="clearConversation()" title="New Research"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Research</button>
         <button class="act-btn act-btn-refine" onclick="openRefinePanel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Refine Prompting</button>
+        <button class="act-btn mob-cfg-inline" onclick="toggleRightSidebar()" style="display:none">Config</button>
         <div class="action-row-spacer"></div>
         <input type="file" id="fileInput" multiple accept=".pdf,image/*" style="display:none" onchange="handleFileSelect(event)">
         <button class="attach-btn" onclick="document.getElementById('fileInput').click()" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Attach</button>
