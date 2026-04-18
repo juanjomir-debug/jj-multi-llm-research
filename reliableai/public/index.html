@@ -586,22 +586,39 @@
     .empty-state .emo { font-size: 2.5rem; } .empty-state p { font-size: .85rem; max-width: 340px; line-height: 1.5; }
 
     @media (max-width: var(--bp-lg)) {
-      .main { overflow: visible; } body { overflow-y: auto; overflow-x: hidden; } .results-grid { grid-template-columns: 1fr !important; }
+      /* En móvil: main es el scroll container con altura fija */
+      .main {
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        height: calc(100dvh - 113px);
+        display: flex;
+        flex-direction: column;
+      }
+      body { overflow: hidden; }
+      .results-grid { grid-template-columns: 1fr !important; }
+      .answers-area {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0;
+      }
+      .tab-panel.tab-panel-active {
+        overflow-x: hidden;
+        box-sizing: border-box;
+      }
       .answers-area, .tab-panel, #tabPanel-integration, #turnHistoryArea,
       #integratorResultArea, #resultsSection, .integrator-result-card,
       .result-body, .integrator-result-body, .hallucination-panel {
         max-width: 100vw; overflow-x: hidden; box-sizing: border-box;
       }
-      .tab-panel.tab-panel-active {
-        max-height: 70vh;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
+      /* Tabs bar sticky dentro del main */
       .result-tabs-bar {
         position: sticky;
         top: 0;
         z-index: 50;
+        flex-shrink: 0;
       }
+      .query-section { flex-shrink: 0; }
       .md-content pre { overflow-x: auto; max-width: 100%; }
       /* Compact result tabs on mobile: hide version and timing */
       .tab-model-ver { display: none; }
