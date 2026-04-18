@@ -597,6 +597,11 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
+      .result-tabs-bar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
       .md-content pre { overflow-x: auto; max-width: 100%; }
       /* Compact result tabs on mobile: hide version and timing */
       .tab-model-ver { display: none; }
@@ -3141,7 +3146,7 @@ function syncAmplitudeToInt() {
   const tokens = ampToTokens[amp];
   if (!tokens) return;
   const intSel = document.getElementById('maxTokensInt');
-  if (intSel) intSel.value = String(tokens);
+  if (intSel) intSel.value = String(Math.round(tokens * 1.5));
 }
 function toggleInstrArea(key) { const btn = document.getElementById(`instrToggle-${key}`) || document.getElementById('intInstrToggle');
   const area = document.getElementById(`instrArea-${key}`) || document.getElementById('intInstrArea');
