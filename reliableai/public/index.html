@@ -1128,16 +1128,15 @@
     /* ── Result tabs bar ── */
     .result-tabs-bar {
       display: flex; overflow-x: auto; overflow-y: hidden; padding: 0 8px;
+      gap: 4px;
       background: var(--surface1); border-bottom: 2px solid rgba(99,102,241,0.25);
       /* Prevent vertical scroll on touch swipe */
       touch-action: pan-x;
       overscroll-behavior-x: contain;
       -webkit-overflow-scrolling: touch;
-      position: relative; -webkit-overflow-scrolling: touch;
+      position: relative;
     }
     .result-tabs-bar::after { content: "→"; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.2rem; opacity: 0.5; pointer-events: none; mix-blend-mode: multiply; }
-      flex-shrink: 0; gap: 4px;
-    }
     /* ── Answers area ── */
     .answers-area {
       flex: 1; overflow-y: auto; min-height: 0;
@@ -1155,6 +1154,7 @@
       margin-bottom: -2px;
       color: var(--text-muted);
       font-size: .8rem; cursor: pointer; white-space: nowrap;
+      flex-shrink: 0;
       transition: color .15s, border-color .15s, background .15s;
     }
     .result-tab:hover { background: rgba(99,102,241,0.13); color: var(--text); }
@@ -3203,7 +3203,12 @@ function syncAmplitudeToInt() {
   const tokens = ampToTokens[amp];
   if (!tokens) return;
   const intSel = document.getElementById('maxTokensInt');
-  if (intSel) intSel.value = String(Math.round(tokens * 1.5));
+  if (!intSel) return;
+  // Pick the lowest available option that covers tokens * 1.5
+  const target = Math.round(tokens * 1.5);
+  const optionValues = Array.from(intSel.options).map(o => parseInt(o.value)).filter(v => !isNaN(v));
+  const picked = optionValues.find(v => v >= target) ?? optionValues[optionValues.length - 1];
+  intSel.value = String(picked);
 }
 function toggleInstrArea(key) { const btn = document.getElementById(`instrToggle-${key}`) || document.getElementById('intInstrToggle');
   const area = document.getElementById(`instrArea-${key}`) || document.getElementById('intInstrArea');
