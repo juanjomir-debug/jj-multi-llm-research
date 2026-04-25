@@ -219,6 +219,9 @@ function addMonthlyCost(userId, costUsd) {
 // Prices USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-opus-4-7-thinking':  { input: 18.00, output: 90.00 },
+  'claude-opus-4-7':           { input: 18.00, output: 90.00 },
+  'claude-opus-4-7-search':    { input: 18.00, output: 90.00 },
   'claude-opus-4-6-thinking':  { input: 15.00, output: 75.00 },
   'claude-opus-4-6':           { input: 15.00, output: 75.00 },
   'claude-sonnet-4-6':         { input:  3.00, output: 15.00 },
@@ -226,6 +229,7 @@ const PRICING = {
   'claude-sonnet-4-5':         { input:  3.00, output: 15.00 },
   'claude-haiku-4-5-20251001': { input:  0.80, output:  4.00 },
   // ── OpenAI ────────────────────────────────────────────────────────────────
+  'gpt-5.5':      { input:  7.00, output: 28.00 },
   'gpt-5':        { input:  5.00, output: 20.00 },
   'gpt-5.2':      { input:  5.00, output: 20.00 },
   'gpt-5.3':      { input:  5.00, output: 20.00 },
@@ -250,6 +254,8 @@ const PRICING = {
   'grok-3-mini':                  { input: 0.30, output:   0.50 },
   'grok-3-fast':                  { input: 5.00, output:  25.00 },
   'grok-3-mini-fast':             { input: 0.60, output:   4.00 },
+  'grok-4.3':                     { input: 5.00, output:  25.00 },
+  'grok-4.3-mini':                { input: 0.50, output:   2.00 },
   'grok-4.20-0309-reasoning':     { input: 3.00, output:  15.00 },
   'grok-4.20-0309-non-reasoning': { input: 3.00, output:  15.00 },
   'grok-4-1-fast-reasoning':      { input: 0.20, output:   0.50 },
@@ -390,11 +396,11 @@ function setCache(modelId, question, amplitude, data, userId) {
 
 // ─── LLM callers ─────────────────────────────────────────────────────────────
 
-const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking']);
-const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6' };
+const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking', 'claude-opus-4-7-thinking']);
+const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6', 'claude-opus-4-7-thinking': 'claude-opus-4-7' };
 
-const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search']);
-const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6' };
+const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search', 'claude-opus-4-7-search']);
+const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6', 'claude-opus-4-7-search': 'claude-opus-4-7' };
 
 // Streaming caller for Claude (improvement #1)
 async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch = false) {

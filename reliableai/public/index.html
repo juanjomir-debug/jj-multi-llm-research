@@ -2088,6 +2088,10 @@ const PROVIDERS = {
   anthropic: {
     label: 'Claude', icon: '&#128311;', color: 'var(--claude)', dotColor: '#cc785c',
     models: [
+      // Gen 4.7 — Search / Thinking
+      { id: 'claude-opus-4-7-search',      label: 'Claude Opus 4.7 Search 🔍' },
+      { id: 'claude-opus-4-7-thinking',    label: 'Claude Opus 4.7 (Thinking)' },
+      { id: 'claude-opus-4-7',             label: 'Claude Opus 4.7' },
       // Gen 4.6 — Search (web tool nativo)
       { id: 'claude-opus-4-6-search',      label: 'Claude Opus 4.6 Search 🔍' },
       { id: 'claude-sonnet-4-6-search',    label: 'Claude Sonnet 4.6 Search 🔍' },
@@ -2108,6 +2112,7 @@ const PROVIDERS = {
       // GPT-5 — Search
       { id: 'gpt-5.2',     label: 'GPT-5.2 Search 🔍' },
       // GPT-5
+      { id: 'gpt-5.5',     label: 'GPT-5.5' },
       { id: 'gpt-5.4',     label: 'GPT-5.4' },
       { id: 'gpt-5.3',     label: 'GPT-5.3' },
       { id: 'gpt-5',       label: 'GPT-5' },
@@ -2131,6 +2136,9 @@ const PROVIDERS = {
   xai: {
     label: 'Grok', icon: '&#120143;', color: 'var(--grok)', dotColor: '#a78bfa',
     models: [
+      // Grok 4.3
+      { id: 'grok-4.3',      label: 'Grok 4.3' },
+      { id: 'grok-4.3-mini', label: 'Grok 4.3 Mini' },
       // Grok 4.20
       { id: 'grok-4.20-0309-reasoning',     label: 'Grok 4.20 Reasoning' },
       { id: 'grok-4.20-0309-non-reasoning', label: 'Grok 4.20' },
@@ -2168,6 +2176,9 @@ const PROVIDERS = {
 // Prices in USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-opus-4-7-search':    { i: 18,    o: 90   },
+  'claude-opus-4-7-thinking':  { i: 18,    o: 90   },
+  'claude-opus-4-7':           { i: 18,    o: 90   },
   'claude-opus-4-6-search':    { i: 15,    o: 75   },
   'claude-sonnet-4-6-search':  { i:  3,    o: 15   },
   'claude-opus-4-6-thinking':  { i: 15,    o: 75   },
@@ -2178,6 +2189,7 @@ const PRICING = {
   'claude-haiku-4-5-20251001': { i:  0.8,  o:  4   },
   // ── OpenAI ────────────────────────────────────────────────────────────────
   // GPT-5 family (prices per OpenAI API docs)
+  'gpt-5.5':      { i:  7.00, o: 28.00 },
   'gpt-5':        { i:  5.00, o: 20.00 },
   'gpt-5.2':      { i:  5.00, o: 20.00 },
   'gpt-5.3':      { i:  5.00, o: 20.00 },
@@ -2199,6 +2211,8 @@ const PRICING = {
   'gemini-2.5-flash':                     { i: 0.15,  o:  0.60 },
   'gemini-2.0-flash-thinking-exp':        { i: 0.10,  o:  0.40 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
+  'grok-4.3':                     { i: 5.00,  o: 25.00 },
+  'grok-4.3-mini':                { i: 0.50,  o:  2.00 },
   'grok-3':                       { i: 3.00,  o: 15.00 },
   'grok-3-mini':                  { i: 0.30,  o:  0.50 },
   'grok-3-fast':                  { i: 5.00,  o: 25.00 },
@@ -2946,11 +2960,11 @@ function renderModelCards() {
           <span class="websearch-note">${googleUnsupported ? 'Use Flash or 2.5 Pro' : m.provider === 'google' ? 'Google Search' : m.provider === 'xai' ? 'xAI Web Search' : 'Switches to Search model'}</span>
         </div>` : ''}
         ${m.provider === 'anthropic' ? `
-        <div class="websearch-row" id="thinkRow-${m.provider}" style="${!(m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking') ? 'display:none' : ''}">
-          <button class="websearch-toggle ${m.modelId === 'claude-opus-4-6-thinking' ? 'on' : ''}" id="thinkToggle-${m.provider}"
+        <div class="websearch-row" id="thinkRow-${m.provider}" style="${!(m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking' || m.modelId === 'claude-opus-4-7' || m.modelId === 'claude-opus-4-7-thinking') ? 'display:none' : ''}">
+          <button class="websearch-toggle ${(m.modelId === 'claude-opus-4-6-thinking' || m.modelId === 'claude-opus-4-7-thinking') ? 'on' : ''}" id="thinkToggle-${m.provider}"
             onclick="toggleThinking(${idx})"></button>
           <span class="websearch-label">⚡ Thinking</span>
-          <span class="websearch-note">Extended reasoning (Opus 4.6)</span>
+          <span class="websearch-note">Extended reasoning (Opus 4.6 / 4.7)</span>
         </div>` : ''}
         ${m.provider === 'google' ? `
         <div class="websearch-row" id="thinkRow-${m.provider}">
@@ -6062,7 +6076,7 @@ function setModelLevel(level) {
       // Update thinking/search row visibility for Claude
       if (m.provider === 'anthropic') {
         const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-        if (thinkRow) thinkRow.style.display = (modelId === 'claude-opus-4-6') ? '' : 'none';
+        if (thinkRow) thinkRow.style.display = (modelId === 'claude-opus-4-6' || modelId === 'claude-opus-4-7') ? '' : 'none';
         const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
         if (thinkBtn) thinkBtn.className = 'websearch-toggle';
       }
@@ -6102,7 +6116,7 @@ function toggleGlobalReasoning() {
       const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
       if (thinkBtn) thinkBtn.className = `websearch-toggle ${isOn ? 'on' : ''}`;
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-      if (thinkRow) thinkRow.style.display = (isOn || m.modelId === 'claude-opus-4-6') ? '' : 'none';
+      if (thinkRow) thinkRow.style.display = (isOn || m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-7') ? '' : 'none';
     } else if (m.provider === 'openai') {
       if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'o4-mini'; }
       else { m.modelId = m._preReasoningModel || 'gpt-5-mini'; }
@@ -6168,7 +6182,7 @@ function toggleGlobalWebSearch() {
       const sel = document.getElementById(`sel-${m.provider}`);
       if (sel) sel.value = m.modelId;
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-      if (thinkRow) thinkRow.style.display = (!isOn && (m.modelId === 'claude-opus-4-6')) ? '' : 'none';
+      if (thinkRow) thinkRow.style.display = (!isOn && (m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-7')) ? '' : 'none';
     }
     // Auto-switch OpenAI model variant
     if (m.provider === 'openai') {
