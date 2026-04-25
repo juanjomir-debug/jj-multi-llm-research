@@ -2088,10 +2088,6 @@ const PROVIDERS = {
   anthropic: {
     label: 'Claude', icon: '&#128311;', color: 'var(--claude)', dotColor: '#cc785c',
     models: [
-      // Gen 4.7 — Search / Thinking
-      { id: 'claude-opus-4-7-search',      label: 'Claude Opus 4.7 Search 🔍' },
-      { id: 'claude-opus-4-7-thinking',    label: 'Claude Opus 4.7 (Thinking)' },
-      { id: 'claude-opus-4-7',             label: 'Claude Opus 4.7' },
       // Gen 4.6 — Search (web tool nativo)
       { id: 'claude-opus-4-6-search',      label: 'Claude Opus 4.6 Search 🔍' },
       { id: 'claude-sonnet-4-6-search',    label: 'Claude Sonnet 4.6 Search 🔍' },
@@ -2112,7 +2108,6 @@ const PROVIDERS = {
       // GPT-5 — Search
       { id: 'gpt-5.2',     label: 'GPT-5.2 Search 🔍' },
       // GPT-5
-      { id: 'gpt-5.5',     label: 'GPT-5.5' },
       { id: 'gpt-5.4',     label: 'GPT-5.4' },
       { id: 'gpt-5.3',     label: 'GPT-5.3' },
       { id: 'gpt-5',       label: 'GPT-5' },
@@ -2136,9 +2131,6 @@ const PROVIDERS = {
   xai: {
     label: 'Grok', icon: '&#120143;', color: 'var(--grok)', dotColor: '#a78bfa',
     models: [
-      // Grok 4.3
-      { id: 'grok-4.3',      label: 'Grok 4.3' },
-      { id: 'grok-4.3-mini', label: 'Grok 4.3 Mini' },
       // Grok 4.20
       { id: 'grok-4.20-0309-reasoning',     label: 'Grok 4.20 Reasoning' },
       { id: 'grok-4.20-0309-non-reasoning', label: 'Grok 4.20' },
@@ -2176,9 +2168,6 @@ const PROVIDERS = {
 // Prices in USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
-  'claude-opus-4-7-search':    { i: 18,    o: 90   },
-  'claude-opus-4-7-thinking':  { i: 18,    o: 90   },
-  'claude-opus-4-7':           { i: 18,    o: 90   },
   'claude-opus-4-6-search':    { i: 15,    o: 75   },
   'claude-sonnet-4-6-search':  { i:  3,    o: 15   },
   'claude-opus-4-6-thinking':  { i: 15,    o: 75   },
@@ -2189,7 +2178,6 @@ const PRICING = {
   'claude-haiku-4-5-20251001': { i:  0.8,  o:  4   },
   // ── OpenAI ────────────────────────────────────────────────────────────────
   // GPT-5 family (prices per OpenAI API docs)
-  'gpt-5.5':      { i:  7.00, o: 28.00 },
   'gpt-5':        { i:  5.00, o: 20.00 },
   'gpt-5.2':      { i:  5.00, o: 20.00 },
   'gpt-5.3':      { i:  5.00, o: 20.00 },
@@ -2211,8 +2199,6 @@ const PRICING = {
   'gemini-2.5-flash':                     { i: 0.15,  o:  0.60 },
   'gemini-2.0-flash-thinking-exp':        { i: 0.10,  o:  0.40 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
-  'grok-4.3':                     { i: 5.00,  o: 25.00 },
-  'grok-4.3-mini':                { i: 0.50,  o:  2.00 },
   'grok-3':                       { i: 3.00,  o: 15.00 },
   'grok-3-mini':                  { i: 0.30,  o:  0.50 },
   'grok-3-fast':                  { i: 5.00,  o: 25.00 },
@@ -2425,6 +2411,20 @@ function applyPlanLimits() {
   renderModelCards();
   updatePlanModels();
   onIntProviderChange();
+
+  // 7. Lock Fast/Medium/High level buttons for free plan
+  document.querySelectorAll('#modelLevelGroup .rsb-level-btn').forEach(btn => {
+    const level = btn.dataset.level;
+    const locked = isFree && (level === 'medium' || level === 'high');
+    btn.disabled = locked;
+    btn.style.opacity = locked ? '0.5' : '';
+    btn.title = locked ? 'Upgrade to unlock this quality level' : '';
+    btn.textContent = btn.textContent.replace(' 🔒', '') + (locked ? ' 🔒' : '');
+  });
+  if (isFree) {
+    const activeLevel = document.querySelector('#modelLevelGroup .rsb-level-btn.active')?.dataset.level;
+    if (activeLevel === 'medium' || activeLevel === 'high') setModelLevel('fast');
+  }
 }
 
 function updateDailyQueryUI() {
@@ -2929,6 +2929,7 @@ function renderModelCards() {
       return `<option value="${opt.id}" ${opt.id === m.modelId ? 'selected' : ''} ${locked ? 'disabled' : ''}>${opt.label}${locked ? ' 🔒' : ''}</option>`;
     }).join('');
     const googleUnsupported = m.provider === 'google' && !GEMINI_SEARCH_SUPPORTED.has(m.modelId);
+    const wsLocked = !state.currentUser?.limits?.webSearch;
     card.innerHTML = `
       <div class="inline-model-card-header">
         <span class="model-icon">${prov.icon}</span><span class="model-name" style="color:${prov.dotColor}">${prov.label}</span>
@@ -2954,17 +2955,18 @@ function renderModelCards() {
         </div>
         ${WEB_SEARCH_PROVIDERS.has(m.provider) ? `
         <div class="websearch-row" id="wsRow-${m.provider}">
-          <button class="websearch-toggle ${m.webSearch && !googleUnsupported ? 'on' : ''}" id="wsToggle-${m.provider}"
-            onclick="toggleWebSearch(${idx})" ${googleUnsupported ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}></button>
-          <span class="websearch-label">Web Search</span>
-          <span class="websearch-note">${googleUnsupported ? 'Use Flash or 2.5 Pro' : m.provider === 'google' ? 'Google Search' : m.provider === 'xai' ? 'xAI Web Search' : 'Switches to Search model'}</span>
+          <button class="websearch-toggle ${m.webSearch && !googleUnsupported && !wsLocked ? 'on' : ''}" id="wsToggle-${m.provider}"
+            onclick="${wsLocked ? '' : `toggleWebSearch(${idx})`}" ${googleUnsupported || wsLocked ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}
+            title="${wsLocked ? 'Upgrade to unlock Web Search' : ''}"></button>
+          <span class="websearch-label">Web Search${wsLocked ? ' 🔒' : ''}</span>
+          <span class="websearch-note">${wsLocked ? 'Expert plan required' : googleUnsupported ? 'Use Flash or 2.5 Pro' : m.provider === 'google' ? 'Google Search' : m.provider === 'xai' ? 'xAI Web Search' : 'Switches to Search model'}</span>
         </div>` : ''}
         ${m.provider === 'anthropic' ? `
-        <div class="websearch-row" id="thinkRow-${m.provider}" style="${!(m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking' || m.modelId === 'claude-opus-4-7' || m.modelId === 'claude-opus-4-7-thinking') ? 'display:none' : ''}">
-          <button class="websearch-toggle ${(m.modelId === 'claude-opus-4-6-thinking' || m.modelId === 'claude-opus-4-7-thinking') ? 'on' : ''}" id="thinkToggle-${m.provider}"
+        <div class="websearch-row" id="thinkRow-${m.provider}" style="${!(m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking') ? 'display:none' : ''}">
+          <button class="websearch-toggle ${m.modelId === 'claude-opus-4-6-thinking' ? 'on' : ''}" id="thinkToggle-${m.provider}"
             onclick="toggleThinking(${idx})"></button>
           <span class="websearch-label">⚡ Thinking</span>
-          <span class="websearch-note">Extended reasoning (Opus 4.6 / 4.7)</span>
+          <span class="websearch-note">Extended reasoning (Opus 4.6)</span>
         </div>` : ''}
         ${m.provider === 'google' ? `
         <div class="websearch-row" id="thinkRow-${m.provider}">
@@ -2975,10 +2977,11 @@ function renderModelCards() {
         </div>` : ''}
         ${WEB_SEARCH_PROVIDERS.has(m.provider) ? `
         <div class="websearch-row" id="drRow-${m.provider}" style="${googleUnsupported ? 'display:none' : ''}">
-          <button class="websearch-toggle ${m.deepResearch ? 'deep' : ''}" id="drToggle-${m.provider}"
-            onclick="toggleDeepResearch(${idx})" ${googleUnsupported ? 'disabled' : ''}></button>
-          <span class="websearch-label">🔬 Deep Research</span>
-          <span class="websearch-note">Multi-step web research</span>
+          <button class="websearch-toggle ${m.deepResearch && !wsLocked ? 'deep' : ''}" id="drToggle-${m.provider}"
+            onclick="${wsLocked ? '' : `toggleDeepResearch(${idx})`}" ${googleUnsupported || wsLocked ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}
+            title="${wsLocked ? 'Upgrade to unlock Deep Research' : ''}"></button>
+          <span class="websearch-label">🔬 Deep Research${wsLocked ? ' 🔒' : ''}</span>
+          <span class="websearch-note">${wsLocked ? 'Expert plan required' : 'Multi-step web research'}</span>
         </div>` : ''}
         <button class="instr-toggle${m.customInstructions ? ' open' : ''}" id="instrToggle-${m.provider}" onclick="toggleInstrArea('${m.provider}')"><span class="arrow"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span> Custom instructions</button>
         <div class="instr-area${m.customInstructions ? ' open' : ''}" id="instrArea-${m.provider}">
@@ -4973,16 +4976,20 @@ function onLoginSuccess(user) {
 
 async function resendVerification(btn) {
   btn.disabled = true; btn.textContent = 'Sending…';
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 20000);
   try {
-    const r = await fetch('/api/auth/resend-verification', { method: 'POST' });
+    const r = await fetch('/api/auth/resend-verification', { method: 'POST', signal: ctrl.signal });
+    clearTimeout(tid);
     const d = await r.json();
     if (d.already) { toast('Your email is already verified.', 'success'); document.getElementById('verifyBanner').style.display = 'none'; return; }
     if (!r.ok) throw new Error(d.error || 'Error');
     btn.textContent = 'Sent ✓';
     toast('Verification email sent. Check your inbox.', 'success');
   } catch(e) {
+    clearTimeout(tid);
     btn.disabled = false; btn.textContent = 'Resend email';
-    toast(e.message, 'error');
+    toast(e.name === 'AbortError' ? 'Email server timeout — try again' : e.message, 'error');
   }
 }
 function updateUserSpend(cost) { const el = document.getElementById('userSpend'); if (el) el.textContent = '$' + (cost || 0).toFixed(4); }
@@ -6059,14 +6066,16 @@ const MODEL_LEVELS = {
 };
 // Integrator model per level (anthropic preferred)
 const INTEGRATOR_LEVELS = {
-  high:   { provider: 'anthropic', modelId: 'claude-opus-4-6' },
-  medium: { provider: 'anthropic', modelId: 'claude-sonnet-4-6' },
-  fast:   { provider: 'anthropic', modelId: 'claude-haiku-4-5-20251001' },
+  high:   { provider: 'openai', modelId: 'gpt-5.4' },
+  medium: { provider: 'openai', modelId: 'gpt-5-mini' },
+  fast:   { provider: 'openai', modelId: 'gpt-5-mini' },
 };
 
 function setModelLevel(level) {
   const map = MODEL_LEVELS[level];
   if (!map) return;
+  const isFree = state.currentUser?.plan === 'free';
+  if (isFree && (level === 'medium' || level === 'high')) return;
   state.models.forEach(m => {
     const modelId = map[m.provider];
     if (modelId) {
@@ -6076,7 +6085,7 @@ function setModelLevel(level) {
       // Update thinking/search row visibility for Claude
       if (m.provider === 'anthropic') {
         const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-        if (thinkRow) thinkRow.style.display = (modelId === 'claude-opus-4-6' || modelId === 'claude-opus-4-7') ? '' : 'none';
+        if (thinkRow) thinkRow.style.display = (modelId === 'claude-opus-4-6') ? '' : 'none';
         const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
         if (thinkBtn) thinkBtn.className = 'websearch-toggle';
       }
@@ -6116,7 +6125,7 @@ function toggleGlobalReasoning() {
       const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
       if (thinkBtn) thinkBtn.className = `websearch-toggle ${isOn ? 'on' : ''}`;
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-      if (thinkRow) thinkRow.style.display = (isOn || m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-7') ? '' : 'none';
+      if (thinkRow) thinkRow.style.display = (isOn || m.modelId === 'claude-opus-4-6') ? '' : 'none';
     } else if (m.provider === 'openai') {
       if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'o4-mini'; }
       else { m.modelId = m._preReasoningModel || 'gpt-5-mini'; }
@@ -6182,7 +6191,7 @@ function toggleGlobalWebSearch() {
       const sel = document.getElementById(`sel-${m.provider}`);
       if (sel) sel.value = m.modelId;
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-      if (thinkRow) thinkRow.style.display = (!isOn && (m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-7')) ? '' : 'none';
+      if (thinkRow) thinkRow.style.display = (!isOn && (m.modelId === 'claude-opus-4-6')) ? '' : 'none';
     }
     // Auto-switch OpenAI model variant
     if (m.provider === 'openai') {
