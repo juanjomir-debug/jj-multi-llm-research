@@ -1,0 +1,26 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 187.124.184.177
+          username: root
+          password: ${{ secrets.VPS_SSH_PASSWORD }}
+          script: |
+            cd /opt/jj-multi-llm
+            git pull origin main
+            npm install --omit=dev
+            pm2 restart jj-multi-llm
+            pm2 show jj-multi-llm | grep -E 'status|uptime|restart'
