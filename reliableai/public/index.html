@@ -2088,6 +2088,10 @@ const PROVIDERS = {
   anthropic: {
     label: 'Claude', icon: '&#128311;', color: 'var(--claude)', dotColor: '#cc785c',
     models: [
+      // Gen 4.7
+      { id: 'claude-opus-4-7-search',      label: 'Claude Opus 4.7 Search 🔍' },
+      { id: 'claude-opus-4-7-thinking',    label: 'Claude Opus 4.7 (Thinking)' },
+      { id: 'claude-opus-4-7',             label: 'Claude Opus 4.7' },
       // Gen 4.6 — Search (web tool nativo)
       { id: 'claude-opus-4-6-search',      label: 'Claude Opus 4.6 Search 🔍' },
       { id: 'claude-sonnet-4-6-search',    label: 'Claude Sonnet 4.6 Search 🔍' },
@@ -2108,6 +2112,7 @@ const PROVIDERS = {
       // GPT-5 — Search
       { id: 'gpt-5.2',     label: 'GPT-5.2 Search 🔍' },
       // GPT-5
+      { id: 'gpt-5.5',     label: 'GPT-5.5' },
       { id: 'gpt-5.4',     label: 'GPT-5.4' },
       { id: 'gpt-5.3',     label: 'GPT-5.3' },
       { id: 'gpt-5',       label: 'GPT-5' },
@@ -2168,6 +2173,9 @@ const PROVIDERS = {
 // Prices in USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-opus-4-7-search':    { i: 15,    o: 75   },
+  'claude-opus-4-7-thinking':  { i: 15,    o: 75   },
+  'claude-opus-4-7':           { i: 15,    o: 75   },
   'claude-opus-4-6-search':    { i: 15,    o: 75   },
   'claude-sonnet-4-6-search':  { i:  3,    o: 15   },
   'claude-opus-4-6-thinking':  { i: 15,    o: 75   },
@@ -2182,6 +2190,7 @@ const PRICING = {
   'gpt-5.2':      { i:  5.00, o: 20.00 },
   'gpt-5.3':      { i:  5.00, o: 20.00 },
   'gpt-5.4':      { i:  5.00, o: 20.00 },
+  'gpt-5.5':      { i:  5.00, o: 20.00 },
   'gpt-5-mini':   { i:  0.15, o:  0.60 },
   // GPT-4.1
   'gpt-4.1':      { i: 2.00,  o:  8.00 },
@@ -2248,6 +2257,7 @@ const ALWAYS_SEARCH_PROVIDERS = new Set([]); // reserved for providers that alwa
 
 // Claude: base model → search variant (and reverse)
 const CLAUDE_SEARCH_AUTO = {
+  'claude-opus-4-7':           'claude-opus-4-7-search',
   'claude-opus-4-6':           'claude-opus-4-6-search',
   'claude-sonnet-4-6':         'claude-sonnet-4-6-search',
   'claude-opus-4-5':           'claude-sonnet-4-6-search',
@@ -2255,13 +2265,16 @@ const CLAUDE_SEARCH_AUTO = {
   'claude-haiku-4-5-20251001': 'claude-sonnet-4-6-search',
 };
 const CLAUDE_SEARCH_BASE = {
+  'claude-opus-4-7-search':   'claude-opus-4-7',
   'claude-opus-4-6-search':   'claude-opus-4-6',
   'claude-sonnet-4-6-search': 'claude-sonnet-4-6',
 };
 
 // Claude: base ↔ thinking variant
 const THINKING_VARIANTS = {
-  'claude-opus-4-6':         'claude-opus-4-6-thinking',
+  'claude-opus-4-7':          'claude-opus-4-7-thinking',
+  'claude-opus-4-7-thinking': 'claude-opus-4-7',
+  'claude-opus-4-6':          'claude-opus-4-6-thinking',
   'claude-opus-4-6-thinking': 'claude-opus-4-6',
 };
 const GEMINI_SEARCH_SUPPORTED = new Set(['models/gemini-3.1-pro-preview','models/gemini-3-flash-preview','models/gemini-3.1-flash-lite-preview']);
@@ -2962,11 +2975,11 @@ function renderModelCards() {
           <span class="websearch-note">${wsLocked ? 'Expert plan required' : googleUnsupported ? 'Use Flash or 2.5 Pro' : m.provider === 'google' ? 'Google Search' : m.provider === 'xai' ? 'xAI Web Search' : 'Switches to Search model'}</span>
         </div>` : ''}
         ${m.provider === 'anthropic' ? `
-        <div class="websearch-row" id="thinkRow-${m.provider}" style="${!(m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking') ? 'display:none' : ''}">
-          <button class="websearch-toggle ${m.modelId === 'claude-opus-4-6-thinking' ? 'on' : ''}" id="thinkToggle-${m.provider}"
+        <div class="websearch-row" id="thinkRow-${m.provider}" style="${!(m.modelId === 'claude-opus-4-7' || m.modelId === 'claude-opus-4-7-thinking' || m.modelId === 'claude-opus-4-6' || m.modelId === 'claude-opus-4-6-thinking') ? 'display:none' : ''}">
+          <button class="websearch-toggle ${(m.modelId === 'claude-opus-4-7-thinking' || m.modelId === 'claude-opus-4-6-thinking') ? 'on' : ''}" id="thinkToggle-${m.provider}"
             onclick="toggleThinking(${idx})"></button>
           <span class="websearch-label">⚡ Thinking</span>
-          <span class="websearch-note">Extended reasoning (Opus 4.6)</span>
+          <span class="websearch-note">Extended reasoning (Opus 4.7/4.6)</span>
         </div>` : ''}
         ${m.provider === 'google' ? `
         <div class="websearch-row" id="thinkRow-${m.provider}">
@@ -3082,11 +3095,11 @@ function onModelChange(idx, newId) { const m = state.models[idx];
     if (wsBtn) wsBtn.className = `websearch-toggle ${isSearchModel ? 'on' : ''}`;
     // Show/hide thinking row
     const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-    const isThinkingEligible = newId === 'claude-opus-4-6' || newId === 'claude-opus-4-6-thinking';
+    const isThinkingEligible = newId === 'claude-opus-4-7' || newId === 'claude-opus-4-7-thinking' || newId === 'claude-opus-4-6' || newId === 'claude-opus-4-6-thinking';
     if (thinkRow) thinkRow.style.display = isThinkingEligible ? '' : 'none';
     // Sync thinking toggle
     const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
-    if (thinkBtn) thinkBtn.className = `websearch-toggle ${newId === 'claude-opus-4-6-thinking' ? 'on' : ''}`;
+    if (thinkBtn) thinkBtn.className = `websearch-toggle ${(newId === 'claude-opus-4-7-thinking' || newId === 'claude-opus-4-6-thinking') ? 'on' : ''}`;
   }
   updateEstimate();
 }
