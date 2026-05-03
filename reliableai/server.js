@@ -219,6 +219,8 @@ function addMonthlyCost(userId, costUsd) {
 // Prices USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-opus-4-7-thinking':  { input: 15.00, output: 75.00 },
+  'claude-opus-4-7':           { input: 15.00, output: 75.00 },
   'claude-opus-4-6-thinking':  { input: 15.00, output: 75.00 },
   'claude-opus-4-6':           { input: 15.00, output: 75.00 },
   'claude-sonnet-4-6':         { input:  3.00, output: 15.00 },
@@ -230,6 +232,7 @@ const PRICING = {
   'gpt-5.2':      { input:  5.00, output: 20.00 },
   'gpt-5.3':      { input:  5.00, output: 20.00 },
   'gpt-5.4':      { input:  5.00, output: 20.00 },
+  'gpt-5.5':      { input:  5.00, output: 20.00 },
   'gpt-5-mini':   { input:  0.15, output:  0.60 },
   'gpt-4.1':      { input:  2.00, output:  8.00 },
   'gpt-4.1-mini': { input:  0.40, output:  1.60 },
@@ -390,11 +393,11 @@ function setCache(modelId, question, amplitude, data, userId) {
 
 // ─── LLM callers ─────────────────────────────────────────────────────────────
 
-const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking']);
-const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6' };
+const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking', 'claude-opus-4-7-thinking']);
+const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6', 'claude-opus-4-7-thinking': 'claude-opus-4-7' };
 
-const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search']);
-const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6' };
+const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search', 'claude-opus-4-7-search']);
+const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6', 'claude-opus-4-7-search': 'claude-opus-4-7' };
 
 // Streaming caller for Claude (improvement #1)
 async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch = false) {
