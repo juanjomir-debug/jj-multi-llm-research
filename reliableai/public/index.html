@@ -2092,7 +2092,6 @@ const PROVIDERS = {
       { id: 'claude-opus-4-7-search',      label: 'Claude Opus 4.7 Search 🔍' },
       { id: 'claude-opus-4-7-thinking',    label: 'Claude Opus 4.7 (Thinking)' },
       { id: 'claude-opus-4-7',             label: 'Claude Opus 4.7' },
-      { id: 'claude-sonnet-4-7',           label: 'Claude Sonnet 4.7' },
       // Gen 4.6 — Search (web tool nativo)
       { id: 'claude-opus-4-6-search',      label: 'Claude Opus 4.6 Search 🔍' },
       { id: 'claude-sonnet-4-6-search',    label: 'Claude Sonnet 4.6 Search 🔍' },
@@ -2111,14 +2110,16 @@ const PROVIDERS = {
     label: 'OpenAI', icon: '&#9889;', color: 'var(--openai)', dotColor: '#10a37f',
     models: [
       // GPT-5.5
-      { id: 'gpt-5.5',     label: 'GPT-5.5' },
+      { id: 'gpt-5.5',      label: 'GPT-5.5' },
+      // GPT-5.4
+      { id: 'gpt-5.4',      label: 'GPT-5.4' },
+      { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini' },
       // GPT-5 — Search
-      { id: 'gpt-5.2',     label: 'GPT-5.2 Search 🔍' },
+      { id: 'gpt-5.2',      label: 'GPT-5.2 Search 🔍' },
       // GPT-5
-      { id: 'gpt-5.4',     label: 'GPT-5.4' },
-      { id: 'gpt-5.3',     label: 'GPT-5.3' },
-      { id: 'gpt-5',       label: 'GPT-5' },
-      { id: 'gpt-5-mini',  label: 'GPT-5 Mini' },
+      { id: 'gpt-5.3',      label: 'GPT-5.3' },
+      { id: 'gpt-5',        label: 'GPT-5' },
+      { id: 'gpt-5-mini',   label: 'GPT-5 Mini' },
       // Reasoning
       { id: 'o4-mini',     label: 'o4-mini (Reasoning)' },
       { id: 'o3-mini',     label: 'o3-mini (Reasoning)' },
@@ -2175,10 +2176,9 @@ const PROVIDERS = {
 // Prices in USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
-  'claude-opus-4-7-search':    { i: 15,    o: 75   },
-  'claude-opus-4-7-thinking':  { i: 15,    o: 75   },
-  'claude-opus-4-7':           { i: 15,    o: 75   },
-  'claude-sonnet-4-7':         { i:  3,    o: 15   },
+  'claude-opus-4-7-search':    { i:  5,    o: 25   },
+  'claude-opus-4-7-thinking':  { i:  5,    o: 25   },
+  'claude-opus-4-7':           { i:  5,    o: 25   },
   'claude-opus-4-6-search':    { i: 15,    o: 75   },
   'claude-sonnet-4-6-search':  { i:  3,    o: 15   },
   'claude-opus-4-6-thinking':  { i: 15,    o: 75   },
@@ -2186,14 +2186,15 @@ const PRICING = {
   'claude-sonnet-4-6':         { i:  3,    o: 15   },
   'claude-opus-4-5':           { i: 15,    o: 75   },
   'claude-sonnet-4-5':         { i:  3,    o: 15   },
-  'claude-haiku-4-5-20251001': { i:  0.8,  o:  4   },
+  'claude-haiku-4-5-20251001': { i:  1,    o:  5   },
   // ── OpenAI ────────────────────────────────────────────────────────────────
   // GPT-5 family (prices per OpenAI API docs)
+  'gpt-5.5':      { i:  5.00, o: 30.00 },
+  'gpt-5.4':      { i:  2.50, o: 15.00 },
+  'gpt-5.4-mini': { i:  0.75, o:  4.50 },
   'gpt-5':        { i:  5.00, o: 20.00 },
   'gpt-5.2':      { i:  5.00, o: 20.00 },
   'gpt-5.3':      { i:  5.00, o: 20.00 },
-  'gpt-5.4':      { i:  5.00, o: 20.00 },
-  'gpt-5.5':      { i:  5.00, o: 20.00 },
   'gpt-5-mini':   { i:  0.15, o:  0.60 },
   // GPT-4.1
   'gpt-4.1':      { i: 2.00,  o:  8.00 },
