@@ -219,8 +219,10 @@ function addMonthlyCost(userId, costUsd) {
 // Prices USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-opus-4-7-search':    { input: 15.00, output: 75.00 },
   'claude-opus-4-7-thinking':  { input: 15.00, output: 75.00 },
   'claude-opus-4-7':           { input: 15.00, output: 75.00 },
+  'claude-sonnet-4-7':         { input:  3.00, output: 15.00 },
   'claude-opus-4-6-thinking':  { input: 15.00, output: 75.00 },
   'claude-opus-4-6':           { input: 15.00, output: 75.00 },
   'claude-sonnet-4-6':         { input:  3.00, output: 15.00 },
