@@ -255,6 +255,8 @@ const PRICING = {
   'grok-3-mini':                  { input: 0.30, output:   0.50 },
   'grok-3-fast':                  { input: 5.00, output:  25.00 },
   'grok-3-mini-fast':             { input: 0.60, output:   4.00 },
+  'grok-4.3':                     { input: 3.00, output:  15.00 },
+  'grok-4.3-reasoning':           { input: 3.00, output:  15.00 },
   'grok-4.20-0309-reasoning':     { input: 3.00, output:  15.00 },
   'grok-4.20-0309-non-reasoning': { input: 3.00, output:  15.00 },
   'grok-4-1-fast-reasoning':      { input: 0.20, output:   0.50 },
