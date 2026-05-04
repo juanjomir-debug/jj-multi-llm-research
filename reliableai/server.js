@@ -287,10 +287,16 @@ const PRICING = {
   'glm-4.5-air': { input: 0.05, output: 0.20 },
 };
 
-function calcCost(modelId, inputTok, outputTok) {
+function calcCost(modelId, inputTok, outputTok, cacheCreationTok = 0, cacheReadTok = 0) {
   const p = PRICING[modelId];
   if (!p) return 0;
-  return (inputTok / 1_000_000) * p.input + (outputTok / 1_000_000) * p.output;
+  // Cache creation costs 25% more than regular input; cache reads cost 10% of regular input
+  const cacheWritePrice = p.cacheWrite ?? p.input * 1.25;
+  const cacheReadPrice  = p.cacheRead  ?? p.input * 0.10;
+  return (inputTok / 1_000_000) * p.input
+       + (outputTok / 1_000_000) * p.output
+       + (cacheCreationTok / 1_000_000) * cacheWritePrice
+       + (cacheReadTok / 1_000_000) * cacheReadPrice;
 }
 
 // ─── Context tier limits (tokens) ────────────────────────────────────────────
@@ -427,13 +433,36 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
 
   const actualModelId = CLAUDE_THINKING_MODEL_MAP[modelId] || CLAUDE_SEARCH_MODEL_MAP[modelId] || modelId;
   const effectiveMaxTokens = useThinking ? Math.max(maxTokens, 16000) : maxTokens;
+
+  // Prompt caching: mark system prompt and last assistant message as cacheable
+  const systemBlock = systemPrompt
+    ? [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }]
+    : undefined;
+
+  let cachedHistory = history;
+  if (history.length > 0) {
+    const lastAssistantIdx = history.reduceRight(
+      (found, msg, i) => (found === -1 && msg.role === 'assistant' ? i : found), -1
+    );
+    if (lastAssistantIdx !== -1) {
+      cachedHistory = history.map((msg, i) => {
+        if (i !== lastAssistantIdx) return msg;
+        const baseContent = typeof msg.content === 'string'
+          ? [{ type: 'text', text: msg.content }]
+          : (msg.content || []);
+        // Append a zero-byte cache_control marker to the last assistant turn
+        return { ...msg, content: [...baseContent, { type: 'text', text: '', cache_control: { type: 'ephemeral' } }].filter(b => b.cache_control || b.text) };
+      });
+    }
+  }
+
   const params = {
     model: actualModelId,
     max_tokens: effectiveMaxTokens,
-    messages: [...history, { role: 'user', content: userContent }],
+    messages: [...cachedHistory, { role: 'user', content: userContent }],
     stream: true,
   };
-  if (systemPrompt) params.system = systemPrompt;
+  if (systemBlock) params.system = systemBlock;
   if (useThinking) {
     params.thinking = { type: 'enabled', budget_tokens: Math.min(10000, effectiveMaxTokens - 2000) };
     params.temperature = 1; // required for extended thinking, overrides user setting
@@ -444,7 +473,7 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
     params.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
   }
 
-  let text = '', inputTokens = 0, outputTokens = 0;
+  let text = '', inputTokens = 0, outputTokens = 0, cacheCreationTokens = 0, cacheReadTokens = 0;
   const stream = await client.messages.stream(params);
   for await (const event of stream) {
     if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
@@ -453,14 +482,17 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
     } else if (event.type === 'message_delta' && event.usage) {
       outputTokens = event.usage.output_tokens;
     } else if (event.type === 'message_start' && event.message?.usage) {
-      inputTokens = event.message.usage.input_tokens;
+      const u = event.message.usage;
+      inputTokens        = u.input_tokens || 0;
+      cacheCreationTokens = u.cache_creation_input_tokens || 0;
+      cacheReadTokens     = u.cache_read_input_tokens     || 0;
     }
   }
   const final = await stream.finalMessage();
   inputTokens = final.usage?.input_tokens || inputTokens;
   outputTokens = final.usage?.output_tokens || outputTokens;
 
-  return { text, inputTokens, outputTokens };
+  return { text, inputTokens, outputTokens, cacheCreationTokens, cacheReadTokens };
 }
 
 // Streaming caller for OpenAI (improvement #1)
@@ -1595,7 +1627,7 @@ app.post('/api/retry', async (req, res) => {
         temperature ?? null),
       modelTimeout(modelId), modelId
     ), 3, `${provider}:${modelId}`);
-    const cost = calcCost(modelId, r.inputTokens, r.outputTokens);
+    const cost = calcCost(modelId, r.inputTokens, r.outputTokens, r.cacheCreationTokens, r.cacheReadTokens);
     send('model:done', { modelId, provider, text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs: Date.now() - t0 });
   } catch (err) {
     send('model:error', { modelId, provider, error: err.message });
@@ -1664,7 +1696,7 @@ app.post('/api/integrate', async (req, res) => {
         (chunk) => send('integrator:chunk', { chunk })),
       effectiveBlogMode ? 180_000 : modelTimeout(integrator.modelId), 'integrator'
     ), 3, `integrator:${integrator.modelId}`);
-    const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens);
+    const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens, r.cacheCreationTokens, r.cacheReadTokens);
     const durationMs = Date.now() - t0;
     send('integrator:done', { text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs });
 
@@ -1896,7 +1928,7 @@ app.post('/api/research', async (req, res) => {
           m.temperature ?? null, { thinking: !!m.thinking }),
         modelTimeout(m.modelId), m.modelId
       );
-      const cost = calcCost(m.modelId, r.inputTokens, r.outputTokens);
+      const cost = calcCost(m.modelId, r.inputTokens, r.outputTokens, r.cacheCreationTokens, r.cacheReadTokens);
       const durationMs = Date.now() - t0;
       let selfScore = null;
       const scoreMatch = r.text.match(/<!--SELF_SCORE:([^]*?)-->/s);
@@ -2071,7 +2103,7 @@ app.post('/api/research', async (req, res) => {
           (chunk) => send('integrator:chunk', { chunk })),
         effectiveBlogMode ? 180_000 : 120_000, 'integrator'
       );
-      const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens);
+      const cost = calcCost(integrator.modelId, r.inputTokens, r.outputTokens, r.cacheCreationTokens, r.cacheReadTokens);
       const durationMs = Date.now() - t0;
       send('integrator:done', { text: r.text, inputTokens: r.inputTokens, outputTokens: r.outputTokens, cost, durationMs });
 
