@@ -2139,17 +2139,15 @@ const PROVIDERS = {
   xai: {
     label: 'Grok', icon: '&#120143;', color: 'var(--grok)', dotColor: '#a78bfa',
     models: [
-      // Grok 4.3
-      { id: 'grok-4.3',                     label: 'Grok 4.3' },
-      { id: 'grok-4.3-reasoning',            label: 'Grok 4.3 Reasoning' },
-      // Grok 4.20
-      { id: 'grok-4.20-0309-reasoning',     label: 'Grok 4.20 Reasoning' },
-      { id: 'grok-4.20-0309-non-reasoning', label: 'Grok 4.20' },
-      // Grok 4.1
-      { id: 'grok-4-1-fast-reasoning',      label: 'Grok 4.1 Fast Reasoning' },
-      { id: 'grok-4-1-fast-non-reasoning',  label: 'Grok 4.1 Fast' },
+      // Grok 4
+      { id: 'grok-4-0709', label: 'Grok 4' },
+      // Grok 3
+      { id: 'grok-3',          label: 'Grok 3' },
+      { id: 'grok-3-fast',     label: 'Grok 3 Fast' },
+      { id: 'grok-3-mini',     label: 'Grok 3 Mini' },
+      { id: 'grok-3-mini-fast',label: 'Grok 3 Mini Fast' },
     ],
-    defaultModel: 'grok-4-1-fast-non-reasoning',
+    defaultModel: 'grok-3-mini',
   },
   qwen: {
     label: 'Qwen', icon: '&#128200;', color: 'var(--qwen, #6550d4)', dotColor: '#6550d4',
@@ -2219,12 +2217,7 @@ const PRICING = {
   'grok-3-mini':                  { i: 0.30,  o:  0.50 },
   'grok-3-fast':                  { i: 5.00,  o: 25.00 },
   'grok-3-mini-fast':             { i: 0.60,  o:  4.00 },
-  'grok-4.3':                     { i: 3.00,  o: 15.00 },
-  'grok-4.3-reasoning':           { i: 3.00,  o: 15.00 },
-  'grok-4.20-0309-reasoning':     { i: 3.00,  o: 15.00 },
-  'grok-4.20-0309-non-reasoning': { i: 3.00,  o: 15.00 },
-  'grok-4-1-fast-reasoning':      { i: 0.20,  o:  0.50 },
-  'grok-4-1-fast-non-reasoning':  { i: 0.20,  o:  0.50 },
+  'grok-4-0709':                  { i: 3.00,  o: 15.00 },
   // ── Moonshot Kimi ─────────────────────────────────────────────────────────
   'kimi-k2-5':        { i: 2.00, o: 8.00 },
   'kimi-latest':      { i: 2.00, o: 6.00 },
@@ -6082,9 +6075,9 @@ function onGlobalTempReset() {
 
 // Model level selector (High / Medium / Fast)
 const MODEL_LEVELS = {
-  high:   { anthropic: 'claude-opus-4-7', openai: 'gpt-5.5', google: 'models/gemini-3.1-pro-preview', xai: 'grok-4.3', qwen: 'qwen-max', zhipu: 'glm-5' },
-  medium: { anthropic: 'claude-sonnet-4-6', openai: 'gpt-5-mini', google: 'models/gemini-3-flash-preview', xai: 'grok-4-1-fast-non-reasoning', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
-  fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'models/gemini-3.1-flash-lite-preview', xai: 'grok-4-1-fast-non-reasoning', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
+  high:   { anthropic: 'claude-opus-4-7', openai: 'gpt-5.5', google: 'models/gemini-3.1-pro-preview', xai: 'grok-4-0709', qwen: 'qwen-max', zhipu: 'glm-5' },
+  medium: { anthropic: 'claude-sonnet-4-6', openai: 'gpt-5-mini', google: 'models/gemini-3-flash-preview', xai: 'grok-3', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
+  fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'models/gemini-3.1-flash-lite-preview', xai: 'grok-3-mini', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
 };
 // Integrator model per level (anthropic preferred)
 const INTEGRATOR_LEVELS = {

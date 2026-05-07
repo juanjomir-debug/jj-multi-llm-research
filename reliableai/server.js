@@ -123,8 +123,7 @@ const FREE_MODELS = new Set([
   'claude-haiku-4-5-20251001',
   'models/gemini-3.1-flash-lite-preview',
   'gpt-5-mini',
-  'grok-4-1-fast-non-reasoning',
-  'grok-4-1-fast-reasoning',
+  'grok-4-0709',
 ]);
 
 // ── Quota middleware ──────────────────────────────────────────────────────────
@@ -255,12 +254,7 @@ const PRICING = {
   'grok-3-mini':                  { input: 0.30, output:   0.50 },
   'grok-3-fast':                  { input: 5.00, output:  25.00 },
   'grok-3-mini-fast':             { input: 0.60, output:   4.00 },
-  'grok-4.3':                     { input: 3.00, output:  15.00 },
-  'grok-4.3-reasoning':           { input: 3.00, output:  15.00 },
-  'grok-4.20-0309-reasoning':     { input: 3.00, output:  15.00 },
-  'grok-4.20-0309-non-reasoning': { input: 3.00, output:  15.00 },
-  'grok-4-1-fast-reasoning':      { input: 0.20, output:   0.50 },
-  'grok-4-1-fast-non-reasoning':  { input: 0.20, output:   0.50 },
+  'grok-4-0709':                  { input: 3.00, output:  15.00 },
   // ── Moonshot Kimi ─────────────────────────────────────────────────────────
   'kimi-k2-5':        { input: 2.00, output: 8.00 },
   'kimi-latest':      { input: 2.00, output: 6.00 },
@@ -412,8 +406,10 @@ const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6
 // Streaming caller for Claude (improvement #1)
 async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch = false) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const useThinking = CLAUDE_THINKING_MODELS.has(modelId);
+  const clientOpts = { apiKey: process.env.ANTHROPIC_API_KEY };
+  if (useThinking) clientOpts.defaultHeaders = { 'anthropic-beta': 'interleaved-thinking-2025-05-14' };
+  const client = new Anthropic(clientOpts);
   const useSearch   = CLAUDE_SEARCH_MODELS.has(modelId) || webSearch;
 
   let userContent;
