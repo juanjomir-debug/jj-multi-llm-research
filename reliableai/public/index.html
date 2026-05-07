@@ -2863,6 +2863,7 @@ function archiveTurn() {
 function clearConversation() {
   state.conversationHistory = []; _lastIntegratorText = null;
   state.lastSessionId = null; state.lastResults = [];
+  state.conversationId = null;
   _sessionCleared = true; // prevent post-run history push from re-adding turns
   // Clear prompt textarea
   const promptEl = document.getElementById('questionInput');
@@ -3490,6 +3491,7 @@ async function runResearch(withIntegrator = false) {
       conversationHistory: state.conversationHistory,
       temporaryChat: state.temporaryChat,
       blogPostMode: state.blogPostMode,
+      conversationId: state.conversationId || undefined,
     };
 
     _abortController = new AbortController();
@@ -3598,7 +3600,11 @@ function handleSSEEvent(event, data) {
       if (state.currentUser && data.monthly_cost_usd !== undefined) { state.currentUser.monthly_cost_usd = data.monthly_cost_usd; state.currentUser.budget = data.budget; updateQuotaUI(state.currentUser); }
       break;
     case 'complete':
-      if (data.sessionId && !_sessionCleared) { state.lastSessionId = data.sessionId; updateConvIndicator(); }
+      if (data.sessionId && !_sessionCleared) {
+        state.lastSessionId = data.sessionId;
+        if (data.conversationId) state.conversationId = data.conversationId;
+        updateConvIndicator();
+      }
       // Show hallucination button if audit didn't run automatically (no results sent to integrator flow)
       if (state.lastResults.length > 0 && !_sessionCleared) {
         const ha = document.getElementById('hallucinationArea');
@@ -5353,11 +5359,46 @@ async function recoverSession(sid) {
   state.lastSessionId = sid;
   state.lastResults = nonIntRows.map(r => ({ modelId: r.model_id, provider: r.provider, text: r.response, cost: r.cost_usd }));
 
-  // Rebuild conversation history
-  state.conversationHistory = [
-    { role: 'user', content: prompt },
-    { role: 'assistant', content: nonIntRows.map(r => r.response).join('\n\n---\n\n') }
-  ];
+  // Rebuild full conversation history — fetch all turns of this conversation if convId available
+  const convId = sRows[0]?.conversation_id;
+  if (convId) {
+    try {
+      const cr = await fetch(`/api/conversation/${convId}`);
+      if (cr.ok) {
+        const { rows: allRows } = await cr.json();
+        // Group by session_id ordered oldest→newest, build alternating user/assistant turns
+        const sessionMap = new Map();
+        for (const r of allRows) {
+          if (!sessionMap.has(r.session_id)) sessionMap.set(r.session_id, []);
+          sessionMap.get(r.session_id).push(r);
+        }
+        const history = [];
+        for (const [, turnRows] of sessionMap) {
+          const q = turnRows[0].prompt;
+          const nonInt = turnRows.filter(r => !r.is_integrator);
+          const intRow  = turnRows.find(r => r.is_integrator);
+          const answer  = intRow ? intRow.response : nonInt.map(r => r.response).join('\n\n---\n\n');
+          history.push({ role: 'user', content: q });
+          history.push({ role: 'assistant', content: answer });
+        }
+        state.conversationHistory = history;
+        state.conversationId = convId;
+      } else {
+        throw new Error('no conv data');
+      }
+    } catch {
+      // Fallback: single turn
+      state.conversationHistory = [
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: nonIntRows.map(r => r.response).join('\n\n---\n\n') }
+      ];
+    }
+  } else {
+    state.conversationHistory = [
+      { role: 'user', content: prompt },
+      { role: 'assistant', content: nonIntRows.map(r => r.response).join('\n\n---\n\n') }
+    ];
+  }
   updateConvIndicator();
   toast('Session restored', 'success');
 }

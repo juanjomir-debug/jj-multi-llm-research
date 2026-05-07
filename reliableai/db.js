@@ -261,8 +261,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_users_role    ON users(role);
   CREATE INDEX IF NOT EXISTS idx_history_created  ON history(created_at);
   CREATE INDEX IF NOT EXISTS idx_history_provider ON history(provider, created_at);
+  CREATE INDEX IF NOT EXISTS idx_history_conv     ON history(conversation_id, created_at);
   CREATE INDEX IF NOT EXISTS idx_billing_events_type ON billing_events(type, created_at DESC);
 `);
+
+// ── Incremental migrations ────────────────────────────────────────────────────
+try { db.prepare('ALTER TABLE history ADD COLUMN conversation_id TEXT').run(); } catch {}
 
 // Promote ADMIN_EMAIL to superadmin if set
 if (process.env.ADMIN_EMAIL) {

@@ -1276,7 +1276,7 @@ app.get('/api/history', (req, res) => {
   const dateFilter = histPlan.historyDays > 0
     ? `AND created_at >= datetime('now', '-${histPlan.historyDays} days')`
     : '';
-  const rows  = db.prepare(`SELECT id, session_id, created_at, provider, model_id, model_label,
+  const rows  = db.prepare(`SELECT id, session_id, conversation_id, created_at, provider, model_id, model_label,
            prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator
     FROM history WHERE user_id = ? ${dateFilter} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(req.session.userId, limit, offset);
   const total = db.prepare(`SELECT COUNT(*) AS n FROM history WHERE user_id = ? ${dateFilter}`).get(req.session.userId).n;
@@ -1298,6 +1298,19 @@ app.get('/api/debate/:sessionId', (req, res) => {
   const maxVotes = Math.max(0, ...Object.values(votes));
   const winner = Object.keys(votes).find(id => votes[id] === maxVotes) || null;
   res.json({ responses, votes, voterLog: voteRows.map(v => ({ voter: v.voter_model_id, votedFor: v.voted_for_model_id })), winner, totalVoters: voteRows.length });
+});
+
+// Returns all sessions belonging to a conversation, ordered oldest→newest
+app.get('/api/conversation/:convId', (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const rows = db.prepare(`
+    SELECT id, session_id, conversation_id, created_at, provider, model_id, model_label,
+           prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator
+    FROM history
+    WHERE user_id = ? AND conversation_id = ?
+    ORDER BY created_at ASC
+  `).all(req.session.userId, req.params.convId);
+  res.json({ rows });
 });
 
 app.delete('/api/history/session/:sessionId', (req, res) => {
@@ -1715,8 +1728,8 @@ app.post('/api/integrate', async (req, res) => {
     }
 
     if (userId) {
-      db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
-        .run(userId, sessionId, integrator.provider, integrator.modelId, question, r.text, r.inputTokens, r.outputTokens, cost, durationMs);
+      db.prepare(`INSERT INTO history (user_id, session_id, conversation_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
+        .run(userId, sessionId, convId, integrator.provider, integrator.modelId, question, r.text, r.inputTokens, r.outputTokens, cost, durationMs);
     }
   } catch (err) {
     send('integrator:error', { error: err.message });
@@ -1842,9 +1855,11 @@ app.post('/api/research', async (req, res) => {
           attachments = [], amplitude = 'normal', conversationHistory = [],
           debateEnabled = false, debateRounds = 1,
           cascadeEnabled = false, cascadeOrder = [],
-          temporaryChat = false, blogPostMode = false } = req.body;
+          temporaryChat = false, blogPostMode = false,
+          conversationId = null } = req.body;
   const userId = req.session.userId || null;
   const sessionId = crypto.randomUUID();
+  const convId = conversationId || sessionId;
 
   // ── Blog Post Mode: restricted to owner ──
   const BLOGPOST_ALLOWED_EMAILS = new Set(['juanjomir@gmail.com']);
@@ -1935,8 +1950,8 @@ app.post('/api/research', async (req, res) => {
       send('model:done', payload);
       if (userMessage === question) setCache(m.modelId, question, amplitude, payload, userId);
       if (userId && !temporaryChat) {
-        db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-          .run(userId, sessionId, m.provider, m.modelId, question, cleanText, r.inputTokens, r.outputTokens, cost, durationMs);
+        db.prepare(`INSERT INTO history (user_id, session_id, conversation_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+          .run(userId, sessionId, convId, m.provider, m.modelId, question, cleanText, r.inputTokens, r.outputTokens, cost, durationMs);
       }
     } catch (err) {
       send('model:error', { modelId: m.modelId, provider: m.provider, error: err.message });
@@ -2126,8 +2141,8 @@ app.post('/api/research', async (req, res) => {
       }
 
       if (userId && !temporaryChat) {
-        db.prepare(`INSERT INTO history (user_id, session_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
-          .run(userId, sessionId, integrator.provider, integrator.modelId, question, r.text, r.inputTokens, r.outputTokens, cost, durationMs);
+        db.prepare(`INSERT INTO history (user_id, session_id, conversation_id, provider, model_id, prompt, response, input_tokens, output_tokens, cost_usd, duration_ms, is_integrator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`)
+          .run(userId, sessionId, convId, integrator.provider, integrator.modelId, question, r.text, r.inputTokens, r.outputTokens, cost, durationMs);
         const allCosts = results.reduce((s, x) => s + x.cost, 0) + cost;
         db.prepare('UPDATE users SET total_cost_usd = total_cost_usd + ? WHERE id = ?').run(allCosts, userId);
         addMonthlyCost(userId, allCosts);
@@ -2149,7 +2164,7 @@ app.post('/api/research', async (req, res) => {
   }
 
   clearInterval(ping);
-  send('complete', { sessionId });
+  send('complete', { sessionId, conversationId: convId });
   res.end();
 });
 
