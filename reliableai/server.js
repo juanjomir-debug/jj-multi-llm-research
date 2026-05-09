@@ -238,9 +238,6 @@ const PRICING = {
   'gpt-4.1':      { input:  2.00, output:  8.00 },
   'gpt-4.1-mini': { input:  0.40, output:  1.60 },
   'gpt-4.1-nano': { input:  0.10, output:  0.40 },
-  'o4-mini':      { input:  1.10, output:  4.40 },
-  'o3':           { input: 10.00, output: 40.00 },
-  'o3-mini':      { input:  1.10, output:  4.40 },
   // ── Google Gemini ─────────────────────────────────────────────────────────
   // Gemini 2.5 Pro: $1.25/M ≤200k tokens, $2.50/M >200k — we use the lower tier
   'gemini-2.5-pro':                       { input: 1.25,  output: 10.00 },
@@ -893,7 +890,7 @@ function withTimeout(promise, ms, label) {
 // Returns timeout ms based on model — thinking/reasoning/gemini models get more time
 function modelTimeout(modelId) {
   const isThinking = CLAUDE_THINKING_MODELS.has(modelId) ||
-    /thinking|reasoning|o3|o4/.test(modelId);
+    /thinking|reasoning/.test(modelId);
   if (isThinking) return 300_000; // 5 min for thinking
   const isGeminiPro = /gemini.*pro/.test(modelId);
   if (isGeminiPro) return 360_000; // 6 min for Gemini Pro preview (very slow)
