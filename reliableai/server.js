@@ -146,9 +146,14 @@ function resetMonthlyIfNeeded(user) {
   const monthsDiff = (now.getFullYear() - periodStart.getFullYear()) * 12 + (now.getMonth() - periodStart.getMonth());
   if (monthsDiff >= 1) {
     const newPeriod = currentPeriodStart();
-    db.prepare('UPDATE users SET monthly_cost_usd = 0, billing_period_start = ?, paused = 0 WHERE id = ?').run(newPeriod, user.id);
-    user.monthly_cost_usd = 0;
-    user.paused = 0;
+    if (user.plan === 'pro_demo') {
+      // Demo accounts: only update period start, never reset spend
+      db.prepare('UPDATE users SET billing_period_start = ? WHERE id = ?').run(newPeriod, user.id);
+    } else {
+      db.prepare('UPDATE users SET monthly_cost_usd = 0, billing_period_start = ?, paused = 0 WHERE id = ?').run(newPeriod, user.id);
+      user.monthly_cost_usd = 0;
+      user.paused = 0;
+    }
     user.billing_period_start = newPeriod;
   }
 }
