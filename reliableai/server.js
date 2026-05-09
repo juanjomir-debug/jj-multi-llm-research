@@ -928,31 +928,26 @@ function sanitizeStr(s, max = 500) { return typeof s === 'string' ? s.trim().sli
 function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 // ─── Email verification ───────────────────────────────────────────────────────
-function createMailTransport() {
-  const host = process.env.SMTP_HOST;
-  if (!host) return null;
-  const tlsOpts = {};
-  if (process.env.SMTP_CIPHERS) tlsOpts.ciphers = process.env.SMTP_CIPHERS;
-  return nodemailer.createTransport({
-    host,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    tls: tlsOpts,
+async function sendEmail({ to, subject, html, text }) {
+  const apiKey = process.env.SMTP_PASS;
+  if (!apiKey) { console.warn('[email] RESEND_API_KEY not configured'); return false; }
+  const from = process.env.SMTP_FROM || 'ReliableAI <info@reliableai.net>';
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, subject, html, text }),
   });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend API error ${res.status}: ${err}`);
+  }
+  return true;
 }
 
 async function sendVerificationEmail(email, username, token) {
-  const transport = createMailTransport();
-  if (!transport) {
-    console.warn('[email] SMTP not configured — skipping verification email');
-    return false;
-  }
   const appUrl = process.env.APP_URL || 'https://reliableai.net';
   const link = `${appUrl}/verify-email?token=${token}`;
-  const from = process.env.SMTP_FROM || `"ReliableAI" <${process.env.SMTP_USER}>`;
-  await transport.sendMail({
-    from,
+  return sendEmail({
     to: email,
     subject: 'Verify your ReliableAI email',
     html: `
@@ -965,7 +960,6 @@ async function sendVerificationEmail(email, username, token) {
       </div>`,
     text: `Welcome to ReliableAI! Verify your email: ${link}`,
   });
-  return true;
 }
 
 // Verification endpoint — GET /verify-email?token=xxx
@@ -995,7 +989,12 @@ app.post('/api/auth/resend-verification', async (req, res) => {
   const token = crypto.randomBytes(32).toString('hex');
   db.prepare('UPDATE users SET verification_token = ?, verification_sent_at = ? WHERE id = ?')
     .run(token, new Date().toISOString(), user.id);
-  await sendVerificationEmail(user.email, user.username, token);
+  try {
+    await sendVerificationEmail(user.email, user.username, token);
+  } catch (e) {
+    console.error('[email] resend-verification error:', e.message);
+    return res.status(500).json({ error: 'Failed to send verification email. Please try again later.' });
+  }
   res.json({ ok: true });
 });
 
@@ -1012,16 +1011,12 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       .run(token, expires, user.id);
     const appUrl = process.env.APP_URL || 'https://reliableai.net';
     const resetLink = `${appUrl}/analyze?reset_token=${token}`;
-    const transport = createMailTransport();
-    if (transport) {
-      transport.sendMail({
-        from: process.env.SMTP_FROM || '"ReliableAI" <info@reliableai.net>',
-        to: email,
-        subject: 'Reset your ReliableAI password',
-        html: `<p>Hi ${user.username},</p><p>Click the link below to reset your password (valid 1 hour):</p><p><a href="${resetLink}">${resetLink}</a></p><p>If you didn't request this, ignore this email.</p>`,
-        text: `Reset your password: ${resetLink}\n\nValid for 1 hour. If you didn't request this, ignore this email.`,
-      }).catch(e => console.warn('[email] reset password send error:', e.message));
-    }
+    sendEmail({
+      to: email,
+      subject: 'Reset your ReliableAI password',
+      html: `<p>Hi ${user.username},</p><p>Click the link below to reset your password (valid 1 hour):</p><p><a href="${resetLink}">${resetLink}</a></p><p>If you didn't request this, ignore this email.</p>`,
+      text: `Reset your password: ${resetLink}\n\nValid for 1 hour. If you didn't request this, ignore this email.`,
+    }).catch(e => console.warn('[email] reset password send error:', e.message));
   }
   res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
 });
