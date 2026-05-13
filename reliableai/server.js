@@ -35,7 +35,7 @@ function tpl(template, vars) {
 }
 const Anthropic     = require('@anthropic-ai/sdk');
 const OpenAI        = require('openai');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 const pdfParse      = require('pdf-parse');
 const bcrypt        = require('bcryptjs');
 const session       = require('express-session');
@@ -123,7 +123,7 @@ const FREE_MODELS = new Set([
   'claude-haiku-4-5-20251001',
   'models/gemini-3.1-flash-lite-preview',
   'gpt-5-mini',
-  'grok-4-0709',
+  'grok-4.3',
 ]);
 
 // ── Quota middleware ──────────────────────────────────────────────────────────
@@ -252,11 +252,10 @@ const PRICING = {
   'models/gemini-3-flash-preview':        { input: 0.10,  output:  0.40 },
   'models/gemini-3.1-flash-lite-preview': { input: 0.075, output:  0.30 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
-  'grok-3':                       { input: 3.00, output:  15.00 },
+  'grok-4.3':                     { input: 1.25, output:   2.50 },
+  'grok-4.20':                    { input: 2.00, output:   6.00 },
   'grok-3-mini':                  { input: 0.30, output:   0.50 },
-  'grok-3-fast':                  { input: 5.00, output:  25.00 },
   'grok-3-mini-fast':             { input: 0.60, output:   4.00 },
-  'grok-4-0709':                  { input: 3.00, output:  15.00 },
   // ── Moonshot Kimi ─────────────────────────────────────────────────────────
   'kimi-k2-5':        { input: 2.00, output: 8.00 },
   'kimi-latest':      { input: 2.00, output: 6.00 },
@@ -593,26 +592,16 @@ const GEMINI_SEARCH_SUPPORTED = new Set([
 // Gemini — with optional streaming via sendMessageStream
 async function callGemini(modelId, systemPrompt, userMessage, maxTokens = 8192, attachments = [], webSearch = false, history = [], temperature = null, thinking = false, onChunk = null) {
   if (!process.env.GOOGLE_API_KEY) throw new Error('GOOGLE_API_KEY not configured');
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+  const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
   const cleanId = modelId.startsWith('models/') ? modelId.slice(7) : modelId;
   if (webSearch && !GEMINI_SEARCH_SUPPORTED.has(cleanId)) {
     throw new Error(`Google Search grounding not available for "${cleanId}". Use Gemini 2.0 Flash or 2.5 Pro.`);
   }
-  // Pro models support up to 65536 output tokens — enforce a sensible minimum
   const isProModel = cleanId.includes('pro');
   const effectiveMaxTokens = isProModel ? Math.max(maxTokens, 8192) : maxTokens;
-  const generationConfig = {
-    maxOutputTokens: effectiveMaxTokens,
-    ...(temperature != null ? { temperature } : {}),
-    ...(thinking ? { thinkingConfig: { thinkingBudget: 8192 } } : {}),
-  };
-  const model = genAI.getGenerativeModel({
-    model: cleanId,
-    ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
-    ...(webSearch ? { tools: [{ googleSearch: {} }] } : {}),
-    generationConfig,
-  });
-  const geminiHistory = history.map(h => ({
+
+  // Build contents: history + current user message (with any attachments)
+  const contents = history.map(h => ({
     role: h.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: h.content }],
   }));
@@ -625,46 +614,41 @@ async function callGemini(modelId, systemPrompt, userMessage, maxTokens = 8192, 
     }
   }
   parts.push({ text: userMessage });
-  const msgArg = parts.length === 1 ? userMessage : parts;
-  const chat = model.startChat({ history: geminiHistory });
+  contents.push({ role: 'user', parts });
+
+  const config = {
+    maxOutputTokens: effectiveMaxTokens,
+    ...(temperature != null ? { temperature } : {}),
+    ...(thinking ? { thinkingConfig: { thinkingBudget: 8192 } } : {}),
+    ...(webSearch ? { tools: [{ googleSearch: {} }] } : {}),
+  };
+  const params = {
+    model: cleanId,
+    contents,
+    ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
+    config,
+  };
 
   if (onChunk) {
-    // Streaming mode — with fallback to non-streaming if stream parse fails (preview models)
-    try {
-      const streamResult = await chat.sendMessageStream(msgArg);
-      let fullText = '';
-      for await (const chunk of streamResult.stream) {
-        const t = chunk.text();
-        if (t) { fullText += t; onChunk(t); }
-      }
-      const resp = await streamResult.response;
-      if (!fullText) fullText = resp.text?.() || '';
-      return {
-        text: fullText,
-        inputTokens:  resp.usageMetadata?.promptTokenCount     || 0,
-        outputTokens: resp.usageMetadata?.candidatesTokenCount || 0,
-      };
-    } catch (streamErr) {
-      if (!streamErr.message?.includes('parse stream')) throw streamErr;
-      // Fallback: non-streaming for models that don't support stream parsing
-      const result = await chat.sendMessage(msgArg);
-      const resp = result.response;
-      const text = resp.text();
-      onChunk(text);
-      return {
-        text,
-        inputTokens:  resp.usageMetadata?.promptTokenCount     || 0,
-        outputTokens: resp.usageMetadata?.candidatesTokenCount || 0,
-      };
+    const stream = await ai.models.generateContentStream(params);
+    let text = '';
+    let usageMeta = null;
+    for await (const chunk of stream) {
+      const t = chunk.text;
+      if (t) { text += t; onChunk(t); }
+      if (chunk.usageMetadata) usageMeta = chunk.usageMetadata;
     }
-  } else {
-    // Non-streaming fallback
-    const result = await chat.sendMessage(msgArg);
-    const resp = result.response;
     return {
-      text: resp.text(),
-      inputTokens:  resp.usageMetadata?.promptTokenCount     || 0,
-      outputTokens: resp.usageMetadata?.candidatesTokenCount || 0,
+      text,
+      inputTokens:  usageMeta?.promptTokenCount     || 0,
+      outputTokens: usageMeta?.candidatesTokenCount || 0,
+    };
+  } else {
+    const result = await ai.models.generateContent(params);
+    return {
+      text: result.text,
+      inputTokens:  result.usageMetadata?.promptTokenCount     || 0,
+      outputTokens: result.usageMetadata?.candidatesTokenCount || 0,
     };
   }
 }
@@ -904,11 +888,21 @@ function modelTimeout(modelId) {
   return 120_000; // 2 min default
 }
 
-// Retry con backoff exponencial para errores transitorios (overloaded, 529, 503)
+// Retry con backoff exponencial para errores transitorios (overloaded, 529, 503, 429)
 function isRetryableError(err) {
   const msg = err?.message || '';
   return msg.includes('overloaded') || msg.includes('529') || msg.includes('503') ||
-         msg.includes('overloaded_error') || msg.includes('rate_limit') || msg.includes('RATE_LIMIT');
+         msg.includes('overloaded_error') || msg.includes('rate_limit') || msg.includes('RATE_LIMIT') ||
+         msg.includes('429') || msg.includes('exhausted') || msg.includes('capacity') ||
+         msg.includes('Respuesta vacía');
+}
+function retryWait(err, attempt) {
+  const msg = err?.message || '';
+  // 429 / capacity errors need longer waits
+  if (msg.includes('429') || msg.includes('exhausted') || msg.includes('capacity')) {
+    return attempt * 20000; // 20s, 40s
+  }
+  return attempt * 8000; // 8s, 16s
 }
 async function withRetry(fn, maxAttempts = 3, label = '') {
   let lastErr;
@@ -917,7 +911,7 @@ async function withRetry(fn, maxAttempts = 3, label = '') {
     catch (err) {
       lastErr = err;
       if (!isRetryableError(err) || i === maxAttempts - 1) throw err;
-      const wait = (i + 1) * 8000; // 8s, 16s
+      const wait = retryWait(err, i + 1);
       console.warn(`[retry] ${label} attempt ${i + 1} failed (${err.message}), retrying in ${wait / 1000}s…`);
       await new Promise(r => setTimeout(r, wait));
     }
