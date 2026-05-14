@@ -122,7 +122,7 @@ const PLANS = {
 // Models allowed for free plan (only previous-gen / lightweight models)
 const FREE_MODELS = new Set([
   'claude-haiku-4-5-20251001',
-  'models/gemini-3.1-flash-lite-preview',
+  'gemini-2.5-flash',
   'gpt-5-mini',
   'grok-4.3',
 ]);
@@ -248,10 +248,6 @@ const PRICING = {
   // Gemini 2.5 Pro: $1.25/M ≤200k tokens, $2.50/M >200k — we use the lower tier
   'gemini-2.5-pro':                       { input: 1.25,  output: 10.00 },
   'gemini-2.5-flash':                     { input: 0.15,  output:  0.60 },
-  'gemini-2.0-flash-thinking-exp':        { input: 0.10,  output:  0.40 },
-  'models/gemini-3.1-pro-preview':        { input: 1.25,  output:  5.00 },
-  'models/gemini-3-flash-preview':        { input: 0.10,  output:  0.40 },
-  'models/gemini-3.1-flash-lite-preview': { input: 0.075, output:  0.30 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
   'grok-4.3':                     { input: 1.25, output:   2.50 },
   'grok-4.20':                    { input: 2.00, output:   6.00 },
@@ -585,9 +581,7 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
 }
 
 const GEMINI_SEARCH_SUPPORTED = new Set([
-  'gemini-3.1-pro-preview', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview',
-  'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash',
-  'gemini-1.5-pro', 'gemini-1.5-flash',
+  'gemini-2.5-pro', 'gemini-2.5-flash',
 ]);
 
 // Gemini — with optional streaming via sendMessageStream
@@ -1144,7 +1138,7 @@ function resolveConfiguredProvider(requestedProvider, requestedModelId) {
   const DEFAULT_MODELS = {
     anthropic:  'claude-sonnet-4-6',
     openai:     'gpt-4o-mini',
-    google:     'gemini-2.0-flash',
+    google:     'gemini-2.5-flash',
     xai:        'grok-3-mini',
     moonshot:   'moonshot-v1-8k',
     qwen:       'qwen-plus',
