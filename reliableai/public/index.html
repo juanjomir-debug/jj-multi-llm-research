@@ -2130,12 +2130,10 @@ const PROVIDERS = {
   google: {
     label: 'Gemini', icon: '&#10024;', color: 'var(--gemini)', dotColor: '#4285f4',
     models: [
-      // Gemini 3.x (preview)
-      { id: 'models/gemini-3.1-pro-preview',        label: 'Gemini 3.1 Pro' },
-      { id: 'models/gemini-3-flash-preview',         label: 'Gemini 3 Flash' },
-      { id: 'models/gemini-3.1-flash-lite-preview',  label: 'Gemini 3.1 Flash Lite' },
+      { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro' },
+      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
     ],
-    defaultModel: 'models/gemini-3-flash-preview',
+    defaultModel: 'gemini-2.5-flash',
   },
   xai: {
     label: 'Grok', icon: '&#120143;', color: 'var(--grok)', dotColor: '#a78bfa',
@@ -2205,12 +2203,8 @@ const PRICING = {
   // o-series reasoning
   'o3':           { i: 10.00, o: 40.00 },
   // ── Google Gemini ─────────────────────────────────────────────────────────
-  'models/gemini-3.1-pro-preview':        { i: 1.25,  o:  5.00 },
-  'models/gemini-3-flash-preview':        { i: 0.10,  o:  0.40 },
-  'models/gemini-3.1-flash-lite-preview': { i: 0.075, o:  0.30 },
-  'gemini-2.5-pro':                       { i: 1.25,  o: 10.00 },
-  'gemini-2.5-flash':                     { i: 0.15,  o:  0.60 },
-  'gemini-2.0-flash-thinking-exp':        { i: 0.10,  o:  0.40 },
+  'gemini-2.5-pro':   { i: 1.25,  o: 10.00 },
+  'gemini-2.5-flash': { i: 0.15,  o:  0.60 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
   'grok-4.3':                     { i: 1.25,  o:  2.50 },
   'grok-4.20':                    { i: 2.00,  o:  6.00 },
@@ -2275,7 +2269,7 @@ const THINKING_VARIANTS = {
   'claude-opus-4-6':          'claude-opus-4-6-thinking',
   'claude-opus-4-6-thinking': 'claude-opus-4-6',
 };
-const GEMINI_SEARCH_SUPPORTED = new Set(['models/gemini-3.1-pro-preview','models/gemini-3-flash-preview','models/gemini-3.1-flash-lite-preview']);
+const GEMINI_SEARCH_SUPPORTED = new Set(['gemini-2.5-pro','gemini-2.5-flash']);
 
 // Templates (improvement #9)
 const TEMPLATES = {
@@ -2308,7 +2302,7 @@ let _intAbortController = null;
 // ── Free plan model whitelist ───────────────────────────────────────────────
 const FREE_MODELS = new Set([
   'claude-haiku-4-5-20251001',
-  'models/gemini-3.1-flash-lite-preview',
+  'gemini-2.5-flash',
   'gpt-5-mini',
   'grok-4.3',
 ]);
@@ -6116,9 +6110,9 @@ function onGlobalTempReset() {
 
 // Model level selector (High / Medium / Fast)
 const MODEL_LEVELS = {
-  high:   { anthropic: 'claude-opus-4-7', openai: 'gpt-5.5', google: 'models/gemini-3.1-pro-preview', xai: 'grok-4.3', qwen: 'qwen-max', zhipu: 'glm-5' },
-  medium: { anthropic: 'claude-sonnet-4-6', openai: 'gpt-5-mini', google: 'models/gemini-3-flash-preview', xai: 'grok-4.20', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
-  fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'models/gemini-3.1-flash-lite-preview', xai: 'grok-3-mini', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
+  high:   { anthropic: 'claude-opus-4-7', openai: 'gpt-5.5', google: 'gemini-2.5-pro',   xai: 'grok-4.3',   qwen: 'qwen-max',   zhipu: 'glm-5' },
+  medium: { anthropic: 'claude-sonnet-4-6', openai: 'gpt-5-mini', google: 'gemini-2.5-flash', xai: 'grok-4.20', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
+  fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'gemini-2.5-flash', xai: 'grok-3-mini', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
 };
 // Integrator model per level (anthropic preferred)
 const INTEGRATOR_LEVELS = {
