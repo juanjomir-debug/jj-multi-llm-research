@@ -46,7 +46,7 @@ jobs:
       - name: Install Capacitor dependencies in reliableai
         working-directory: reliableai
         run: |
-          npm install @capacitor/cli @capacitor/core @capacitor/ios @capacitor/splash-screen @capacitor/assets
+          npm install @capacitor/cli@6 @capacitor/core@6 @capacitor/ios@6 "@capacitor/splash-screen@6" @capacitor/assets
 
       - name: Initialize Capacitor iOS (if ios/ dir missing)
         working-directory: reliableai
