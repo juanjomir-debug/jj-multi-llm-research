@@ -250,6 +250,7 @@ const PRICING = {
   'gemini-2.5-flash':                     { input: 0.15,  output:  0.60 },
   'gemini-2.0-flash-thinking-exp':        { input: 0.10,  output:  0.40 },
   'models/gemini-3.1-pro-preview':        { input: 1.25,  output:  5.00 },
+  'gemini-3.5-flash':      { input: 0.10,  output:  0.40 },
   'models/gemini-3-flash-preview':        { input: 0.10,  output:  0.40 },
   'models/gemini-3.1-flash-lite-preview': { input: 0.075, output:  0.30 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
@@ -586,7 +587,7 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
 }
 
 const GEMINI_SEARCH_SUPPORTED = new Set([
-  'gemini-3.1-pro-preview', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview',
+  'gemini-3.1-pro-preview', 'gemini-3.5-flash-preview', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview',
   'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash',
   'gemini-1.5-pro', 'gemini-1.5-flash',
 ]);
