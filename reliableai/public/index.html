@@ -5176,9 +5176,9 @@ async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); s
 function openDeleteAccount() {
   document.getElementById('deleteConfirmEmail').value = '';
   document.getElementById('deleteAccountError').textContent = '';
-  document.getElementById('deleteAccountOverlay').classList.remove('hidden');
+  document.getElementById('deleteAccountOverlay').style.display = 'flex';
 }
-function closeDeleteAccount() { document.getElementById('deleteAccountOverlay').classList.add('hidden'); }
+function closeDeleteAccount() { document.getElementById('deleteAccountOverlay').style.display = 'none'; }
 async function confirmDeleteAccount() {
   const email = document.getElementById('deleteConfirmEmail').value.trim().toLowerCase();
   const errEl = document.getElementById('deleteAccountError');
@@ -6707,7 +6707,7 @@ console.log('[Sprint 2 + 3 + Animaciones] Inicialización completada');
 </script>
 
 <!-- ── Delete Account Modal ── -->
-<div id="deleteAccountOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)closeDeleteAccount()">
+<div id="deleteAccountOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)closeDeleteAccount()">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 24px;max-width:380px;width:90%">
     <h3 style="margin:0 0 8px;color:var(--danger);text-align:center">Delete Account</h3>
     <p style="font-size:.85rem;color:var(--text-muted);margin:0 0 16px;text-align:center">This will permanently delete your account and all data. This cannot be undone.</p>
