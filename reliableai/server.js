@@ -2503,6 +2503,27 @@ app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), asyn
   res.sendStatus(200);
 });
 
+// DELETE /api/account — permanently delete the authenticated user's account
+app.delete('/api/account', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Not authenticated' });
+  const userId = req.session.userId;
+  const user = db.prepare('SELECT id, stripe_subscription_id FROM users WHERE id = ?').get(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  try {
+    if (stripe && user.stripe_subscription_id) {
+      try { await stripe.subscriptions.cancel(user.stripe_subscription_id); } catch (e) {
+        console.error('[account delete] stripe cancel error:', e.message);
+      }
+    }
+    const tables = ['history', 'debate_responses', 'debate_votes', 'projects', 'project_sessions', 'billing_events'];
+    for (const t of tables) {
+      try { db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).run(userId); } catch {}
+    }
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+    req.session.destroy(() => res.json({ ok: true }));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ── Admin: configure Stripe Price IDs ──────────────────────────────────────
 // POST /api/admin/billing/plans  body: { token, plans: [{id:'starter', stripe_price_id:'price_xxx'}, ...] }
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;

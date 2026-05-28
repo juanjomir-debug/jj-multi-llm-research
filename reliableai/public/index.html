@@ -1586,6 +1586,7 @@
       <button class="udd-btn" id="adminDashBtn" style="display:none;color:var(--accent)" onclick="location.href='/admin'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Admin Dashboard</button>
       <div class="udd-sep"></div>
       <button class="udd-btn danger" onclick="logout()">Sign out</button>
+      <button class="udd-btn" style="color:var(--danger);font-size:.75rem;opacity:.75;margin-top:2px" onclick="openDeleteAccount(); closeUserMenu()">Delete Account</button>
     </div>
   </div>
 </header>
@@ -5094,9 +5095,11 @@ function renderBillingPlans() {
         ? `<button class="plan-btn current" disabled>Current plan</button>`
         : p.price_eur === 0
           ? `<button class="plan-btn" style="background:var(--surface2);border:1px solid var(--border)" onclick="closeBilling()">Use for free</button>`
-          : p.id === 'enterprise'
-            ? `<button class="plan-btn primary" onclick="startCheckout('${p.id}')">Get ${p.name}</button>`
-            : `<button class="plan-btn primary" onclick="startCheckout('${p.id}')">Upgrade to ${p.name}</button>`
+          : window.Capacitor?.isNativePlatform?.()
+            ? `<div style="font-size:.78rem;color:var(--text-muted);text-align:center;padding:10px 4px;line-height:1.4">To subscribe, visit<br><strong style="color:var(--text)">reliableai.net</strong></div>`
+            : p.id === 'enterprise'
+              ? `<button class="plan-btn primary" onclick="startCheckout('${p.id}')">Get ${p.name}</button>`
+              : `<button class="plan-btn primary" onclick="startCheckout('${p.id}')">Upgrade to ${p.name}</button>`
       }
     </div>`;
   }).join('');
@@ -5132,6 +5135,9 @@ async function redeemPromo() {
 }
 
 async function openBillingPortal() {
+  if (window.Capacitor?.isNativePlatform?.()) {
+    toast('Manage your subscription at reliableai.net', 'info'); return;
+  }
   try {
     const r = await fetch('/api/billing/portal', { method: 'POST' });
     const d = await r.json();
@@ -5166,6 +5172,33 @@ async function submitRegister(e) {
 }
 async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); state.currentUser = null;
   document.getElementById('userBar').classList.add('hidden'); document.getElementById('authOverlay').classList.remove('hidden'); }
+
+function openDeleteAccount() {
+  document.getElementById('deleteConfirmEmail').value = '';
+  document.getElementById('deleteAccountError').textContent = '';
+  document.getElementById('deleteAccountOverlay').classList.remove('hidden');
+}
+function closeDeleteAccount() { document.getElementById('deleteAccountOverlay').classList.add('hidden'); }
+async function confirmDeleteAccount() {
+  const email = document.getElementById('deleteConfirmEmail').value.trim().toLowerCase();
+  const errEl = document.getElementById('deleteAccountError');
+  const expected = (state.currentUser?.email || '').toLowerCase();
+  if (!email || email !== expected) { errEl.textContent = 'Email does not match your account email.'; return; }
+  errEl.textContent = '';
+  try {
+    const r = await fetch('/api/account', { method: 'DELETE' });
+    if (r.ok) {
+      closeDeleteAccount();
+      state.currentUser = null;
+      document.getElementById('userBar').classList.add('hidden');
+      document.getElementById('authOverlay').classList.remove('hidden');
+      toast('Your account has been deleted.', 'success');
+    } else {
+      const d = await r.json().catch(() => ({}));
+      errEl.textContent = d.error || 'Error deleting account.';
+    }
+  } catch { errEl.textContent = 'Network error. Please try again.'; }
+}
 
 // ── User menu dropdown ────────────────────────────────────────────────────────
 function toggleUserMenu(e) { if (e) e.stopPropagation(); document.getElementById('userDropdown').classList.toggle('open'); }
@@ -6672,5 +6705,20 @@ if (intStopBtn && !intStopBtn.getAttribute('aria-label')) {
 
 console.log('[Sprint 2 + 3 + Animaciones] Inicialización completada');
 </script>
+
+<!-- ── Delete Account Modal ── -->
+<div id="deleteAccountOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)closeDeleteAccount()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 24px;max-width:380px;width:90%">
+    <h3 style="margin:0 0 8px;color:var(--danger);text-align:center">Delete Account</h3>
+    <p style="font-size:.85rem;color:var(--text-muted);margin:0 0 16px;text-align:center">This will permanently delete your account and all data. This cannot be undone.</p>
+    <p style="font-size:.85rem;margin:0 0 6px;font-weight:600">Type your email to confirm:</p>
+    <input id="deleteConfirmEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:.9rem;margin-bottom:14px">
+    <div style="display:flex;gap:8px">
+      <button onclick="closeDeleteAccount()" style="flex:1;padding:9px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-size:.9rem">Cancel</button>
+      <button onclick="confirmDeleteAccount()" style="flex:1;padding:9px;border-radius:6px;border:none;background:var(--danger);color:#fff;cursor:pointer;font-weight:600;font-size:.9rem">Delete Forever</button>
+    </div>
+    <div id="deleteAccountError" style="font-size:.8rem;color:var(--danger);margin-top:10px;min-height:16px;text-align:center"></div>
+  </div>
+</div>
 </body>
 </html>
