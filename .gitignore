@@ -18,6 +18,18 @@ backlink-bot/token.json
 # GitHub Actions workflows (keep — needed for iOS build)
 # .github/workflows/
 
+# iOS Apple signing secrets (NEVER commit — keep local only).
+# NOTE: icon-1024.png and splash-2732x2732.png stay tracked; the CI needs them.
+reliableai/ios-assets/*.p8
+reliableai/ios-assets/*.p12
+reliableai/ios-assets/*.pem
+reliableai/ios-assets/*.cer
+reliableai/ios-assets/*.crt
+reliableai/ios-assets/*.csr
+reliableai/ios-assets/*.mobileprovision
+reliableai/ios-assets/*_b64.txt
+reliableai/ios-assets/generate-secrets.bat
+
 # iOS / Capacitor
 ios/App/Pods/
 ios/App/App.xcworkspace/xcuserdata/
