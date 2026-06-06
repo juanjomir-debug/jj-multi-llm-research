@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- iOS native: hide all pricing/plan UI (App Store guideline 3.1.1) -->
+  <style>.is-ios-native .hide-on-ios{display:none !important}</style>
+  <script>
+    (function(){function m(){try{if(window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add('is-ios-native');}}catch(e){}}m();document.addEventListener('DOMContentLoaded',m);})();
+  </script>
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-4278E5RC6V"></script>
   <script>
@@ -523,7 +528,7 @@
     <a href="#verticals">Use cases</a>
     <a href="/demo">Demo</a>
     <a href="https://blog.reliableai.net" target="_blank">Blog</a>
-    <a href="#pricing">Pricing</a>
+    <a href="#pricing" class="hide-on-ios">Pricing</a>
     <a href="/analyze" class="nav-cta">Try Free →</a>
   </div>
 </nav>
@@ -533,7 +538,7 @@
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
 
-  <a href="#pricing" class="ios-coming">📱 iOS app — coming soon · Get early access →</a>
+  <a href="#pricing" class="ios-coming hide-on-ios">📱 iOS app — coming soon · Get early access →</a>
 
   <div class="hero-eyebrow">Multi-model AI intelligence</div>
 
@@ -869,7 +874,7 @@
 </section>
 
 <!-- ═══ PRICING ═══ -->
-<section id="pricing" style="background:var(--bg)">
+<section id="pricing" class="hide-on-ios" style="background:var(--bg)">
   <div class="container">
     <div class="section-eyebrow reveal" style="text-align:center">Pricing</div>
     <h2 class="section-title reveal" style="text-align:center">Start free. <span class="grad">Scale as you go.</span></h2>
@@ -961,7 +966,7 @@
         <button class="faq-q" onclick="toggleFaq(this)">Which AI models are included? <span class="faq-icon">+</span></button>
         <div class="faq-a">ReliableAI currently supports Claude (Anthropic), GPT (OpenAI), Gemini (Google), Grok (xAI), Kimi (Moonshot) and Qwen (Alibaba). Models are updated as new versions are released. The Explorer free plan uses previous-generation models; paid plans unlock the latest frontier models.</div>
       </div>
-      <div class="faq-item reveal">
+      <div class="faq-item reveal hide-on-ios">
         <button class="faq-q" onclick="toggleFaq(this)">What does "API budget" mean? <span class="faq-icon">+</span></button>
         <div class="faq-a">ReliableAI passes model costs through at provider rates with zero markup. Your monthly API budget is the maximum you can spend on model calls. Professional includes $15/mo, Expert $40/mo, Team $200/mo. If you hit the limit, queries pause until the next billing cycle — you're never surprised by a bill.</div>
       </div>
@@ -1045,7 +1050,7 @@
   <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap">
     <a href="/analyze">App</a>
     <a href="/demo">Demo</a>
-    <a href="#pricing">Pricing</a>
+    <a href="#pricing" class="hide-on-ios">Pricing</a>
     <a href="#how-it-works">How it works</a>
     <a href="https://blog.reliableai.net" target="_blank">Blog</a>
     <a href="mailto:info@reliableai.net">Contact</a>

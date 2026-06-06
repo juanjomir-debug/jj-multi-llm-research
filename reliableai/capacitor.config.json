@@ -3,14 +3,10 @@
   "appName": "ReliableAI",
   "webDir": "public",
   "server": {
-    "url": "https://reliableai.net",
+    "url": "https://reliableai.net/analyze",
     "cleartext": false,
     "allowNavigation": [
-      "reliableai.net",
-      "*.stripe.com",
-      "checkout.stripe.com",
-      "billing.stripe.com",
-      "js.stripe.com"
+      "reliableai.net"
     ]
   },
   "plugins": {
