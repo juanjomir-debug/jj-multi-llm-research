@@ -65,9 +65,20 @@ jobs:
       - name: Generate app icons and splash
         working-directory: reliableai
         run: |
-          if [ -f "ios-assets/icon-1024.png" ]; then
-            npx @capacitor/assets generate --ios || echo "WARNING: Asset generation failed, continuing anyway..."
-          fi
+          # @capacitor/assets reads source images from the ./assets directory.
+          # Provide the finalized (flattened, no-alpha) icon + splash there so the
+          # build ships real icons — NOT the default Capacitor placeholder.
+          mkdir -p assets
+          cp ios-assets/icon-1024.png assets/icon-only.png
+          cp ios-assets/icon-1024.png assets/logo.png
+          cp ios-assets/splash-2732x2732.png assets/splash.png
+          cp ios-assets/splash-2732x2732.png assets/splash-dark.png
+          echo "Source icon details (must be 1024x1024, no alpha):"
+          sips -g pixelWidth -g pixelHeight -g hasAlpha assets/icon-only.png || true
+          # Fail loudly if asset generation fails — a silent failure ships placeholders.
+          npx @capacitor/assets generate --ios
+          echo "Generated AppIcon contents:"
+          ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/ || echo "ERROR: AppIcon set not found!"
 
       - name: Setup Ruby and Fastlane
         uses: ruby/setup-ruby@v1

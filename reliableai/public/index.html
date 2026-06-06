@@ -9,6 +9,24 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ReliableAI" />
+  <!-- iOS native: hide all payment/plan/promo UI (App Store guideline 3.1.1) -->
+  <style>.is-ios-native .hide-on-ios{display:none !important}</style>
+  <script>
+    (function markNative(){
+      try{
+        if(window.Capacitor && typeof window.Capacitor.isNativePlatform==='function' && window.Capacitor.isNativePlatform()){
+          document.documentElement.classList.add('is-ios-native');
+        }
+      }catch(e){}
+    })();
+    document.addEventListener('DOMContentLoaded', function(){
+      try{
+        if(window.Capacitor && typeof window.Capacitor.isNativePlatform==='function' && window.Capacitor.isNativePlatform()){
+          document.documentElement.classList.add('is-ios-native');
+        }
+      }catch(e){}
+    });
+  </script>
   <!-- P2.6: PWA Manifest + Apple Touch Icon -->
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/apple-touch-icon-180.png" />
@@ -1580,7 +1598,7 @@
         </div>
       </div>
       <div class="udd-sep"></div>
-      <button class="udd-btn" onclick="openBilling(); closeUserMenu()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Plan &amp; Billing</button>
+      <button class="udd-btn hide-on-ios" onclick="openBilling(); closeUserMenu()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Plan &amp; Billing</button>
       <button class="udd-btn" id="menuProjectsBtn" onclick="openProjects(); closeUserMenu()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg> Projects</button>
       <button class="udd-btn" id="menuHistoryBtn" onclick="openHistory(); closeUserMenu()">History</button>
       <button class="udd-btn" id="adminDashBtn" style="display:none;color:var(--accent)" onclick="location.href='/admin'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Admin Dashboard</button>
@@ -2021,7 +2039,7 @@
     <div id="billingPortalRow" class="hidden" style="margin-top:8px;text-align:center">
       <button class="user-btn" onclick="openBillingPortal()" style="font-size:.82rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Manage subscription</button>
     </div>
-    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+    <div class="hide-on-ios" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
       <label style="font-size:.82rem;font-weight:600">Have a promo code?</label>
       <div style="display:flex;gap:6px;margin-top:4px">
         <input type="text" id="promoCodeInput" placeholder="RELI-XXXXXX" style="flex:1;padding:6px 10px;font-size:.85rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);text-transform:uppercase" maxlength="20">
@@ -3408,8 +3426,12 @@ async function runResearch(withIntegrator = false) {
     const used = state.currentUser.daily_queries || 0;
     const max = state.currentUser.limits.dailyQueries;
     if (max < 100 && used >= max) {
-      toast(`Daily limit of ${max} queries reached. Upgrade your plan for more.`, 'error');
-      openBilling();
+      if (window.Capacitor?.isNativePlatform?.()) {
+        toast(`Daily limit of ${max} queries reached. Please try again tomorrow.`, 'error');
+      } else {
+        toast(`Daily limit of ${max} queries reached. Upgrade your plan for more.`, 'error');
+        openBilling();
+      }
       return;
     }
   }
@@ -5041,6 +5063,8 @@ function updateQuotaUI(user) {
 // ── Billing modal ─────────────────────────────────────────────────────────────
 let _billingPlans = null;
 async function openBilling() {
+  // App Store 3.1.1: no plan/billing UI on iOS native
+  if (window.Capacitor?.isNativePlatform?.()) return;
   document.getElementById('billingOverlay').classList.remove('hidden');
   // Load usage
   try {

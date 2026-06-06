@@ -21,6 +21,7 @@ const DEBATE_PROMPT             = loadPrompt('debate.md').trim();
 const DEBATE_VOTE_PROMPT        = loadPrompt('debate-vote.md').trim();
 const HIDDEN_INSTRUCTIONS       = loadPrompt('instrucciones-ocultas.md').trim();
 const CONFIDENCE_INSTRUCTION    = '\n\n' + loadPrompt('confidence-instruction.md').trim();
+const LANGUAGE_INSTRUCTION      = 'IMPORTANT: Always respond in the same language as the user\'s most recent message. If the language is ambiguous or cannot be determined, respond in English.';
 const DEBATE_USER_MSG_TPL       = loadPrompt('debate-user-message.md').trim();
 const DEBATE_VOTE_MSG_TPL       = loadPrompt('debate-vote-user-message.md').trim();
 const HALLUCINATION_DETECTOR    = loadPrompt('hallucination-detector.md').trim();
@@ -1612,7 +1613,7 @@ app.post('/api/retry', async (req, res) => {
   try { processedAttachments = await processAttachments(attachments || []); } catch {}
 
   const amplitudeInstr = AMPLITUDE_INSTRUCTIONS[amplitude] || '';
-  const sysInstr = [HIDDEN_INSTRUCTIONS, customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
+  const sysInstr = [HIDDEN_INSTRUCTIONS, customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION, LANGUAGE_INSTRUCTION].filter(Boolean).join('\n\n');
 
   send('model:start', { modelId, provider });
   const t0 = Date.now();
@@ -1917,8 +1918,8 @@ app.post('/api/research', async (req, res) => {
     try {
       const deepResearchInstr = m.deepResearch ? 'DEEP RESEARCH MODE: Conduct thorough, multi-step research. Search and synthesize multiple sources. Provide comprehensive citations. Do not stop until you have a complete, well-sourced answer.' : '';
       const sysInstr = effectiveBlogMode
-        ? [BLOGPOST_MODEL_PROMPT, m.customInstructions].filter(Boolean).join('\n\n')
-        : [HIDDEN_INSTRUCTIONS, deepResearchInstr, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION].filter(Boolean).join('\n\n');
+        ? [BLOGPOST_MODEL_PROMPT, m.customInstructions, LANGUAGE_INSTRUCTION].filter(Boolean).join('\n\n')
+        : [HIDDEN_INSTRUCTIONS, deepResearchInstr, m.customInstructions, amplitudeInstr, CONFIDENCE_INSTRUCTION, LANGUAGE_INSTRUCTION].filter(Boolean).join('\n\n');
       const r = await withTimeout(
         callModelStream(m.provider, m.modelId, sysInstr || null, userMessage, maxTokens,
           processedAttachments, !!m.webSearch || !!m.deepResearch, conversationHistory,
@@ -2079,7 +2080,7 @@ app.post('/api/research', async (req, res) => {
       const modelListStr = results.map(r => `${modelLabels[r.modelId] || r.provider} — \`${r.modelId}\``).join(', ');
       const todayStr = new Date().toISOString().slice(0, 10);
       intPrompt = BLOGPOST_INTEGRATOR_PROMPT;
-      sysPrompt = [intPrompt, integrator.customInstructions || ''].filter(Boolean).join('\n\n');
+      sysPrompt = [intPrompt, integrator.customInstructions || '', LANGUAGE_INSTRUCTION].filter(Boolean).join('\n\n');
       userMsg = `Pregunta original / Topic: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}\n\n---\nMETADATA FOR FOOTER (replace placeholders):\n- {{ORIGINAL_PROMPT}} = ${question}\n- {{MODEL_LIST}} = ${modelListStr}\n- {{INTEGRATOR_MODEL}} = ${integrator.provider} — ${integrator.modelId}\n- {{DATE}} = ${todayStr}`;
     } else {
       intPrompt = integrator.mode === 'unique' ? INTEGRATOR_UNIQUE_PROMPT : INTEGRATOR_CONSENSUS_PROMPT;
@@ -2088,6 +2089,7 @@ app.post('/api/research', async (req, res) => {
         integrator.customInstructions || '',
         intPrompt,
         amplitudeInstr || '',
+        LANGUAGE_INSTRUCTION,
       ].filter(Boolean).join('\n\n');
       userMsg = `Pregunta original: ${question}\n\nRespuestas de todos los modelos:\n\n${allResponsesBlock}`;
     }
