@@ -2,4 +2,8 @@ source "https://rubygems.org"
 
 gem "fastlane", "~> 2.220"
 
+# representable (a fastlane dependency) requires multi_json at runtime but no
+# longer declares it, so a fresh `bundle install` leaves it out of the bundle
+# and fastlane crashes with "multi_json is not part of the bundle". Declaring it
+# explicitly keeps it in the resolved bundle. See CI run 27061738007.
 gem "multi_json"
