@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -1546,7 +1546,7 @@
 
 <!-- Cookie banner (F6 GDPR) -->
 <div id="appCookieBanner" style="display:none" role="complementary" aria-label="Cookie consent">
-  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> We use essential session cookies only — no tracking, no ads. <a href="mailto:info@reliableai.net">Privacy info</a></span>
+  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> We use essential session cookies only — no tracking, no ads. <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></span>
   <button class="ck-app-btn ck-app-accept" onclick="setAppCookieConsent('accepted')">Accept</button>
   <button class="ck-app-btn ck-app-decline" onclick="setAppCookieConsent('declined')">Decline</button>
 </div>
@@ -1578,23 +1578,23 @@
     </button>
     <div class="user-dropdown" id="userDropdown">
       <div class="udd-name" id="userName"></div>
-      <div class="udd-plan-row">
+      <div class="udd-plan-row hide-on-ios">
         <span class="udd-plan-badge" id="quotaPlanBadge">Free</span>
         <span class="udd-spend" id="userSpend">$0.0000</span>
       </div>
-      <div class="udd-quota-row">
+      <div class="udd-quota-row hide-on-ios">
         <div class="quota-bar-wrap" style="flex:1"><div class="quota-bar-fill" id="quotaBarFill" style="width:0%"></div></div>
         <span id="quotaLabel">$0 / $3</span>
       </div>
-      <div style="font-size:.72rem;color:var(--text-muted);margin-top:4px">Total histórico: <span id="userTotalSpend" style="font-family:monospace;font-weight:700">$0.0000</span></div>
+      <div class="hide-on-ios" style="font-size:.72rem;color:var(--text-muted);margin-top:4px">Total spent: <span id="userTotalSpend" style="font-family:monospace;font-weight:700">$0.0000</span></div>
       <div class="udd-sep"></div>
       <!-- Theme selector -->
       <div class="udd-theme-row">
-        <span class="udd-theme-label">Tema</span>
+        <span class="udd-theme-label">Theme</span>
         <div class="udd-theme-btns">
-          <button class="udd-theme-opt" id="themeAuto"  onclick="setTheme('auto')"  title="Automático (sistema)">Auto</button>
-          <button class="udd-theme-opt" id="themeDark"  onclick="setTheme('dark')"  title="Oscuro">&#9790;</button>
-          <button class="udd-theme-opt" id="themeLight" onclick="setTheme('light')" title="Claro">&#9728;</button>
+          <button class="udd-theme-opt" id="themeAuto"  onclick="setTheme('auto')"  title="Automatic (system)">Auto</button>
+          <button class="udd-theme-opt" id="themeDark"  onclick="setTheme('dark')"  title="Dark">&#9790;</button>
+          <button class="udd-theme-opt" id="themeLight" onclick="setTheme('light')" title="Light">&#9728;</button>
         </div>
       </div>
       <div class="udd-sep"></div>
@@ -2030,7 +2030,7 @@
       <div class="billing-usage-bar"><div class="billing-usage-fill" id="billingUsageFill" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-muted);margin-top:4px">
         <span id="billingPeriodText">Period: —</span>
-        <span>Total histórico: <span id="billingTotalSpend" style="font-family:monospace;font-weight:700;color:var(--text)">$0.0000</span></span>
+        <span>Total spent: <span id="billingTotalSpend" style="font-family:monospace;font-weight:700;color:var(--text)">$0.0000</span></span>
       </div>
     </div>
     <div class="billing-plans-grid" id="billingPlansGrid" style="margin-top:20px">
@@ -2096,7 +2096,7 @@
   <div class="history-panel" onclick="event.stopPropagation()">
     <div class="history-header"><h2>Search History</h2><button class="user-btn" onclick="closeHistory()">Close</button></div>
     <!-- P1.6: History search + filter -->
-    <input id="historySearch" type="text" placeholder="Buscar en historial…" style="width:calc(100% - 24px); padding:8px; border: 1px solid var(--border); border-radius: var(--radius); margin: 12px; background: var(--surface2); color: var(--text);" />
+    <input id="historySearch" type="text" placeholder="Search history…" style="width:calc(100% - 24px); padding:8px; border: 1px solid var(--border); border-radius: var(--radius); margin: 12px; background: var(--surface2); color: var(--text);" />
   </div>
 </div>
 
@@ -2596,7 +2596,7 @@ async function runPlanResearch() {
             document.getElementById('planApplyBtn').disabled = false;
           } else {
             body.innerHTML = `<div style="color:var(--warn);font-size:.82rem;padding:8px">
-              ⚠️ No se pudo interpretar el plan automáticamente. Revisa la respuesta y aplica la configuración manualmente.
+              ⚠️ Could not interpret the plan automatically. Review the response and apply the configuration manually.
             </div><div class="md-content" style="font-size:.78rem;opacity:.6;margin-top:8px">${renderMarkdown(fullText)}</div>`;
           }
         } else if (event === 'plan:error') {
@@ -2963,13 +2963,13 @@ function renderModelCards() {
         <div class="temp-section">
           <span class="temp-title">Temperature</span>
           <div class="temp-row">
-          <span class="temp-label" title="Baja temperatura = más fiable y preciso">Reliability</span>
-          <span class="temp-label-icon" title="Baja temperatura = más fiable y preciso"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="temp-label" title="Low temperature = more reliable and precise">Reliability</span>
+          <span class="temp-label-icon" title="Low temperature = more reliable and precise"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
           <input type="range" class="temp-slider" id="tempSlider-${m.provider}" min="0" max="1.5" step="0.05"
             value="${m.temperature ?? 0.7}"
             oninput="onTempSlide('${m.provider}', ${idx}, +this.value)">
-          <span class="temp-label" title="Alta temperatura = más creativo y variado">Creativity</span>
-          <span class="temp-label-icon" title="Alta temperatura = más creativo y variado">✨</span>
+          <span class="temp-label" title="High temperature = more creative and varied">Creativity</span>
+          <span class="temp-label-icon" title="High temperature = more creative and varied">✨</span>
           <span class="temp-val ${m.temperature == null ? 'auto' : ''}" id="tempVal-${m.provider}">${m.temperature != null ? (+m.temperature).toFixed(2) : 'auto'}</span>
           <button class="temp-reset" id="tempReset-${m.provider}" style="visibility:${m.temperature != null ? 'visible' : 'hidden'}"
             onclick="onTempReset('${m.provider}', ${idx})" title="Reset to auto">×</button>
@@ -3197,7 +3197,7 @@ function toggleWebSearch(idx) {
       const btn = document.getElementById(`wsToggle-${m.provider}`);
       if (btn) btn.className = 'websearch-toggle';
       toggleModel(idx); // desactivar el modelo
-      toast('GLM no soporta búsqueda web. Modelo desactivado.', 'warn');
+      toast('GLM does not support web search. Model disabled.', 'warn');
     }
     return;
   }
@@ -3981,7 +3981,7 @@ function renderReliabilityIndex() {
   const hasBreakdown = selfData.some(m => m.evidenceQuality !== null);
   let selfTable = `<table class="ri-table"><thead><tr>
     <th>Modelo</th><th>Confianza</th>
-    ${hasBreakdown ? '<th>Evidencia</th><th>Fuentes</th><th>Consenso</th>' : ''}
+    ${hasBreakdown ? '<th>Evidence</th><th>Sources</th><th>Consensus</th>' : ''}
     <th>Alucinac.</th></tr></thead><tbody>`;
   selfData.forEach(m => {
     const hClass = m.hallucClass === 'low' ? 'high' : m.hallucClass === 'med' ? 'med' : 'low';
@@ -4003,14 +4003,14 @@ function renderReliabilityIndex() {
       </div>
       <div class="ri-section">
         <div class="ri-section-title">
-          1 · Consenso entre modelos
+          1 · Consensus between models
           ${avgConsensus !== null ? `<span class="ri-sect-score" style="color:${rowColor(avgConsensus)}">${avgConsensus}%</span>` : ''}
         </div>
         ${consensusRows}
       </div>
       <div class="ri-section">
         <div class="ri-section-title">
-          2 · Autoevaluación de los modelos
+          2 · Model self-evaluation
           <span class="ri-sect-score" style="color:${rowColor(avgSelf)}">${avgSelf}%</span>
         </div>
         ${selfTable}
@@ -4072,7 +4072,7 @@ function renderConsensusPanel(data) {
   const panel = document.createElement('div'); panel.className = 'consensus-panel'; panel.id = 'consensusPanel';
   const levelColor = data.consensusLevel === 'high' ? 'var(--success)' : data.consensusLevel === 'medium' ? 'var(--warn)' : 'var(--danger)';
   const levelLabel = data.consensusLevel === 'high' ? 'Alto' : data.consensusLevel === 'medium' ? 'Medio' : 'Bajo';
-  let html = `<h4>Consenso entre modelos</h4>
+  let html = `<h4>Consensus between models</h4>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <div class="consensus-bar" style="flex:1"><div class="consensus-bar-fill" style="width:${data.avgSimilarity}%;background:${levelColor}"></div></div>
       <span style="font-family:monospace;font-weight:700;font-size:.85rem;color:${levelColor}">${data.avgSimilarity}%</span>
@@ -4805,10 +4805,10 @@ function computeFinalScore(modelId, selfScore, text) {
   let factors = [];
   if (agreement !== undefined) {
     confidence = Math.round(agreement * 0.40 + selfConf * 0.35 + heuristic.confidence * 0.25);
-    factors = [`Consenso entre modelos ${agreement}%`, `Autoeval global ${selfConf}%`, `Análisis léxico ${heuristic.confidence}%`];
+    factors = [`Consensus between models ${agreement}%`, `Global self-eval ${selfConf}%`, `Lexical analysis ${heuristic.confidence}%`];
   } else {
     confidence = Math.round(selfConf * 0.60 + heuristic.confidence * 0.40);
-    factors = [`Autoeval global ${selfConf}%`, `Análisis léxico ${heuristic.confidence}%`];
+    factors = [`Global self-eval ${selfConf}%`, `Lexical analysis ${heuristic.confidence}%`];
   }
   confidence = Math.max(15, Math.min(97, confidence));
 
@@ -4816,7 +4816,7 @@ function computeFinalScore(modelId, selfScore, text) {
   const breakdownLines = bd ? [
     `· Calidad evidencia ${bd.evidenceQuality}%`,
     `· Fiabilidad fuentes ${bd.sourceReliability}%`,
-    `· Consenso fuentes   ${bd.consensus}%`,
+    `· Source consensus   ${bd.consensus}%`,
   ] : [];
 
   // Hallucination: consensus divergence takes priority over heuristic
@@ -4848,7 +4848,7 @@ function updateScoreRow(modelId, selfScore, text) {
   const mainRow =
     `<span style="color:var(--text-muted)">Confianza:</span>` +
     `<span class="score-badge confidence-${score.confClass}">${score.confidence}%</span>` +
-    `<span style="color:var(--text-muted);margin-left:6px">Alucinación:</span>` +
+    `<span style="color:var(--text-muted);margin-left:6px">Hallucination:</span>` +
     `<span class="score-badge halluc-${score.hallucClass}">${score.hallucLabel === 'Low' ? 'Baja' : score.hallucLabel === 'Med' ? 'Media' : 'Alta'}</span>` +
     (_consensusScores[modelId] !== undefined
       ? `<span style="color:var(--text-muted);font-size:.68rem;margin-left:auto">Acuerdo ${_consensusScores[modelId]}%</span>`
@@ -4860,7 +4860,7 @@ function updateScoreRow(modelId, selfScore, text) {
     return `<div class="score-breakdown">` +
       `<span class="score-bd-item">Solidez evidencia ${c(bd.evidenceQuality)}</span>` +
       `<span class="score-bd-item">Calidad fuentes ${c(bd.sourceReliability)}</span>` +
-      `<span class="score-bd-item">Consenso fuentes ${c(bd.consensus)}</span>` +
+      `<span class="score-bd-item">Source consensus ${c(bd.consensus)}</span>` +
       `</div>`;
   })() : '';
 
@@ -4869,7 +4869,7 @@ function updateScoreRow(modelId, selfScore, text) {
   let llmHtml = '';
   if (llmAnalysis === undefined) {
     // Not yet triggered — show loading placeholder
-    llmHtml = `<div class="score-llm-row"><span class="score-llm-loading">⏳ Análisis profundo...</span></div>`;
+    llmHtml = `<div class="score-llm-row"><span class="score-llm-loading">⏳ Deep analysis...</span></div>`;
   } else if (llmAnalysis === null) {
     // Triggered but failed or skipped
     llmHtml = '';
@@ -4888,7 +4888,7 @@ function updateScoreRow(modelId, selfScore, text) {
 function buildLLMAnalysisHtml(modelId, a) {
   if (!a || a.total_risk_score === undefined) return '';
   const riskColors = { bajo: 'bajo', medio: 'medio', alto: 'alto', crítico: 'critico' };
-  const riskLabels = { bajo: 'Riesgo Bajo', medio: 'Riesgo Medio', alto: 'Riesgo Alto', crítico: 'Riesgo Crítico' };
+  const riskLabels = { bajo: 'Low Risk', medio: 'Medium Risk', alto: 'High Risk', crítico: 'Critical Risk' };
   const cls = riskColors[a.risk_level] || 'medio';
   const label = riskLabels[a.risk_level] || a.risk_level;
   const bk = a.breakdown || {};
@@ -4896,12 +4896,12 @@ function buildLLMAnalysisHtml(modelId, a) {
 
   // Detail items
   const detailItems = [
-    bk.unattributed_entities?.count > 0   ? `<span class="score-llm-detail-item" title="Entidades no atribuidas"><span class="score-llm-count" style="color:var(--danger)">${bk.unattributed_entities.count}</span> entidades sin fuente</span>` : '',
-    bk.universalist_claims?.count > 0     ? `<span class="score-llm-detail-item" title="Afirmaciones universalistas"><span class="score-llm-count" style="color:var(--warn)">${bk.universalist_claims.count}</span> afirm. universales</span>` : '',
-    bk.internal_contradictions?.count > 0 ? `<span class="score-llm-detail-item" title="Contradicciones internas"><span class="score-llm-count" style="color:var(--danger)">${bk.internal_contradictions.count}</span> contradiccion${bk.internal_contradictions.count !== 1 ? 'es' : ''}</span>` : '',
-    bk.suspicious_specificity?.count > 0  ? `<span class="score-llm-detail-item" title="Especificidad sospechosa"><span class="score-llm-count" style="color:var(--warn)">${bk.suspicious_specificity.count}</span> cifras sospechosas</span>` : '',
-    mod.explicit_disclaimers_count > 0    ? `<span class="score-llm-detail-item" title="Disclaimers explícitos (riesgo reducido)" style="color:var(--success)">✓ ${mod.explicit_disclaimers_count} disclaimer${mod.explicit_disclaimers_count !== 1 ? 's' : ''}</span>` : '',
-    mod.hedge_on_facts_count > 0          ? `<span class="score-llm-detail-item" title="Hedges sobre hechos (riesgo aumentado)" style="color:var(--warn)">⚠ ${mod.hedge_on_facts_count} hedge${mod.hedge_on_facts_count !== 1 ? 's' : ''} en hechos</span>` : '',
+    bk.unattributed_entities?.count > 0   ? `<span class="score-llm-detail-item" title="Unattributed entities"><span class="score-llm-count" style="color:var(--danger)">${bk.unattributed_entities.count}</span> unsourced entities</span>` : '',
+    bk.universalist_claims?.count > 0     ? `<span class="score-llm-detail-item" title="Universalist claims"><span class="score-llm-count" style="color:var(--warn)">${bk.universalist_claims.count}</span> universal claims</span>` : '',
+    bk.internal_contradictions?.count > 0 ? `<span class="score-llm-detail-item" title="Internal contradictions"><span class="score-llm-count" style="color:var(--danger)">${bk.internal_contradictions.count}</span> contradiction${bk.internal_contradictions.count !== 1 ? 's' : ''}</span>` : '',
+    bk.suspicious_specificity?.count > 0  ? `<span class="score-llm-detail-item" title="Suspicious specificity"><span class="score-llm-count" style="color:var(--warn)">${bk.suspicious_specificity.count}</span> suspicious figures</span>` : '',
+    mod.explicit_disclaimers_count > 0    ? `<span class="score-llm-detail-item" title="Explicit disclaimers (reduced risk)" style="color:var(--success)">✓ ${mod.explicit_disclaimers_count} disclaimer${mod.explicit_disclaimers_count !== 1 ? 's' : ''}</span>` : '',
+    mod.hedge_on_facts_count > 0          ? `<span class="score-llm-detail-item" title="Hedges on facts (increased risk)" style="color:var(--warn)">⚠ ${mod.hedge_on_facts_count} hedge${mod.hedge_on_facts_count !== 1 ? 's' : ''} on facts</span>` : '',
   ].filter(Boolean).join('');
 
   const safeId = modelId.replace(/[^a-z0-9]/gi, '-');
@@ -6579,13 +6579,13 @@ document.querySelectorAll('button, .btn, a[role="button"]').forEach(el => {
     banner.className = 'onboarding-banner';
     banner.innerHTML = `
       <div class="onboarding-content">
-        <strong>Bienvenido a ReliableAI</strong>
+        <strong>Welcome to ReliableAI</strong>
         <ul style="font-size:12px; margin-top:8px; margin-left:16px;">
-          <li><strong>Amplitude:</strong> Controla la extensión de la respuesta (5 niveles)</li>
-          <li><strong>Cascade:</strong> Ejecuta modelos secuencialmente, uno alimenta al siguiente</li>
-          <li><strong>Integrator:</strong> Sintetiza y detecta contradicciones</li>
+          <li><strong>Amplitude:</strong> Controls the length of the response (5 levels)</li>
+          <li><strong>Cascade:</strong> Runs models sequentially, each one feeds the next</li>
+          <li><strong>Integrator:</strong> Synthesizes and detects contradictions</li>
         </ul>
-        <button id="onboardingClose" style="margin-top:12px; background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 6px 14px; font-weight: 600; cursor: pointer;">Entendido</button>
+        <button id="onboardingClose" style="margin-top:12px; background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 6px 14px; font-weight: 600; cursor: pointer;">Got it</button>
       </div>
     `;
     // Inyectar CSS para onboarding (si no existe)
@@ -6650,7 +6650,7 @@ document.querySelectorAll('button, .btn, a[role="button"]').forEach(el => {
 document.getElementById('stopIntegrator')?.addEventListener('click', () => {
   if (window._intAbortController) {
     window._intAbortController.abort();
-    toast('Síntesis detenida');
+    toast('Synthesis stopped');
   }
 });
 
@@ -6718,13 +6718,13 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
 });
 document.querySelectorAll('.stop-btn').forEach(btn => {
   if (!btn.getAttribute('aria-label')) {
-    btn.setAttribute('aria-label', 'Detener búsqueda');
+    btn.setAttribute('aria-label', 'Stop search');
   }
 });
 // Integrator stop button
 const intStopBtn = document.getElementById('intStopBtn');
 if (intStopBtn && !intStopBtn.getAttribute('aria-label')) {
-  intStopBtn.setAttribute('aria-label', 'Detener síntesis');
+  intStopBtn.setAttribute('aria-label', 'Stop synthesis');
 }
 
 console.log('[Sprint 2 + 3 + Animaciones] Inicialización completada');
