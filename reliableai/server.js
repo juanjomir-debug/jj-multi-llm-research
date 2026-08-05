@@ -2654,18 +2654,23 @@ app.post('/api/export-docx', async (req, res) => {
     return Buffer.from(base64, 'base64');
   }
 
-  // Detect image type from data URL
+  // Detect image type from data URL — SVG not supported by ImageRun, skip it
   function imageType(dataUrl) {
-    if (dataUrl.startsWith('data:image/svg')) return 'svg';
     if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) return 'jpg';
+    if (dataUrl.startsWith('data:image/gif')) return 'gif';
+    if (dataUrl.startsWith('data:image/bmp')) return 'bmp';
+    if (dataUrl.startsWith('data:image/webp')) return 'webp';
+    if (dataUrl.startsWith('data:image/svg')) return null; // SVG unsupported in docx
     return 'png';
   }
 
   // Build an ImageRun paragraph from a data URL (max 500px wide)
   function imageRunParagraph(dataUrl, altText = '') {
     try {
-      const buf = dataUrlToBuffer(dataUrl);
       const type = imageType(dataUrl);
+      if (!type) return null; // skip SVG
+      const buf = dataUrlToBuffer(dataUrl);
+      if (!buf || buf.length === 0) return null;
       return new Paragraph({
         children: [new ImageRun({
           data: buf,
@@ -2689,9 +2694,9 @@ app.post('/api/export-docx', async (req, res) => {
       // Bullet lists
       const bullet = line.match(/^[-*] (.+)/);
       if (bullet) { paras.push(new Paragraph({ bullet: { level: 0 }, children: parseInline(bullet[1]) })); continue; }
-      // Numbered list
-      const num = line.match(/^\d+\. (.+)/);
-      if (num) { paras.push(new Paragraph({ numbering: { reference: 'default', level: 0 }, children: parseInline(num[1]) })); continue; }
+      // Numbered list — use text prefix to avoid invalid numbering XML references
+      const num = line.match(/^(\d+)\. (.+)/);
+      if (num) { paras.push(new Paragraph({ children: [new TextRun(`${num[1]}. `), ...parseInline(num[2])] })); continue; }
       // Empty line
       if (!line.trim()) { paras.push(new Paragraph({ text: '' })); continue; }
       // Normal paragraph
