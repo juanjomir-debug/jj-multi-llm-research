@@ -2107,6 +2107,15 @@ const PROVIDERS = {
   anthropic: {
     label: 'Claude', icon: '&#128311;', color: 'var(--claude)', dotColor: '#cc785c',
     models: [
+      // Gen 5
+      { id: 'claude-fable-5',              label: 'Claude Fable 5 🧠' },
+      { id: 'claude-opus-5',               label: 'Claude Opus 5' },
+      { id: 'claude-opus-5-search',        label: 'Claude Opus 5 Search 🔍' },
+      { id: 'claude-sonnet-5',             label: 'Claude Sonnet 5' },
+      { id: 'claude-sonnet-5-search',      label: 'Claude Sonnet 5 Search 🔍' },
+      // Gen 4.8
+      { id: 'claude-opus-4-8',             label: 'Claude Opus 4.8' },
+      { id: 'claude-opus-4-8-search',      label: 'Claude Opus 4.8 Search 🔍' },
       // Gen 4.7
       { id: 'claude-opus-4-7-search',      label: 'Claude Opus 4.7 Search 🔍' },
       { id: 'claude-opus-4-7',             label: 'Claude Opus 4.7' },
@@ -2170,6 +2179,7 @@ const PROVIDERS = {
       { id: 'qwen-max',          label: 'Qwen Max' },
       { id: 'qwen-plus',         label: 'Qwen Plus (Qwen3)' },
       { id: 'qwen-turbo',        label: 'Qwen Turbo' },
+      { id: 'qwen3-8b',          label: 'Qwen3 8B' },
     ],
     defaultModel: 'qwen-plus',
   },
@@ -2192,6 +2202,13 @@ const PROVIDERS = {
 // Prices in USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-fable-5':            { i: 10,    o: 50   },
+  'claude-opus-5':             { i:  5,    o: 25   },
+  'claude-opus-5-search':      { i:  5,    o: 25   },
+  'claude-opus-4-8':           { i:  5,    o: 25   },
+  'claude-opus-4-8-search':    { i:  5,    o: 25   },
+  'claude-sonnet-5':           { i:  3,    o: 15   },
+  'claude-sonnet-5-search':    { i:  3,    o: 15   },
   'claude-opus-4-7-search':    { i:  5,    o: 25   },
   'claude-opus-4-7-thinking':  { i:  5,    o: 25   },
   'claude-opus-4-7':           { i:  5,    o: 25   },
@@ -2244,6 +2261,7 @@ const PRICING = {
   'qwen-plus':         { i: 0.40, o: 1.20 },
   'qwen-turbo':        { i: 0.05, o: 0.15 },
   'qwq-32b':           { i: 0.60, o: 2.40 },
+  'qwen3-8b':          { i: 0.05, o: 0.15 },
   // ── Zhipu GLM ─────────────────────────────────────────────────────────────
   'glm-5.1':            { i: 0.50, o: 2.00 },
   'glm-5-turbo':        { i: 0.10, o: 0.40 },
@@ -2268,6 +2286,10 @@ const ALWAYS_SEARCH_PROVIDERS = new Set([]); // reserved for providers that alwa
 
 // Claude: base model → search variant (and reverse)
 const CLAUDE_SEARCH_AUTO = {
+  'claude-opus-5':             'claude-opus-5-search',
+  'claude-opus-4-8':           'claude-opus-4-8-search',
+  'claude-sonnet-5':           'claude-sonnet-5-search',
+  'claude-fable-5':            'claude-opus-5-search',
   'claude-opus-4-7':           'claude-opus-4-7-search',
   'claude-opus-4-6':           'claude-opus-4-6-search',
   'claude-sonnet-4-6':         'claude-sonnet-4-6-search',
@@ -2276,9 +2298,12 @@ const CLAUDE_SEARCH_AUTO = {
   'claude-haiku-4-5-20251001': 'claude-sonnet-4-6-search',
 };
 const CLAUDE_SEARCH_BASE = {
-  'claude-opus-4-7-search':   'claude-opus-4-7',
-  'claude-opus-4-6-search':   'claude-opus-4-6',
-  'claude-sonnet-4-6-search': 'claude-sonnet-4-6',
+  'claude-opus-5-search':      'claude-opus-5',
+  'claude-opus-4-8-search':    'claude-opus-4-8',
+  'claude-sonnet-5-search':    'claude-sonnet-5',
+  'claude-opus-4-7-search':    'claude-opus-4-7',
+  'claude-opus-4-6-search':    'claude-opus-4-6',
+  'claude-sonnet-4-6-search':  'claude-sonnet-4-6',
 };
 
 // Claude: base ↔ thinking variant
@@ -6165,8 +6190,8 @@ function onGlobalTempReset() {
 
 // Model level selector (High / Medium / Fast)
 const MODEL_LEVELS = {
-  high:   { anthropic: 'claude-opus-4-7', openai: 'gpt-5.5', google: 'gemini-2.5-pro',   xai: 'grok-4.3',   qwen: 'qwen-max',   zhipu: 'glm-5' },
-  medium: { anthropic: 'claude-sonnet-4-6', openai: 'gpt-5-mini', google: 'gemini-2.5-flash', xai: 'grok-4.20', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
+  high:   { anthropic: 'claude-opus-5', openai: 'gpt-5.5', google: 'gemini-2.5-pro',   xai: 'grok-4.3',   qwen: 'qwen-max',   zhipu: 'glm-5' },
+  medium: { anthropic: 'claude-sonnet-5', openai: 'gpt-5-mini', google: 'gemini-2.5-flash', xai: 'grok-4.20', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
   fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'gemini-2.5-flash', xai: 'grok-3-mini', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
 };
 // Integrator model per level (anthropic preferred)

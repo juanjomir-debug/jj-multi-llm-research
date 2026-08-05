@@ -225,6 +225,13 @@ function addMonthlyCost(userId, costUsd) {
 // Prices USD per million tokens (input / output) — updated April 2026
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-fable-5':            { input: 10.00, output: 50.00 },
+  'claude-opus-5':             { input:  5.00, output: 25.00 },
+  'claude-opus-5-search':      { input:  5.00, output: 25.00 },
+  'claude-opus-4-8':           { input:  5.00, output: 25.00 },
+  'claude-opus-4-8-search':    { input:  5.00, output: 25.00 },
+  'claude-sonnet-5':           { input:  3.00, output: 15.00 },
+  'claude-sonnet-5-search':    { input:  3.00, output: 15.00 },
   'claude-opus-4-7-search':    { input:  5.00, output: 25.00 },
   'claude-opus-4-7-thinking':  { input:  5.00, output: 25.00 },
   'claude-opus-4-7':           { input:  5.00, output: 25.00 },
@@ -271,6 +278,7 @@ const PRICING = {
   'qwen-turbo': { input: 0.05, output: 0.15 },
   'qwen-max':   { input: 1.60, output: 6.40 },
   'qwq-32b':    { input: 0.60, output: 2.40 },
+  'qwen3-8b':   { input: 0.05, output: 0.15 },
   // ── Zhipu GLM ─────────────────────────────────────────────────────────────
   'glm-5.1':     { input: 0.50, output: 2.00 },
   'glm-5-turbo': { input: 0.10, output: 0.40 },
@@ -399,9 +407,13 @@ function setCache(modelId, question, amplitude, data, userId) {
 
 const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking', 'claude-opus-4-7-thinking']);
 const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6', 'claude-opus-4-7-thinking': 'claude-opus-4-7' };
+// Models that use adaptive thinking (no budget_tokens) — 4.7 and newer
+const CLAUDE_ADAPTIVE_MODELS = new Set(['claude-opus-4-7', 'claude-opus-4-8', 'claude-opus-5', 'claude-sonnet-5', 'claude-fable-5']);
+// Models that use the newer web_search_20260209 tool type
+const CLAUDE_NEW_SEARCH_TOOL = new Set(['claude-opus-4-7', 'claude-opus-4-8', 'claude-opus-5', 'claude-sonnet-4-6', 'claude-sonnet-5', 'claude-fable-5']);
 
-const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search', 'claude-opus-4-7-search']);
-const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6', 'claude-opus-4-7-search': 'claude-opus-4-7' };
+const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search', 'claude-opus-4-7-search', 'claude-opus-4-8-search', 'claude-opus-5-search', 'claude-sonnet-5-search']);
+const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6', 'claude-opus-4-7-search': 'claude-opus-4-7', 'claude-opus-4-8-search': 'claude-opus-4-8', 'claude-opus-5-search': 'claude-opus-5', 'claude-sonnet-5-search': 'claude-sonnet-5' };
 
 // Streaming caller for Claude (improvement #1)
 async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch = false) {
@@ -460,13 +472,18 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
   };
   if (systemBlock) params.system = systemBlock;
   if (useThinking) {
-    params.thinking = { type: 'enabled', budget_tokens: Math.min(10000, effectiveMaxTokens - 2000) };
+    if (CLAUDE_ADAPTIVE_MODELS.has(actualModelId)) {
+      params.thinking = { type: 'adaptive' };
+    } else {
+      params.thinking = { type: 'enabled', budget_tokens: Math.min(10000, effectiveMaxTokens - 2000) };
+    }
     params.temperature = 1; // required for extended thinking, overrides user setting
   } else if (temperature != null) {
     params.temperature = temperature;
   }
   if (useSearch) {
-    params.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+    const searchToolType = CLAUDE_NEW_SEARCH_TOOL.has(actualModelId) ? 'web_search_20260209' : 'web_search_20250305';
+    params.tools = [{ type: searchToolType, name: 'web_search' }];
   }
 
   let text = '', inputTokens = 0, outputTokens = 0, cacheCreationTokens = 0, cacheReadTokens = 0;
