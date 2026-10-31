@@ -2107,6 +2107,13 @@ const PROVIDERS = {
   anthropic: {
     label: 'Claude', icon: '&#128311;', color: 'var(--claude)', dotColor: '#cc785c',
     models: [
+      // Gen 5.5
+      { id: 'claude-fable-5-1',            label: 'Claude Fable 5.1 🧠' },
+      { id: 'claude-opus-5-5',             label: 'Claude Opus 5.5' },
+      { id: 'claude-opus-5-5-search',      label: 'Claude Opus 5.5 Search 🔍' },
+      { id: 'claude-sonnet-5-5',           label: 'Claude Sonnet 5.5' },
+      { id: 'claude-sonnet-5-5-search',    label: 'Claude Sonnet 5.5 Search 🔍' },
+      { id: 'claude-haiku-5-5',            label: 'Claude Haiku 5.5' },
       // Gen 5
       { id: 'claude-fable-5',              label: 'Claude Fable 5 🧠' },
       { id: 'claude-opus-5',               label: 'Claude Opus 5' },
@@ -2131,57 +2138,60 @@ const PROVIDERS = {
       { id: 'claude-sonnet-4-5',           label: 'Claude Sonnet 4.5' },
       { id: 'claude-haiku-4-5-20251001',   label: 'Claude Haiku 4.5' },
     ],
-    defaultModel: 'claude-haiku-4-5-20251001',
+    defaultModel: 'claude-haiku-5-5',
   },
   openai: {
     label: 'OpenAI', icon: '&#9889;', color: 'var(--openai)', dotColor: '#10a37f',
     models: [
+      // GPT-6
+      { id: 'gpt-6-astra',   label: 'GPT-6 Astra 🧠' },
+      { id: 'gpt-6.1-sol',   label: 'GPT-6.1 Sol' },
+      { id: 'gpt-6.1-terra', label: 'GPT-6.1 Terra' },
+      { id: 'gpt-6-luna',    label: 'GPT-6 Luna' },
+      // Search
+      { id: 'gpt-5-search-api', label: 'GPT-5 Search 🔍' },
       // GPT-5.5
       { id: 'gpt-5.5',      label: 'GPT-5.5' },
       // GPT-5.4
       { id: 'gpt-5.4',      label: 'GPT-5.4' },
       { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini' },
-      // GPT-5 — Search
-      { id: 'gpt-5.2',      label: 'GPT-5.2 Search 🔍' },
       // GPT-5
-      { id: 'gpt-5.3',      label: 'GPT-5.3' },
       { id: 'gpt-5',        label: 'GPT-5' },
       { id: 'gpt-5-mini',   label: 'GPT-5 Mini' },
       // Reasoning
     ],
-    defaultModel: 'gpt-5-mini',
+    defaultModel: 'gpt-6-luna',
   },
   google: {
     label: 'Gemini', icon: '&#10024;', color: 'var(--gemini)', dotColor: '#4285f4',
     models: [
-      { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
-      { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro' },
-      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+      { id: 'gemini-4-argon',        label: 'Gemini 4 Argon' },
+      { id: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash' },
+      { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash-Lite' },
     ],
-    defaultModel: 'gemini-3.5-flash',
+    defaultModel: 'gemini-3.8-flash',
   },
   xai: {
     label: 'Grok', icon: '&#120143;', color: 'var(--grok)', dotColor: '#a78bfa',
     models: [
       // Grok 4
+      { id: 'grok-4.7',        label: 'Grok 4.7' },
+      { id: 'grok-4.6',        label: 'Grok 4.6' },
       { id: 'grok-4.3',        label: 'Grok 4.3' },
-      { id: 'grok-4.20',       label: 'Grok 4.20' },
-      // Grok 3
-      { id: 'grok-3-mini',     label: 'Grok 3 Mini' },
-      { id: 'grok-3-mini-fast',label: 'Grok 3 Mini Fast' },
     ],
-    defaultModel: 'grok-3-mini',
+    defaultModel: 'grok-4.3',
   },
   qwen: {
     label: 'Qwen', icon: '&#128200;', color: 'var(--qwen, #6550d4)', dotColor: '#6550d4',
     models: [
-      { id: 'qwen-max-thinking', label: 'Qwen3 235B (Thinking) 🧠' },
+      { id: 'qwen-max-thinking', label: 'Qwen 3.8 Max (Thinking) 🧠' },
+      { id: 'qwen3.8-max',       label: 'Qwen 3.8 Max' },
+      { id: 'qwen3.7-plus',      label: 'Qwen 3.7 Plus' },
+      { id: 'qwen3.8-flash',     label: 'Qwen 3.8 Flash' },
       { id: 'qwen-max',          label: 'Qwen Max' },
-      { id: 'qwen-plus',         label: 'Qwen Plus (Qwen3)' },
-      { id: 'qwen-turbo',        label: 'Qwen Turbo' },
-      { id: 'qwen3-8b',          label: 'Qwen3 8B' },
+      { id: 'qwen-plus',         label: 'Qwen Plus' },
     ],
-    defaultModel: 'qwen-plus',
+    defaultModel: 'qwen3.8-flash',
   },
   zhipu: {
     label: 'GLM', icon: '&#127979;', color: 'var(--zhipu, #ff6b6b)', dotColor: '#ff6b6b',
@@ -2199,29 +2209,41 @@ const PROVIDERS = {
   },
 };
 
-// Prices in USD per million tokens (input / output) — updated April 2026
+// Prices in USD per million tokens (input / output) — updated October 2026
+// Gemini 4 Argon and 3.8 Flash use the post-promo rates (Dec 2026 / Jan 2027)
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-fable-5-1':          { i: 10,    o: 50   },
+  'claude-opus-5-5':           { i:  4,    o: 20   },
+  'claude-opus-5-5-search':    { i:  4,    o: 20   },
+  'claude-sonnet-5-5':         { i:  2,    o: 10   },
+  'claude-sonnet-5-5-search':  { i:  2,    o: 10   },
+  'claude-haiku-5-5':          { i:  0.10, o:  0.50 },
   'claude-fable-5':            { i: 10,    o: 50   },
   'claude-opus-5':             { i:  5,    o: 25   },
   'claude-opus-5-search':      { i:  5,    o: 25   },
   'claude-opus-4-8':           { i:  5,    o: 25   },
   'claude-opus-4-8-search':    { i:  5,    o: 25   },
-  'claude-sonnet-5':           { i:  3,    o: 15   },
-  'claude-sonnet-5-search':    { i:  3,    o: 15   },
+  'claude-sonnet-5':           { i:  2,    o: 10   },
+  'claude-sonnet-5-search':    { i:  2,    o: 10   },
   'claude-opus-4-7-search':    { i:  5,    o: 25   },
   'claude-opus-4-7-thinking':  { i:  5,    o: 25   },
   'claude-opus-4-7':           { i:  5,    o: 25   },
-  'claude-opus-4-6-search':    { i: 15,    o: 75   },
+  'claude-opus-4-6-search':    { i:  5,    o: 25   },
   'claude-sonnet-4-6-search':  { i:  3,    o: 15   },
-  'claude-opus-4-6-thinking':  { i: 15,    o: 75   },
-  'claude-opus-4-6':           { i: 15,    o: 75   },
+  'claude-opus-4-6-thinking':  { i:  5,    o: 25   },
+  'claude-opus-4-6':           { i:  5,    o: 25   },
   'claude-sonnet-4-6':         { i:  3,    o: 15   },
   'claude-opus-4-5':           { i: 15,    o: 75   },
   'claude-sonnet-4-5':         { i:  3,    o: 15   },
   'claude-haiku-4-5-20251001': { i:  1,    o:  5   },
   // ── OpenAI ────────────────────────────────────────────────────────────────
-  // GPT-5 family (prices per OpenAI API docs)
+  // GPT-6 / GPT-5 family (prices per OpenAI API docs)
+  'gpt-6-astra':   { i: 10.00, o: 50.00 },
+  'gpt-6.1-sol':   { i:  2.00, o: 10.00 },
+  'gpt-6.1-terra': { i:  1.00, o:  5.00 },
+  'gpt-6-luna':    { i:  0.10, o:  0.50 },
+  'gpt-5-search-api': { i: 5.00, o: 20.00 },
   'gpt-5.5':      { i:  5.00, o: 30.00 },
   'gpt-5.4':      { i:  2.50, o: 15.00 },
   'gpt-5.4-mini': { i:  0.75, o:  4.50 },
@@ -2236,14 +2258,13 @@ const PRICING = {
   // o-series reasoning
   'o3':           { i: 10.00, o: 40.00 },
   // ── Google Gemini ─────────────────────────────────────────────────────────
-  'gemini-3.5-flash': { i: 0.10,  o:  0.40 },
-  'gemini-2.5-pro':   { i: 1.25,  o: 10.00 },
-  'gemini-2.5-flash': { i: 0.15,  o:  0.60 },
+  'gemini-4-argon':        { i: 4.00,  o: 20.00 },
+  'gemini-3.8-flash':      { i: 1.50,  o:  7.50 },
+  'gemini-3.1-flash-lite': { i: 0.25,  o:  1.50 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
+  'grok-4.7':                     { i: 2.00,  o:  6.00 },
+  'grok-4.6':                     { i: 2.00,  o:  6.00 },
   'grok-4.3':                     { i: 1.25,  o:  2.50 },
-  'grok-4.20':                    { i: 2.00,  o:  6.00 },
-  'grok-3-mini':                  { i: 0.30,  o:  0.50 },
-  'grok-3-mini-fast':             { i: 0.60,  o:  4.00 },
   // ── Moonshot Kimi ─────────────────────────────────────────────────────────
   'kimi-k2-5':        { i: 2.00, o: 8.00 },
   'kimi-latest':      { i: 2.00, o: 6.00 },
@@ -2256,12 +2277,13 @@ const PRICING = {
   'sonar-reasoning':     { i: 1.00, o:  5.00 },
   'sonar-reasoning-pro': { i: 2.00, o:  8.00 },
   // ── Qwen / Alibaba DashScope ──────────────────────────────────────────────
-  'qwen-max-thinking': { i: 1.60, o: 6.40 },
+  'qwen-max-thinking': { i: 2.00, o: 6.00 },
+  'qwen3.8-max':       { i: 2.00, o: 6.00 },
+  'qwen3.8-flash':     { i: 0.15, o: 0.47 },
+  'qwen3.7-plus':      { i: 0.40, o: 1.60 },
   'qwen-max':          { i: 1.60, o: 6.40 },
   'qwen-plus':         { i: 0.40, o: 1.20 },
-  'qwen-turbo':        { i: 0.05, o: 0.15 },
   'qwq-32b':           { i: 0.60, o: 2.40 },
-  'qwen3-8b':          { i: 0.05, o: 0.15 },
   // ── Zhipu GLM ─────────────────────────────────────────────────────────────
   'glm-5.1':            { i: 0.50, o: 2.00 },
   'glm-5-turbo':        { i: 0.10, o: 0.40 },
@@ -2286,6 +2308,10 @@ const ALWAYS_SEARCH_PROVIDERS = new Set([]); // reserved for providers that alwa
 
 // Claude: base model → search variant (and reverse)
 const CLAUDE_SEARCH_AUTO = {
+  'claude-opus-5-5':           'claude-opus-5-5-search',
+  'claude-sonnet-5-5':         'claude-sonnet-5-5-search',
+  'claude-haiku-5-5':          'claude-sonnet-5-5-search',
+  'claude-fable-5-1':          'claude-opus-5-5-search',
   'claude-opus-5':             'claude-opus-5-search',
   'claude-opus-4-8':           'claude-opus-4-8-search',
   'claude-sonnet-5':           'claude-sonnet-5-search',
@@ -2293,11 +2319,13 @@ const CLAUDE_SEARCH_AUTO = {
   'claude-opus-4-7':           'claude-opus-4-7-search',
   'claude-opus-4-6':           'claude-opus-4-6-search',
   'claude-sonnet-4-6':         'claude-sonnet-4-6-search',
-  'claude-opus-4-5':           'claude-sonnet-4-6-search',
-  'claude-sonnet-4-5':         'claude-sonnet-4-6-search',
-  'claude-haiku-4-5-20251001': 'claude-sonnet-4-6-search',
+  'claude-opus-4-5':           'claude-sonnet-5-5-search',
+  'claude-sonnet-4-5':         'claude-sonnet-5-5-search',
+  'claude-haiku-4-5-20251001': 'claude-sonnet-5-5-search',
 };
 const CLAUDE_SEARCH_BASE = {
+  'claude-opus-5-5-search':    'claude-opus-5-5',
+  'claude-sonnet-5-5-search':  'claude-sonnet-5-5',
   'claude-opus-5-search':      'claude-opus-5',
   'claude-opus-4-8-search':    'claude-opus-4-8',
   'claude-sonnet-5-search':    'claude-sonnet-5',
@@ -2311,7 +2339,7 @@ const THINKING_VARIANTS = {
   'claude-opus-4-6':          'claude-opus-4-6-thinking',
   'claude-opus-4-6-thinking': 'claude-opus-4-6',
 };
-const GEMINI_SEARCH_SUPPORTED = new Set(['gemini-3.5-flash','gemini-2.5-pro','gemini-2.5-flash']);
+const GEMINI_SEARCH_SUPPORTED = new Set(['gemini-4-argon','gemini-3.8-flash','gemini-3.1-flash-lite']);
 
 // Templates (improvement #9)
 const TEMPLATES = {
@@ -2343,8 +2371,10 @@ let _intAbortController = null;
 
 // ── Free plan model whitelist ───────────────────────────────────────────────
 const FREE_MODELS = new Set([
+  'claude-haiku-5-5',
   'claude-haiku-4-5-20251001',
-  'gemini-2.5-flash',
+  'gemini-3.1-flash-lite',
+  'gpt-6-luna',
   'gpt-5-mini',
   'grok-4.3',
 ]);
@@ -2510,7 +2540,7 @@ function updatePlanModels() {
   sel.innerHTML = models.map(m => `<option value="${m.id}" ${m.locked ? 'disabled' : ''}>${m.label}${m.locked ? ' 🔒' : ''}</option>`).join('');
   // Select first unlocked model
   const firstUnlocked = models.find(m => !m.locked);
-  if (prov === 'openai') sel.value = models.find(m => m.id === 'gpt-5-mini' && !m.locked)?.id || firstUnlocked?.id;
+  if (prov === 'openai') sel.value = models.find(m => m.id === 'gpt-6-luna' && !m.locked)?.id || firstUnlocked?.id;
   else sel.value = models.find(m => m.id === PROVIDERS[prov].defaultModel && !m.locked)?.id || firstUnlocked?.id;
 }
 
@@ -3182,14 +3212,14 @@ function toggleWebSearch(idx) {
   if (m.provider === 'anthropic') {
     const sel = document.getElementById(`sel-${m.provider}`);
     if (m.webSearch) {
-      const searchVariant = CLAUDE_SEARCH_AUTO[m.modelId] || 'claude-sonnet-4-6-search';
+      const searchVariant = CLAUDE_SEARCH_AUTO[m.modelId] || 'claude-sonnet-5-5-search';
       m.modelId = searchVariant;
       // Disable thinking when search is on
       m._thinkingPreSearch = m.modelId;
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
       if (thinkRow) thinkRow.style.display = 'none';
     } else {
-      const baseModel = CLAUDE_SEARCH_BASE[m.modelId] || m._searchPreBase || 'claude-sonnet-4-6';
+      const baseModel = CLAUDE_SEARCH_BASE[m.modelId] || m._searchPreBase || 'claude-sonnet-5-5';
       m.modelId = baseModel;
       // Restore thinking row visibility if applicable
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
@@ -3200,14 +3230,14 @@ function toggleWebSearch(idx) {
     return;
   }
 
-  // OpenAI: auto-switch to/from gpt-5.2 (search)
+  // OpenAI: auto-switch to/from gpt-5-search-api (search)
   if (m.provider === 'openai') {
     const sel = document.getElementById(`sel-${m.provider}`);
     if (m.webSearch) {
       m._searchPreBase = m.modelId;
-      m.modelId = 'gpt-5.2';
+      m.modelId = 'gpt-5-search-api';
     } else {
-      m.modelId = m._searchPreBase || 'gpt-5-mini';
+      m.modelId = m._searchPreBase || 'gpt-6-luna';
     }
     if (sel) sel.value = m.modelId;
     updateEstimate();
@@ -3290,9 +3320,9 @@ function updateEnabledBadge() { const n = state.models.filter(m => m.enabled).le
 }
 function populateIntegratorDropdowns() {
   onIntProviderChange();
-  // Default integrator: GPT-5 Mini
+  // Default integrator: GPT-6 Luna
   const intMod = document.getElementById('intModel');
-  if (intMod) intMod.value = 'gpt-5-mini';
+  if (intMod) intMod.value = 'gpt-6-luna';
   // Sync integrator length to answer length on init
   syncAmplitudeToInt();
 }
@@ -6190,15 +6220,15 @@ function onGlobalTempReset() {
 
 // Model level selector (High / Medium / Fast)
 const MODEL_LEVELS = {
-  high:   { anthropic: 'claude-opus-5', openai: 'gpt-5.5', google: 'gemini-2.5-pro',   xai: 'grok-4.3',   qwen: 'qwen-max',   zhipu: 'glm-5' },
-  medium: { anthropic: 'claude-sonnet-5', openai: 'gpt-5-mini', google: 'gemini-2.5-flash', xai: 'grok-4.20', qwen: 'qwen-plus', zhipu: 'glm-5-turbo' },
-  fast:   { anthropic: 'claude-haiku-4-5-20251001', openai: 'gpt-5-mini', google: 'gemini-2.5-flash', xai: 'grok-3-mini', qwen: 'qwen-turbo', zhipu: 'glm-4.5-air' },
+  high:   { anthropic: 'claude-opus-5-5', openai: 'gpt-6.1-sol', google: 'gemini-4-argon', xai: 'grok-4.7', qwen: 'qwen3.8-max', zhipu: 'glm-5' },
+  medium: { anthropic: 'claude-sonnet-5-5', openai: 'gpt-6.1-terra', google: 'gemini-3.8-flash', xai: 'grok-4.6', qwen: 'qwen3.7-plus', zhipu: 'glm-5-turbo' },
+  fast:   { anthropic: 'claude-haiku-5-5', openai: 'gpt-6-luna', google: 'gemini-3.1-flash-lite', xai: 'grok-4.3', qwen: 'qwen3.8-flash', zhipu: 'glm-4.5-air' },
 };
 // Integrator model per level (anthropic preferred)
 const INTEGRATOR_LEVELS = {
-  high:   { provider: 'openai', modelId: 'gpt-5.5' },
-  medium: { provider: 'openai', modelId: 'gpt-5-mini' },
-  fast:   { provider: 'openai', modelId: 'gpt-5-mini' },
+  high:   { provider: 'openai', modelId: 'gpt-6.1-sol' },
+  medium: { provider: 'openai', modelId: 'gpt-6.1-terra' },
+  fast:   { provider: 'openai', modelId: 'gpt-6-luna' },
 };
 
 function setModelLevel(level) {
@@ -6235,8 +6265,8 @@ function setModelLevel(level) {
 
 // Reasoning model map: base → reasoning variant (and reverse)
 const REASONING_ON = {
-  anthropic: 'claude-opus-4-6-thinking',
-  openai:    'o4-mini',
+  anthropic: 'claude-opus-5-5',
+  openai:    'gpt-6.1-sol',
   xai:       null, // determined dynamically from current model
   qwen:      'qwen-max-thinking',
   zhipu:     'glm-5-turbo', // GLM no tiene reasoning dedicado, usa el mismo modelo
@@ -6249,16 +6279,16 @@ function toggleGlobalReasoning() {
   state.models.forEach((m, idx) => {
     const sel = document.getElementById(`sel-${m.provider}`);
     if (m.provider === 'anthropic') {
-      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'claude-opus-4-6-thinking'; }
-      else { m.modelId = m._preReasoningModel || 'claude-sonnet-4-6'; }
+      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'claude-opus-5-5'; }
+      else { m.modelId = m._preReasoningModel || 'claude-sonnet-5-5'; }
       if (sel) sel.value = m.modelId;
       const thinkBtn = document.getElementById(`thinkToggle-${m.provider}`);
-      if (thinkBtn) thinkBtn.className = `websearch-toggle ${isOn ? 'on' : ''}`;
+      if (thinkBtn) thinkBtn.className = 'websearch-toggle';
       const thinkRow = document.getElementById(`thinkRow-${m.provider}`);
-      if (thinkRow) thinkRow.style.display = (isOn || m.modelId === 'claude-opus-4-6') ? '' : 'none';
+      if (thinkRow) thinkRow.style.display = (m.modelId === 'claude-opus-4-6') ? '' : 'none';
     } else if (m.provider === 'openai') {
-      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'o4-mini'; }
-      else { m.modelId = m._preReasoningModel || 'gpt-5-mini'; }
+      if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'gpt-6.1-sol'; }
+      else { m.modelId = m._preReasoningModel || 'gpt-6-luna'; }
       if (sel) sel.value = m.modelId;
     } else if (m.provider === 'xai') {
       // Switch between reasoning / non-reasoning variant of same tier
@@ -6273,7 +6303,7 @@ function toggleGlobalReasoning() {
       if (sel) sel.value = m.modelId;
     } else if (m.provider === 'qwen') {
       if (isOn) { m._preReasoningModel = m.modelId; m.modelId = 'qwen-max-thinking'; }
-      else { m.modelId = m._preReasoningModel || 'qwen-plus'; }
+      else { m.modelId = m._preReasoningModel || 'qwen3.8-flash'; }
       if (sel) sel.value = m.modelId;
     } else if (m.provider === 'zhipu') {
       // GLM no tiene modelo reasoning dedicado — no cambia
@@ -6314,9 +6344,9 @@ function toggleGlobalWebSearch() {
     if (m.provider === 'anthropic') {
       if (isOn) {
         m._searchPreBase = m.modelId;
-        m.modelId = CLAUDE_SEARCH_AUTO[m.modelId] || 'claude-sonnet-4-6-search';
+        m.modelId = CLAUDE_SEARCH_AUTO[m.modelId] || 'claude-sonnet-5-5-search';
       } else {
-        m.modelId = CLAUDE_SEARCH_BASE[m.modelId] || m._searchPreBase || 'claude-sonnet-4-6';
+        m.modelId = CLAUDE_SEARCH_BASE[m.modelId] || m._searchPreBase || 'claude-sonnet-5-5';
       }
       const sel = document.getElementById(`sel-${m.provider}`);
       if (sel) sel.value = m.modelId;
@@ -6327,9 +6357,9 @@ function toggleGlobalWebSearch() {
     if (m.provider === 'openai') {
       if (isOn) {
         m._searchPreBase = m.modelId;
-        m.modelId = 'gpt-5.2';
+        m.modelId = 'gpt-5-search-api';
       } else {
-        m.modelId = m._searchPreBase || 'gpt-5-mini';
+        m.modelId = m._searchPreBase || 'gpt-6-luna';
       }
       const sel = document.getElementById(`sel-${m.provider}`);
       if (sel) sel.value = m.modelId;

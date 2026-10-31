@@ -122,8 +122,11 @@ const PLANS = {
 
 // Models allowed for free plan (only previous-gen / lightweight models)
 const FREE_MODELS = new Set([
+  'claude-haiku-5-5',
   'claude-haiku-4-5-20251001',
+  'gemini-3.1-flash-lite',
   'gemini-2.5-flash',
+  'gpt-6-luna',
   'gpt-5-mini',
   'grok-4.3',
 ]);
@@ -222,26 +225,38 @@ function addMonthlyCost(userId, costUsd) {
 }
 
 // ─── Pricing (USD per 1M tokens: input / output) ────────────────────────────
-// Prices USD per million tokens (input / output) — updated April 2026
+// Prices USD per million tokens (input / output) — updated October 2026
+// Gemini 4 Argon and 3.8 Flash use the post-promo rates (Dec 2026 / Jan 2027)
 const PRICING = {
   // ── Anthropic Claude ──────────────────────────────────────────────────────
+  'claude-fable-5-1':          { input: 10.00, output: 50.00 },
+  'claude-opus-5-5':           { input:  4.00, output: 20.00 },
+  'claude-opus-5-5-search':    { input:  4.00, output: 20.00 },
+  'claude-sonnet-5-5':         { input:  2.00, output: 10.00 },
+  'claude-sonnet-5-5-search':  { input:  2.00, output: 10.00 },
+  'claude-haiku-5-5':          { input:  0.10, output:  0.50 },
   'claude-fable-5':            { input: 10.00, output: 50.00 },
   'claude-opus-5':             { input:  5.00, output: 25.00 },
   'claude-opus-5-search':      { input:  5.00, output: 25.00 },
   'claude-opus-4-8':           { input:  5.00, output: 25.00 },
   'claude-opus-4-8-search':    { input:  5.00, output: 25.00 },
-  'claude-sonnet-5':           { input:  3.00, output: 15.00 },
-  'claude-sonnet-5-search':    { input:  3.00, output: 15.00 },
+  'claude-sonnet-5':           { input:  2.00, output: 10.00 },
+  'claude-sonnet-5-search':    { input:  2.00, output: 10.00 },
   'claude-opus-4-7-search':    { input:  5.00, output: 25.00 },
   'claude-opus-4-7-thinking':  { input:  5.00, output: 25.00 },
   'claude-opus-4-7':           { input:  5.00, output: 25.00 },
-  'claude-opus-4-6-thinking':  { input: 15.00, output: 75.00 },
-  'claude-opus-4-6':           { input: 15.00, output: 75.00 },
+  'claude-opus-4-6-thinking':  { input:  5.00, output: 25.00 },
+  'claude-opus-4-6':           { input:  5.00, output: 25.00 },
   'claude-sonnet-4-6':         { input:  3.00, output: 15.00 },
   'claude-opus-4-5':           { input: 15.00, output: 75.00 },
   'claude-sonnet-4-5':         { input:  3.00, output: 15.00 },
   'claude-haiku-4-5-20251001': { input:  1.00, output:  5.00 },
   // ── OpenAI ────────────────────────────────────────────────────────────────
+  'gpt-6-astra':   { input: 10.00, output: 50.00 },
+  'gpt-6.1-sol':   { input:  2.00, output: 10.00 },
+  'gpt-6.1-terra': { input:  1.00, output:  5.00 },
+  'gpt-6-luna':    { input:  0.10, output:  0.50 },
+  'gpt-5-search-api': { input: 5.00, output: 20.00 },
   'gpt-5.5':      { input:  5.00, output: 30.00 },
   'gpt-5.4':      { input:  2.50, output: 15.00 },
   'gpt-5.4-mini': { input:  0.75, output:  4.50 },
@@ -255,11 +270,16 @@ const PRICING = {
   // ── Google Gemini ─────────────────────────────────────────────────────────
   // Gemini 2.5 Pro: $1.25/M ≤200k tokens, $2.50/M >200k — we use the lower tier
   'gemini-2.5-pro':                       { input: 1.25,  output: 10.00 },
-  'gemini-2.5-flash':                     { input: 0.15,  output:  0.60 },
-  'gemini-3.5-flash': { input: 0.10, output: 0.40 },
+  'gemini-2.5-flash':                     { input: 0.30,  output:  2.50 },
+  'gemini-4-argon':        { input: 4.00, output: 20.00 },
+  'gemini-3.8-flash':      { input: 1.50, output:  7.50 },
+  'gemini-3.5-flash':      { input: 1.50, output:  7.50 },
+  'gemini-3.1-flash-lite': { input: 0.25, output:  1.50 },
   // ── xAI Grok ──────────────────────────────────────────────────────────────
+  'grok-4.7':                     { input: 2.00, output:   6.00 },
+  'grok-4.6':                     { input: 2.00, output:   6.00 },
   'grok-4.3':                     { input: 1.25, output:   2.50 },
-  'grok-4.20':                    { input: 2.00, output:   6.00 },
+  'grok-4.20':                    { input: 1.25, output:   2.50 },
   'grok-3-mini':                  { input: 0.30, output:   0.50 },
   'grok-3-mini-fast':             { input: 0.60, output:   4.00 },
   // ── Moonshot Kimi ─────────────────────────────────────────────────────────
@@ -274,6 +294,10 @@ const PRICING = {
   'sonar-reasoning':    { input: 1.00, output:  5.00 },
   'sonar-reasoning-pro':{ input: 2.00, output:  8.00 },
   // ── Qwen / Alibaba DashScope ──────────────────────────────────────────────
+  'qwen3.8-max':       { input: 2.00, output: 6.00 },
+  'qwen-max-thinking': { input: 2.00, output: 6.00 },
+  'qwen3.8-flash':     { input: 0.15, output: 0.47 },
+  'qwen3.7-plus':      { input: 0.40, output: 1.60 },
   'qwen-plus':  { input: 0.40, output: 1.20 },
   'qwen-turbo': { input: 0.05, output: 0.15 },
   'qwen-max':   { input: 1.60, output: 6.40 },
@@ -408,19 +432,28 @@ function setCache(modelId, question, amplitude, data, userId) {
 const CLAUDE_THINKING_MODELS = new Set(['claude-3-7-sonnet-20250219', 'claude-opus-4-6-thinking', 'claude-opus-4-7-thinking']);
 const CLAUDE_THINKING_MODEL_MAP = { 'claude-opus-4-6-thinking': 'claude-opus-4-6', 'claude-opus-4-7-thinking': 'claude-opus-4-7' };
 // Models that use adaptive thinking (no budget_tokens) — 4.7 and newer
-const CLAUDE_ADAPTIVE_MODELS = new Set(['claude-opus-4-7', 'claude-opus-4-8', 'claude-opus-5', 'claude-sonnet-5', 'claude-fable-5']);
+const CLAUDE_ADAPTIVE_MODELS = new Set(['claude-opus-4-7', 'claude-opus-4-8', 'claude-opus-5', 'claude-opus-5-5', 'claude-sonnet-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-fable-5', 'claude-fable-5-1']);
+// Models that think by default — thinking counts against max_tokens, so brief answers need a floor
+const CLAUDE_DEFAULT_THINKING = new Set(['claude-opus-5', 'claude-opus-5-5', 'claude-sonnet-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-fable-5', 'claude-fable-5-1']);
+// Only these still accept temperature — newer models return a 400
+const CLAUDE_TEMPERATURE_MODELS = new Set(['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-opus-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5-20251001']);
+// Models whose safety refusals are rerouted by the API to a fallback model
+const CLAUDE_FALLBACK_MODELS = new Set(['claude-fable-5-1', 'claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5']);
 // Models that use the newer web_search_20260209 tool type
-const CLAUDE_NEW_SEARCH_TOOL = new Set(['claude-opus-4-7', 'claude-opus-4-8', 'claude-opus-5', 'claude-sonnet-4-6', 'claude-sonnet-5', 'claude-fable-5']);
+const CLAUDE_NEW_SEARCH_TOOL = new Set(['claude-opus-4-7', 'claude-opus-4-8', 'claude-opus-5', 'claude-opus-5-5', 'claude-sonnet-4-6', 'claude-sonnet-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-fable-5', 'claude-fable-5-1']);
 
-const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search', 'claude-opus-4-7-search', 'claude-opus-4-8-search', 'claude-opus-5-search', 'claude-sonnet-5-search']);
-const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6', 'claude-opus-4-7-search': 'claude-opus-4-7', 'claude-opus-4-8-search': 'claude-opus-4-8', 'claude-opus-5-search': 'claude-opus-5', 'claude-sonnet-5-search': 'claude-sonnet-5' };
+const CLAUDE_SEARCH_MODELS    = new Set(['claude-sonnet-4-6-search', 'claude-opus-4-6-search', 'claude-opus-4-7-search', 'claude-opus-4-8-search', 'claude-opus-5-search', 'claude-sonnet-5-search', 'claude-opus-5-5-search', 'claude-sonnet-5-5-search']);
+const CLAUDE_SEARCH_MODEL_MAP = { 'claude-sonnet-4-6-search': 'claude-sonnet-4-6', 'claude-opus-4-6-search': 'claude-opus-4-6', 'claude-opus-4-7-search': 'claude-opus-4-7', 'claude-opus-4-8-search': 'claude-opus-4-8', 'claude-opus-5-search': 'claude-opus-5', 'claude-sonnet-5-search': 'claude-sonnet-5', 'claude-opus-5-5-search': 'claude-opus-5-5', 'claude-sonnet-5-5-search': 'claude-sonnet-5-5' };
 
 // Streaming caller for Claude (improvement #1)
 async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, attachments, history, temperature, onChunk, webSearch = false) {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
   const useThinking = CLAUDE_THINKING_MODELS.has(modelId);
+  const actualModelId = CLAUDE_THINKING_MODEL_MAP[modelId] || CLAUDE_SEARCH_MODEL_MAP[modelId] || modelId;
+  const useFallback = CLAUDE_FALLBACK_MODELS.has(actualModelId);
   const clientOpts = { apiKey: process.env.ANTHROPIC_API_KEY };
   if (useThinking) clientOpts.defaultHeaders = { 'anthropic-beta': 'interleaved-thinking-2025-05-14' };
+  else if (useFallback) clientOpts.defaultHeaders = { 'anthropic-beta': 'server-side-fallback-2026-07-01' };
   const client = new Anthropic(clientOpts);
   const useSearch   = CLAUDE_SEARCH_MODELS.has(modelId) || webSearch;
 
@@ -439,8 +472,8 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
     userContent = userMessage;
   }
 
-  const actualModelId = CLAUDE_THINKING_MODEL_MAP[modelId] || CLAUDE_SEARCH_MODEL_MAP[modelId] || modelId;
-  const effectiveMaxTokens = useThinking ? Math.max(maxTokens, 16000) : maxTokens;
+  const effectiveMaxTokens = useThinking ? Math.max(maxTokens, 16000)
+    : CLAUDE_DEFAULT_THINKING.has(actualModelId) ? Math.max(maxTokens, 4096) : maxTokens;
 
   // Prompt caching: mark system prompt and last assistant message as cacheable
   const systemBlock = systemPrompt
@@ -471,14 +504,15 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
     stream: true,
   };
   if (systemBlock) params.system = systemBlock;
+  if (useFallback && !useThinking) params.fallbacks = 'default';
   if (useThinking) {
     if (CLAUDE_ADAPTIVE_MODELS.has(actualModelId)) {
       params.thinking = { type: 'adaptive' };
     } else {
       params.thinking = { type: 'enabled', budget_tokens: Math.min(10000, effectiveMaxTokens - 2000) };
     }
-    params.temperature = 1; // required for extended thinking, overrides user setting
-  } else if (temperature != null) {
+    if (CLAUDE_TEMPERATURE_MODELS.has(actualModelId)) params.temperature = 1; // required for extended thinking, overrides user setting
+  } else if (temperature != null && CLAUDE_TEMPERATURE_MODELS.has(actualModelId)) {
     params.temperature = temperature;
   }
   if (useSearch) {
@@ -504,6 +538,7 @@ async function callClaudeStream(modelId, systemPrompt, userMessage, maxTokens, a
   const final = await stream.finalMessage();
   inputTokens = final.usage?.input_tokens || inputTokens;
   outputTokens = final.usage?.output_tokens || outputTokens;
+  if (!text) throw new Error(`Respuesta vacía de ${modelId} (${final.stop_reason}).`);
 
   return { text, inputTokens, outputTokens, cacheCreationTokens, cacheReadTokens };
 }
@@ -532,17 +567,16 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
   }
 
   const isOSeries = /^o\d/.test(modelId);
-  const isGpt5Family = modelId.startsWith('gpt-5');
-  const isSearchModel = modelId === 'gpt-5.2'; // search via Responses API
+  const isGpt5Family = /^gpt-[5-9]/.test(modelId);
+  const isSearchModel = modelId === 'gpt-5-search-api' || modelId === 'gpt-5.2'; // gpt-5.2 = legacy id of this option
   const useMaxCompletionTokens = isOSeries || isGpt5Family || isSearchModel;
   const effectiveMaxTokens = (isOSeries || isGpt5Family || isSearchModel) ? Math.max(maxTokens, 4096) : maxTokens;
 
-  // gpt-5.2 = gpt-4o-search-preview via Chat Completions (search-enabled model)
+  // gpt-5-search-api via Chat Completions (search-enabled model)
   if (isSearchModel) {
-    // gpt-4o-search-preview does not support system messages — strip them
-    const searchMessages = messages.filter(m => m.role !== 'system');
+    const searchMessages = messages;
     const payload = {
-      model: 'gpt-4o-search-preview',
+      model: 'gpt-5-search-api',
       web_search_options: {},
       messages: searchMessages,
       max_tokens: effectiveMaxTokens,
@@ -600,6 +634,7 @@ async function callOpenAIStream(modelId, systemPrompt, userMessage, maxTokens, a
 }
 
 const GEMINI_SEARCH_SUPPORTED = new Set([
+  'gemini-4-argon', 'gemini-3.8-flash', 'gemini-3.1-flash-lite',
   'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-3.5-flash',
 ]);
 
@@ -609,9 +644,10 @@ async function callGemini(modelId, systemPrompt, userMessage, maxTokens = 8192, 
   const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
   const cleanId = modelId.startsWith('models/') ? modelId.slice(7) : modelId;
   if (webSearch && !GEMINI_SEARCH_SUPPORTED.has(cleanId)) {
-    throw new Error(`Google Search grounding not available for "${cleanId}". Use Gemini 2.0 Flash or 2.5 Pro.`);
+    throw new Error(`Google Search grounding not available for "${cleanId}". Use Gemini 4 Argon or 3.8 Flash.`);
   }
-  const isProModel = cleanId.includes('pro');
+  // Pro and newer models think by default, and thinking counts against maxOutputTokens
+  const isProModel = cleanId.includes('pro') || /^gemini-([4-9]|3\.[5-9])/.test(cleanId);
   const effectiveMaxTokens = isProModel ? Math.max(maxTokens, 8192) : maxTokens;
 
   // Build contents: history + current user message (with any attachments)
@@ -766,7 +802,7 @@ async function callPerplexityStream(modelId, systemPrompt, userMessage, maxToken
 async function callQwenStream(modelId, systemPrompt, userMessage, maxTokens, history, temperature, onChunk, webSearch = false) {
   if (!process.env.QWEN_API_KEY) throw new Error('QWEN_API_KEY not configured');
   const isThinking = modelId === 'qwen-max-thinking';
-  const baseModelId = isThinking ? 'qwen3-235b-a22b' : modelId; // qwen3-235b supports thinking
+  const baseModelId = isThinking ? 'qwen3.8-max' : modelId; // qwen3.8-max supports thinking
 
   const messages = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
@@ -855,10 +891,14 @@ async function callZhipuStream(modelId, systemPrompt, userMessage, maxTokens, hi
   return { text, inputTokens, outputTokens };
 }
 
+// Removed models → replacement, for pages still open or cached with the old list
+const RETIRED_MODELS = { 'gpt-5.3': 'gpt-5.4', 'qwen3-8b': 'qwen3.8-flash', 'qwen-turbo': 'qwen3.8-flash' };
+
 // Streaming dispatcher (improvement #1)
 // temperature = null → use API default; pass as last arg to preserve backward compat
 async function callModelStream(provider, modelId, systemPrompt, userMessage, maxTokens, attachments, webSearch, history, onChunk, temperature = null, options = {}) {
   // Trim history to model's context budget before sending
+  modelId = RETIRED_MODELS[modelId] || modelId;
   const { trimmed: trimmedHistory } = trimHistory(history || [], modelId);
   // Qwen and Zhipu (GLM) do not support vision — strip image attachments
   const NO_VISION_PROVIDERS = new Set(['qwen', 'zhipu']);
@@ -1156,9 +1196,9 @@ function resolveConfiguredProvider(requestedProvider, requestedModelId) {
   };
   const DEFAULT_MODELS = {
     anthropic:  'claude-sonnet-4-6',
-    openai:     'gpt-4o-mini',
-    google:     'gemini-2.5-flash',
-    xai:        'grok-3-mini',
+    openai:     'gpt-6-luna',
+    google:     'gemini-3.8-flash',
+    xai:        'grok-4.3',
     moonshot:   'moonshot-v1-8k',
     qwen:       'qwen-plus',
     zhipu:      'glm-5.1',
